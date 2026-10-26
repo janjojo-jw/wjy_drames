@@ -412,6 +412,7 @@ body.mview .hintCard{display:block}
   <div class="dsec"><span>内容概要</span><div class="dtext" id="ddSum"></div></div>
   <div class="dsec"><span id="ddCastLab">有戏份的角色</span><div class="roles" id="ddCast" style="margin-top:0"></div></div>
   <div class="foot">
+    <button type="button" id="ddBack" hidden></button>
     <button type="button" class="primary" id="ddEdit" hidden>编辑此场</button>
     <button type="button" id="ddClose">关闭</button>
   </div>
@@ -1914,7 +1915,9 @@ function renderPie(rows){
 </div>`;
 }
 /* 点角色名:列出她所有的场次 */
+let FROMROLE='',CURROLE='';
 function openRole(r){
+  CURROLE=r;
   const list=S.scenes.filter(s=>s.cast[r]===1).sort((a,b)=>a.ep-b.ep||(parseInt(a.sc)||0)-(parseInt(b.sc)||0)||String(a.sc).localeCompare(String(b.sc),'zh',{numeric:true}));
   const pg=list.reduce((a,s)=>a+(num(s.pages)||0),0),all=S.scenes.reduce((a,s)=>a+(num(s.pages)||0),0);
   const eps=uniq(list.map(s=>s.ep)).length;
@@ -1924,7 +1927,7 @@ function openRole(r){
   $('#rdlg').showModal();
 }
 $('#rdClose').onclick=()=>$('#rdlg').close();
-$('#rdList').onclick=e=>{const r=e.target.closest('.rrow');if(r){$('#rdlg').close();openDetail(+r.dataset.id)}};
+$('#rdList').onclick=e=>{const r=e.target.closest('.rrow');if(r){FROMROLE=CURROLE;$('#rdlg').close();openDetail(+r.dataset.id)}}; // 记住是从哪个角色点进来的,方便返回
 document.addEventListener('click',e=>{ // 抢在表格「点整行」之前处理
   const t=e.target.closest('[data-role]');if(!t)return;
   e.stopPropagation();e.preventDefault();
@@ -2088,11 +2091,14 @@ function openDetail(id){
   $('#ddCastLab').textContent=`有戏份的角色(${cast.length})`;
   $('#ddCast').innerHTML=cast.length?cast.map(r=>`<span class="chip rc ${r===PINK?'pink':''}">${esc(r)}</span>`).join(''):'<span class="hint">没有角色戏份</span>';
   $('#ddEdit').hidden=!ADMIN;
+  $('#ddBack').hidden=!FROMROLE;if(FROMROLE)$('#ddBack').textContent='← 返回「'+FROMROLE+'」的场次';
   $('#ddlg').showModal();
 }
 $('#ddPhoto').firstElementChild.onclick=e=>showBig(e.target.getAttribute('src'));
-$('#ddClose').onclick=()=>$('#ddlg').close();
-$('#ddEdit').onclick=()=>{$('#ddlg').close();openScene(detailId)};
+$('#ddClose').onclick=()=>{FROMROLE='';$('#ddlg').close()}; // 「关闭」=全部关掉
+$('#ddBack').onclick=()=>$('#ddlg').close(); // 「返回」=回到那个角色的场次列表
+$('#ddlg').addEventListener('close',()=>{if(FROMROLE){const r=FROMROLE;FROMROLE='';openRole(r)}});
+$('#ddEdit').onclick=()=>{FROMROLE='';$('#ddlg').close();openScene(detailId)};
 $('#ddlg').addEventListener('click',e=>{
   const r=$('#ddlg').getBoundingClientRect();
   if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$('#ddlg').close(); // 点到视窗外的暗处才关闭
