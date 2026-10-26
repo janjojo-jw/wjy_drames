@@ -1515,16 +1515,24 @@ const PHCACHE={}; // 刚上传的照片:部署完成前先用本机的图显示
 const phSrc=p=>PHCACHE[p]||p;
 async function uploadPhotoGH(dataUrl){ // 照片存进仓库 photos/ 资料夹,data.json 里只记路径
   const path='photos/'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'.jpg';
-  const r=await fetch('https://api.github.com/repos/'+GH_REPO+'/contents/'+path,{method:'PUT',headers:{accept:'application/vnd.github+json',authorization:'Bearer '+GHTOK,'content-type':'application/json'},
-    body:JSON.stringify({message:'网站上传照片',content:dataUrl.split(',')[1],branch:'main'})});
-  if(!r.ok)throw new Error('photo '+r.status);
-  PHCACHE[path]=dataUrl;return path;
+  let last=0;
+  for(let i=0;i<5;i++){
+    const r=await fetch('https://api.github.com/repos/'+GH_REPO+'/contents/'+path,{method:'PUT',headers:{accept:'application/vnd.github+json',authorization:'Bearer '+GHTOK,'content-type':'application/json'},
+      body:JSON.stringify({message:'网站上传照片',content:dataUrl.split(',')[1],branch:'main'})});
+    if(r.ok){PHCACHE[path]=dataUrl;return path}
+    last=r.status;
+    if(r.status===401||r.status===403||r.status===404)break;
+    await new Promise(z=>setTimeout(z,1200*(i+1))); // GitHub 正在更新分支时稍等再试
+  }
+  throw new Error('上传照片失败('+last+')');
 }
 async function fetchGH(auth){
+  if(auth===undefined)auth=true; // 有令牌就带上(读取次数限制宽很多)
   try{
     const h={accept:'application/vnd.github+json'};
     if(auth&&GHTOK)h.authorization='Bearer '+GHTOK;
-    const r=await fetch(GH_API+'?ref=main&t='+Date.now(),{headers:h,cache:'no-store'});
+    let r=await fetch(GH_API+'?ref=main&t='+Date.now(),{headers:h,cache:'no-store'});
+    if(r.status===401&&h.authorization){delete h.authorization;r=await fetch(GH_API+'?ref=main&t='+Date.now(),{headers:h,cache:'no-store'})} // 令牌失效也要能读
     if(!r.ok)return null;
     const j=await r.json();
     return {sha:j.sha,data:JSON.parse(b64d(j.content))};
@@ -1548,7 +1556,7 @@ async function load(){
   let d=null;
   const sv=GHMODE?null:await fetchServer();
   if(sv){SERVER=true;REV=sv.rev;d=sv.data}
-  if(GHMODE){const g=await fetchGH(false);if(g){setBase(g.sha,g.data);d=g.data}}
+  if(GHMODE){const g=await fetchGH();if(g){setBase(g.sha,g.data);d=g.data}}
   if(!d){ // 没有服务器数据(或还没人存过):沿用 本地修改 → data.json → 内建数据
     if(!GHMODE)try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){}
     if(!d){
@@ -1567,7 +1575,7 @@ async function load(){
 async function refreshFromServer(){
   if(GHMODE){
     if(pushing||document.querySelector('dialog[open]'))return;
-    const g=await fetchGH(false);
+    const g=await fetchGH();
     if(g&&g.sha!==GHSHA&&!SHAS.has(g.sha)){setBase(g.sha,g.data);adopt(g.data);render()}
     return;
   }
@@ -1629,6 +1637,11 @@ function pushGH(){
     pushing=true;$('#saved').textContent='同步中…';
     const sleep=ms=>new Promise(z=>setTimeout(z,ms));
     try{
+      if(!GHSHA||!GHBASE){ // 打开页面时没读到 GitHub 的版本(例如读取被限制):先补读
+        const c=await fetchGH(true);
+        if(!c){$('#saved').textContent='同步失败:读不到 GitHub 上的最新数据,请稍后再试';pushing=false;return}
+        S=mergeData(c.data,S,c.data);setBase(c.sha,c.data);
+      }
       for(const x of S.scenes)if(x.photo&&String(x.photo).startsWith('data:'))x.photo=await uploadPhotoGH(x.photo);
       let done=false,merged=false;
       for(let i=0;i<7&&!done;i++){
@@ -1653,7 +1666,7 @@ function pushGH(){
         $('#saved').textContent='同步失败('+r.status+'),请稍后再试';pushing=false;return;
       }
       $('#saved').textContent=done?(merged?'已同步(已合并别的管理员的更新)':'已同步到 GitHub,所有人打开都是最新的'):'同步失败,请稍后再试';
-    }catch(e){$('#saved').textContent='同步失败(网络),请稍后再试'}
+    }catch(e){$('#saved').textContent='同步失败:'+(e&&e.message?e.message:'网络问题')+',请稍后再试'}
     pushing=false;
   });
   return pushQ;
