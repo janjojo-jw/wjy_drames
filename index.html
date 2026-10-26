@@ -172,6 +172,8 @@ body.mview .tabs{gap:14px}
 .piebtn{margin-top:16px;margin-bottom:6px;padding:3px 14px;font-size:13px;border-radius:999px;color:var(--mute)}
 .piebtn.on{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;font-weight:600}
 .epbtn{margin-left:10px;padding:6px 16px;font-size:14px;font-weight:700;border-radius:999px;border:1px solid #fbefc6;background:linear-gradient(180deg,#fbefc6,#e5bf6c);color:#2a210a;box-shadow:0 0 0 0 rgba(251,239,198,.7),0 3px 10px rgba(217,181,108,.35);animation:epglow 2.4s ease-out infinite}
+/* 手机上:管理按钮排成一行,放不下就左右滑动,不换行 */
+@media(max-width:700px){header .bar{flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding-bottom:4px;scrollbar-width:none}header .bar::-webkit-scrollbar{display:none}header .bar button{flex:none;white-space:nowrap;padding:6px 10px;font-size:13px}}
 .sortbar{flex-wrap:nowrap;gap:6px}
 .sortbar .hint{white-space:nowrap}
 .sortbar button{white-space:nowrap;flex:none}
