@@ -169,6 +169,28 @@ body.mview .tabs{gap:14px}
 #vStats>.note{max-width:none;margin-left:0}
 .note b{display:block;color:var(--accent);margin-bottom:2px;letter-spacing:.06em}
 .note p{margin:3px 0;color:#cfcac0}
+.rolelink{cursor:pointer}
+.rolelink:hover{text-decoration:underline;text-underline-offset:3px}
+#rdlg{width:min(560px,94vw);max-height:86vh;padding:14px 16px;border-radius:12px;border:1px solid #6d6880;background:linear-gradient(160deg,#3d394b,#2d2b38);color:#f2eefb;box-shadow:0 24px 60px -16px #000}
+#rdlg::backdrop{background:rgba(0,0,0,.55)}
+#rdlg h2{margin:0 0 4px;font-size:17px;color:#fff3d1}
+.rdsum{font-size:13px;color:#d9d4e6;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px 16px}
+.rdsum b{color:#fff3d1;font-size:15px}
+.rdlist{max-height:58vh;overflow:auto;border-top:1px solid rgba(255,255,255,.18)}
+.rrow{display:grid;grid-template-columns:96px 74px 54px 1fr;gap:8px;align-items:baseline;padding:8px 2px;border-bottom:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:13px}
+.rrow:hover{background:rgba(255,255,255,.08)}
+.rrow b{color:#fff3d1}
+.rrow .pg{text-align:right;font-variant-numeric:tabular-nums}
+.rrow .sm{color:#cfc9de;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:520px){.rrow{grid-template-columns:84px 1fr 52px}.rrow .sm{grid-column:1/-1}}
+.epc{margin-top:18px}
+.epc h3{margin:0 0 4px;font:600 16px "Songti SC","Noto Serif CJK SC",serif;color:#f3ecd9;letter-spacing:.1em}
+.epleg{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0 10px;font-size:12.5px;color:var(--ink)}
+.epleg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.eprow{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center;padding:5px 0}
+.eplab{font-size:13px;line-height:1.3}.eplab small{display:block;color:var(--mute);font-size:11px}
+.epbar{display:flex;height:26px;border-radius:5px;overflow:hidden;background:#101014}
+.epbar div{display:flex;align-items:center;justify-content:center;font:600 11px sans-serif;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);overflow:hidden;white-space:nowrap;border-right:1px solid #17171c;min-width:0}
 .pieback{font-size:13px;padding:4px 12px;border-radius:999px;color:var(--mute);margin-top:4px}
 .pie svg{display:block;width:100%;max-width:520px;height:auto;margin:6px auto}
 .pie .pl{fill:#fff;font:700 15px sans-serif;paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:3px;stroke-linejoin:round}
@@ -371,6 +393,13 @@ body.mview .hintCard{display:block}
     <button type="button" class="primary" id="ddEdit" hidden>编辑此场</button>
     <button type="button" id="ddClose">关闭</button>
   </div>
+</dialog>
+
+<dialog id="rdlg">
+  <h2 id="rdTitle">角色</h2>
+  <div class="rdsum" id="rdSum"></div>
+  <div class="rdlist" id="rdList"></div>
+  <div class="foot"><button type="button" id="rdClose">关闭</button></div>
 </dialog>
 
 <dialog id="mdlg">
@@ -1802,12 +1831,12 @@ function renderScenes(rows){
   if(!rows.length){$('#vScenes').innerHTML='<div class="empty">没有符合的场次</div>';return}
   const tp=rows.reduce((a,s)=>a+(num(s.pages)||0),0);
   const pgOf=s=>num(s.pages)!==null?`${fmt(s.pages)}<small>页</small>`:esc(s.pnote||'');
-  const chipsOf=s=>S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('');
+  const chipsOf=s=>S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rolelink ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}" data-role="${esc(r)}">${esc(r)}</span>`).join('');
   const cards=rows.map(s=>{
     const meta=[s.light,s.place,s.main,s.sub].filter(Boolean).map(esc).join(' · '),cast=chipsOf(s);
     return`<div class="sc-card" data-id="${s.id}"><div class="h">${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}<b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${s.photo?`<img class="sc-photo" src="${phSrc(s.photo)}" alt="现场照片" loading="lazy">`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
   $('#vScenes').innerHTML=`<div class="mcards">${cards}<div class="tot">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div><div class="mtable"><table><thead><tr>${sortHead()}</tr></thead><tbody>`+
-  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}${esc(s.date).replace('/','/<br>')}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
+  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}${esc(s.date).replace('/','/<br>')}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rolelink ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}" data-role="${esc(r)}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
   `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table></div><p class="hint hintTable">点任一场可查看完整资讯${ADMIN?',并可在窗口里编辑':''}。</p>${ADMIN?'<p class="hint hintCard">点任一张卡片即可编辑。</p>':''}`;
   document.querySelectorAll('th.sortable').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;SORT=SORT.key===k?{key:k,dir:-SORT.dir}:{key:k,dir:1};render()});
@@ -1849,7 +1878,7 @@ function renderPie(rows){
       svg+=`<polyline points="${lx.toFixed(1)},${ly.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)} ${ax.toFixed(1)},${ey.toFixed(1)}" fill="none" stroke="${x.c}" stroke-width="1.5"/><text class="pl out" x="${(ax+(right?4:-4)).toFixed(1)}" y="${(ey+4).toFixed(1)}" text-anchor="${right?'start':'end'}">${esc(x.n)} ${pct}</text>`}
     a0=a1;
   });
-  const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
+  const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b ${x.n==='其他'?'':`class="rolelink" data-role="${esc(x.n)}"`}>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
   $('#vStats').innerHTML=`<div class="pie"><button class="pieback" type="button">← 返回长条图</button><h3>角色戏份占比<small>范围:${esc(scope)}</small></h3>
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色占比圆饼图">${svg}</svg>
     <ul class="plegend">${legend}</ul>
@@ -1858,6 +1887,43 @@ function renderPie(rows){
       <p>一场戏有多位角色时,每位角色都各算一次整场页数,所以这个加总(${fmt(sum)} 页)会比实际总页数(${fmt(rows.reduce((a,s)=>a+(num(s.pages)||0),0))} 页)大。</p>
       <p>因此这里的百分比和「戏份占比结算」长条图的页数占比不同:圆饼图表示「在所有角色的戏份总量里占几成」,长条图表示「占了整部戏多少篇幅」。</p>
       <p>只列前 6 位有名字的角色,其余合并为「其他」。</p></div></div>`;
+}
+/* 点角色名:列出她所有的场次 */
+function openRole(r){
+  const list=S.scenes.filter(s=>s.cast[r]===1).sort((a,b)=>a.ep-b.ep||(parseInt(a.sc)||0)-(parseInt(b.sc)||0)||String(a.sc).localeCompare(String(b.sc),'zh',{numeric:true}));
+  const pg=list.reduce((a,s)=>a+(num(s.pages)||0),0),all=S.scenes.reduce((a,s)=>a+(num(s.pages)||0),0);
+  const eps=uniq(list.map(s=>s.ep)).length;
+  $('#rdTitle').textContent=r;
+  $('#rdSum').innerHTML=`<span><b>${list.length}</b> 场</span><span><b>${fmt(pg)}</b> 页</span><span>占整部戏页数 <b>${all?(pg/all*100).toFixed(1):0}%</b></span><span>出现在 <b>${eps}</b> 集</span>`;
+  $('#rdList').innerHTML=list.length?list.map(s=>`<div class="rrow" data-id="${s.id}"><b>第${esc(s.ep)}集 ${esc(s.sc)}场</b><span>${esc(s.date)}</span><span class="pg">${num(s.pages)!==null?fmt(s.pages)+' 页':esc(s.pnote||'')}</span><span class="sm">${esc(cut(s.summary))}</span></div>`).join(''):'<div class="hint" style="padding:16px 2px">这个角色还没有场次。</div>';
+  $('#rdlg').showModal();
+}
+$('#rdClose').onclick=()=>$('#rdlg').close();
+$('#rdList').onclick=e=>{const r=e.target.closest('.rrow');if(r){$('#rdlg').close();openDetail(+r.dataset.id)}};
+document.addEventListener('click',e=>{ // 抢在表格「点整行」之前处理
+  const t=e.target.closest('[data-role]');if(!t)return;
+  e.stopPropagation();e.preventDefault();
+  if($('#ddlg').open)$('#ddlg').close();
+  openRole(t.dataset.role);
+},true);
+/* 每集戏份分布:每集一条横条,按角色页数占比分段(颜色和圆饼图一致) */
+function epChart(rows){
+  const eps=uniq(rows.map(s=>s.ep)).sort((a,b)=>a-b);
+  if(!eps.length)return'';
+  const tot={};rows.forEach(s=>S.roles.forEach(r=>{if(s.cast[r]===1)tot[r]=(tot[r]||0)+(num(s.pages)||0)}));
+  const top=Object.keys(tot).filter(r=>tot[r]>0&&!/配角/.test(r)).sort((a,b)=>tot[b]-tot[a]).slice(0,6);
+  let ci=0;const col={};top.forEach(r=>col[r]=r===PINK?'#ff4fa3':PIE_COL[ci++%PIE_COL.length]);
+  const segs=eps.map(ep=>{
+    const rs=rows.filter(s=>s.ep===ep),pages=rs.reduce((a,s)=>a+(num(s.pages)||0),0);
+    const per={};rs.forEach(s=>S.roles.forEach(r=>{if(s.cast[r]===1)per[r]=(per[r]||0)+(num(s.pages)||0)}));
+    const sum=Object.values(per).reduce((a,b)=>a+b,0);
+    const parts=top.filter(r=>per[r]>0).map(r=>({n:r,p:per[r],c:col[r]}));
+    const rest=sum-parts.reduce((a,x)=>a+x.p,0);if(rest>0.0001)parts.push({n:'其他',p:rest,c:PIE_OTHER});
+    return`<div class="eprow"><div class="eplab"><b>第${esc(ep)}集</b><small>${fmt(pages)} 页 · ${rs.length} 场</small></div><div class="epbar">${sum?parts.map(x=>{const pc=x.p/sum*100;return`<div style="flex:${x.p} 1 0;background:${x.c}" title="${esc(x.n)} ${fmt(x.p)} 页 · ${pc.toFixed(1)}%">${pc>=12?Math.round(pc)+'%':''}</div>`}).join(''):'<span style="color:#6f6c68;font-size:11px;padding:0 10px;line-height:26px">这一集还没有页数资料</span>'}</div></div>`;
+  }).join('');
+  const leg=top.map(r=>`<span><i style="background:${col[r]}"></i>${esc(r)}</span>`).join('')+`<span><i style="background:${PIE_OTHER}"></i>其他</span>`;
+  return`<div class="epc"><h3>每集戏份分布</h3><div class="epleg">${leg}</div>${segs}
+    <div class="note"><b>这张图怎么看</b><p>每一条是一集;条里各色块是各角色在这一集的页数占比(该角色页数 ÷ 这一集所有角色页数加总),颜色和圆饼图相同。</p><p>色块越宽,代表那个角色在这一集的戏越重;鼠标移上去(手机长按)可以看到页数。左边的页数和场次数是这一集的实际总量。</p></div></div>`;
 }
 document.addEventListener('click',e=>{if(e.target.closest('.pieback')){PIE=false;tab='stats';render()}});
 function renderStats(rows){
@@ -1872,14 +1938,14 @@ function renderStats(rows){
   $('#vStats').innerHTML=`<div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div title="可用上方的筛选调整统计范围"><b>${esc(scope)}</b><span>统计范围</span></div></div>
   <div class="bar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button></div>
   <div class="mcards" style="margin-top:10px">`+
-  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b>${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
+  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b class="rolelink" data-role="${esc(x.r)}">${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
   `</div>
   <div class="scroll mtable" style="margin-top:10px"><table><thead><tr><th>#</th><th>角色</th><th class="num">场次</th><th class="num">场次占比</th><th style="width:22%"></th><th class="num">页数</th><th class="num">页数占比</th><th style="width:22%"></th></tr></thead><tbody>`+
-  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+
+  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b class="rolelink" data-role="${esc(x.r)}">${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+
   `</tbody></table></div><div class="note"><b>长条图的算法</b>
     <p>场次占比 = 该角色有戏的场次数 ÷ 所选范围的总场次数(${nsc} 场)</p>
     <p>页数占比 = 该角色的页数 ÷ 所选范围的总页数(${fmt(total)} 页)</p>
-    <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>`;
+    <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>`+epChart(rows);
   document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{sortBy=b.dataset.s;render()});
 }
 
@@ -1991,7 +2057,7 @@ function openDetail(id){
   $('#ddSum').innerHTML=v(s.summary);
   const cast=S.roles.filter(r=>s.cast[r]);
   $('#ddCastLab').textContent=`有戏份的角色(${cast.length})`;
-  $('#ddCast').innerHTML=cast.length?cast.map(r=>`<span class="chip ${r===PINK?'pink':''}">${esc(r)}</span>`).join(''):'<span class="hint">没有角色戏份</span>';
+  $('#ddCast').innerHTML=cast.length?cast.map(r=>`<span class="chip rolelink ${r===PINK?'pink':''}" data-role="${esc(r)}">${esc(r)}</span>`).join(''):'<span class="hint">没有角色戏份</span>';
   $('#ddEdit').hidden=!ADMIN;
   $('#ddlg').showModal();
 }
