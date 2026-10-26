@@ -173,15 +173,16 @@
    "sc": "3ins",
    "light": "秋",
    "place": "太平县",
-   "main": "蓬莱山\n王氏墓群",
-   "sub": "王二郎墓\n【下葬",
+   "main": "蓬莱山王氏墓群",
+   "sub": "王二郎墓【下葬",
    "summary": "封主观：二郎墓方向",
    "pages": 0.05,
    "pnote": "",
    "cast": {
     "祝阮/阮卿卿": 1,
     "王夫人": 1
-   }
+   },
+   "photo": "photos/mvp3rxtslazt.jpg"
   },
   {
    "id": 10,
