@@ -295,7 +295,7 @@ tr.row,.sc-card{cursor:pointer}
   <h2 style="margin-top:0">选单/角色管理</h2>
   <p class="hint">选单选项会自动收录场次里出现过的内容;这里可以额外预设选项。删除选项不会改动既有场次。</p>
   <div id="mBody"></div>
-  <div class="foot"><button class="primary" id="mClose">完成</button></div>
+  <div class="foot"><button id="mCancel">取消</button><button class="primary" id="mClose">完成</button></div>
 </dialog>
 
 <dialog id="ldlg">
@@ -1608,19 +1608,17 @@ $('#ddlg').addEventListener('click',e=>{
 const LAB={light:'景光',place:'景别(地点)',main:'主场景',sub:'次场景'};
 function drawManage(){
   let h=`<b>角色</b><div class="opt">`+S.roles.map((r,i)=>`<span class="chip">${esc(r)}<button class="rn" data-ren="${i}" title="改名">✎</button><button data-delr="${i}" title="删除">✕</button></span>`).join('')+`</div>
-   <div class="add"><input id="newRole" placeholder="新增角色名称"><button data-addr>新增</button><button data-cancelr>取消</button></div>
+   <div class="add"><input id="newRole" placeholder="新增角色名称"><button data-addr>新增</button></div>
    <p class="hint">改名会同步更新所有场次;删除角色会一并移除该角色在各场次的纪录。</p>`;
   for(const f of ['light','place','main','sub'])
     h+=`<hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><b>${LAB[f]}选项</b><div class="opt">`+
     (S.opts[f]||[]).map((o,i)=>`<span class="chip">${esc(o)}<button data-delo="${f}|${i}">✕</button></span>`).join('')+
-    `</div><div class="add"><input data-newo="${f}" placeholder="新增${LAB[f]}选项"><button data-addo="${f}">新增</button><button data-cancelo="${f}">取消</button></div>
+    `</div><div class="add"><input data-newo="${f}" placeholder="新增${LAB[f]}选项"><button data-addo="${f}">新增</button></div>
     <div class="hint">已出现在场次中的其他值也会自动出现在选单。</div>`;
   $('#mBody').innerHTML=h;
   const B=$('#mBody');
   B.querySelector('[data-addr]').onclick=()=>{const v=$('#newRole').value.trim();if(!v)return;if(S.roles.includes(v))return alert('已有这个角色');S.roles.push(v);save();drawManage();render()};
-  const cancelRole=()=>{const i=$('#newRole');i.value='';i.blur()};
-  B.querySelector('[data-cancelr]').onclick=cancelRole;
-  $('#newRole').onkeydown=e=>{if(e.key==='Enter')B.querySelector('[data-addr]').click();else if(e.key==='Escape'&&$('#newRole').value){e.preventDefault();e.stopPropagation();cancelRole()}};
+  $('#newRole').onkeydown=e=>{if(e.key==='Enter')B.querySelector('[data-addr]').click()};
   B.querySelectorAll('[data-ren]').forEach(b=>b.onclick=()=>{
     const old=S.roles[+b.dataset.ren],n=(prompt('新名称',old)||'').trim();
     if(!n||n===old)return;if(S.roles.includes(n))return alert('已有这个角色');
@@ -1631,15 +1629,26 @@ function drawManage(){
   B.querySelectorAll('[data-addo]').forEach(b=>b.onclick=()=>{
     const f=b.dataset.addo,i=B.querySelector(`[data-newo="${f}"]`),v=i.value.trim();if(!v)return;
     if(!S.opts[f].includes(v))S.opts[f].push(v);save();drawManage();render()});
-  B.querySelectorAll('[data-newo]').forEach(i=>i.onkeydown=e=>{
-    if(e.key==='Enter')B.querySelector(`[data-addo="${i.dataset.newo}"]`).click();
-    else if(e.key==='Escape'&&i.value){e.preventDefault();e.stopPropagation();i.value='';i.blur()}});
-  B.querySelectorAll('[data-cancelo]').forEach(b=>b.onclick=()=>{
-    const i=B.querySelector(`[data-newo="${b.dataset.cancelo}"]`);i.value='';i.blur()});
+  B.querySelectorAll('[data-newo]').forEach(i=>i.onkeydown=e=>{if(e.key==='Enter')B.querySelector(`[data-addo="${i.dataset.newo}"]`).click()});
   B.querySelectorAll('[data-delo]').forEach(b=>b.onclick=()=>{const[f,i]=b.dataset.delo.split('|');S.opts[f].splice(+i,1);save();drawManage();render()});
 }
-$('#manage').onclick=()=>{drawManage();$('#mdlg').showModal()};
-$('#mClose').onclick=()=>$('#mdlg').close();
+/* 管理窗里的新增/改名/删除会立刻生效;「取消」= 放弃这次打开窗口后做的所有改动 */
+let manageSnap=null;
+$('#manage').onclick=()=>{
+  let raw=null;try{raw=localStorage.getItem(KEY)}catch(_){}
+  manageSnap={data:JSON.stringify(S),raw,saved:$('#saved').textContent};
+  drawManage();$('#mdlg').showModal();
+};
+$('#mClose').onclick=()=>{manageSnap=null;$('#mdlg').close()};
+$('#mCancel').onclick=()=>{
+  if(manageSnap){
+    S=JSON.parse(manageSnap.data);
+    try{manageSnap.raw===null?localStorage.removeItem(KEY):localStorage.setItem(KEY,manageSnap.raw)}catch(_){}
+    $('#saved').textContent=manageSnap.saved;
+    manageSnap=null;render();
+  }
+  $('#mdlg').close();
+};
 
 /* ---- tabs / filters ---- */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
