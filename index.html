@@ -73,6 +73,25 @@ tr.pinkrow td b{color:var(--pink)}
 tr.pinkrow .meter i{background:linear-gradient(90deg,#d83686,#ff7cc0)}
 .empty{color:var(--mute);padding:28px;text-align:center}
 ::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#7a7a76;border-radius:4px}
+/* --- 提亮:标题 / 选中状态 --- */
+h1{display:inline-block;font-size:34px;font-weight:700;letter-spacing:.18em;padding:10px 26px 10px 28px;color:#2a210a;
+ background:linear-gradient(135deg,#fbefc6 0%,#f0d58f 55%,#e3bf6a 100%);border-radius:8px;
+ box-shadow:0 10px 30px -8px rgba(255,226,150,.45),inset 0 1px 0 rgba(255,255,255,.7)}
+h1::after{display:none}
+h1 small{color:#6b5a2c;letter-spacing:.06em;font-weight:500}
+.tabs button.on{background:linear-gradient(180deg,#fbefc6,#ecd196);color:#2a210a;border-radius:8px 8px 0 0;border-color:#fbefc6;font-weight:700;padding:8px 18px}
+.tabs button:not(.on){padding:8px 18px}
+.tabs button:not(.on):hover{color:#fbefc6}
+select:focus,input:focus,textarea:focus{border-color:#fbefc6;box-shadow:0 0 0 3px rgba(251,239,198,.28);background:#5c5c5a}
+select:hover,input:hover,textarea:hover{border-color:#cfcfc8}
+tr.row:hover{background:rgba(251,239,198,.16);box-shadow:inset 3px 0 0 #fbefc6}
+button:hover{border-color:#fbefc6;color:#fbefc6;background:rgba(251,239,198,.08)}
+button.primary:hover{background:#fff1c8;color:#2a210a}
+.roles button.s1{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;box-shadow:0 0 12px rgba(251,239,198,.4)}
+.roles button.s2{border-color:#fbefc6;color:#fbefc6}
+.roles button:hover{border-color:#fbefc6}
+.roles button.pink.s1{background:var(--pink);border-color:#ff9ccc;color:#fff;box-shadow:0 0 12px rgba(255,79,163,.55)}
+dialog{border-color:#a9a9a3}
 @media(max-width:600px){header{padding-top:24px}h1{font-size:23px}.card{padding:14px}}
 </style>
 </head>
