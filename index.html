@@ -165,6 +165,7 @@ body.mview .tabs{gap:14px}
 .pieby{margin:6px 0 2px;align-items:center}
 .pieby button{padding:3px 12px;font-size:13px;border-radius:999px;color:var(--mute)}
 .pieby button.on{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;font-weight:600}
+.pieback{font-size:13px;padding:4px 12px;border-radius:999px;color:var(--mute);margin-top:4px}
 .pie svg{display:block;width:100%;max-width:520px;height:auto;margin:6px auto}
 .pie .pl{fill:#fff;font:700 15px sans-serif;paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:3px;stroke-linejoin:round}
 .pie .pl.p2{font-size:13px;font-weight:600}
@@ -1827,7 +1828,7 @@ function renderPie(rows){
   const per=S.roles.map(r=>({r,p:rows.reduce((a,s)=>a+(s.cast[r]===1?(byN?1:(num(s.pages)||0)):0),0)}));
   const sum=per.reduce((a,x)=>a+x.p,0);
   const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部场次';
-  if(!sum){$('#vStats').innerHTML='<div class="hint" style="padding:30px 0;text-align:center">这个范围内没有页数资料,无法画圆饼图。</div>';return}
+  if(!sum){$('#vStats').innerHTML='<div class="pie"><button class="pieback" type="button">← 返回长条图</button><div class="hint" style="padding:30px 0;text-align:center">这个范围内没有页数资料,无法画圆饼图。</div></div>';return}
   const named=per.filter(x=>x.p>0&&!/配角/.test(x.r)).sort((a,b)=>b.p-a.p);
   const top=named.slice(0,6),rest=sum-top.reduce((a,x)=>a+x.p,0);
   let ci=0;const sl=top.map(x=>({n:x.r,p:x.p,c:x.r===PINK?'#ff4fa3':PIE_COL[ci++%PIE_COL.length]}));
@@ -1844,11 +1845,12 @@ function renderPie(rows){
     a0=a1;
   });
   const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
-  $('#vStats').innerHTML=`<div class="pie"><h3>角色戏份占比<small>范围:${esc(scope)}</small></h3>
+  $('#vStats').innerHTML=`<div class="pie"><button class="pieback" type="button">← 返回长条图</button><h3>角色戏份占比<small>范围:${esc(scope)}</small></h3>
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色占比圆饼图">${svg}</svg>
     <ul class="plegend">${legend}</ul>
     <p class="hint">比例 = 该角色的${byN?'场次数':'页数'} ÷ 所有角色${byN?'场次数':'页数'}之和。同一场有多位角色时每人各算一次,所以和表格里的占比不同。只列前 6 位有名字的角色,其余合并为「其他」。</p></div>`;
 }
+document.addEventListener('click',e=>{if(e.target.closest('.pieback')){PIE=false;tab='stats';render()}});
 function renderStats(rows){
   const total=rows.reduce((a,s)=>a+(num(s.pages)||0),0),nsc=rows.length;
   const list=S.roles.map(r=>{
