@@ -201,12 +201,12 @@ tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);t
 .sc-photo{display:block;width:100%;max-height:190px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--line);cursor:zoom-in}
 .cam{position:absolute;left:0;top:12px;font-size:7px;line-height:1;opacity:.9;pointer-events:none} /* 贴在行首、不占位,不会撑大栏位 */
 /* 左右滑动时,日期/集/场 三栏固定在左边,方便对照后面的内容 */
-#vScenes .mtable thead th:nth-child(-n+3),#vScenes .mtable tbody td:nth-child(-n+3){position:sticky;background:#17171c;z-index:2}
-#vScenes .mtable thead th:nth-child(-n+3){z-index:3;background:#1b1b21}
+#vScenes .mtable thead th:nth-child(-n+2),#vScenes .mtable tbody td:nth-child(-n+2){position:sticky;background:#17171c;z-index:2}
+#vScenes .mtable thead th:nth-child(-n+2){z-index:3;background:#1b1b21}
 #vScenes .mtable thead th:nth-child(1),#vScenes .mtable tbody td:nth-child(1){left:0}
-#vScenes .mtable thead th:nth-child(2),#vScenes .mtable tbody td:nth-child(2){left:var(--l2,97px)}
-#vScenes .mtable thead th:nth-child(3),#vScenes .mtable tbody td:nth-child(3){left:var(--l3,141px);box-shadow:6px 0 8px -6px rgba(0,0,0,.7);border-right:1px solid #3a3a43}
-#vScenes .mtable tbody tr.row:hover td:nth-child(-n+3){background:#2a2923}
+#vScenes .mtable thead th:nth-child(2),#vScenes .mtable tbody td:nth-child(2){left:var(--l2,70px)}
+#vScenes .mtable thead th:nth-child(2),#vScenes .mtable tbody td:nth-child(2){box-shadow:6px 0 8px -6px rgba(0,0,0,.7);border-right:1px solid #3a3a43}
+#vScenes .mtable tbody tr.row:hover td:nth-child(-n+2){background:#2a2923}
 .sc-card .h .cam{position:static;font-size:12px;margin-right:-4px}
 /* 场次表:行与行之间的分隔线加深 */
 #vScenes tbody td{border-bottom:1px solid #5c5c68}
@@ -1783,7 +1783,7 @@ function renderScenes(rows){
     const meta=[s.light,s.place,s.main,s.sub].filter(Boolean).map(esc).join(' · '),cast=chipsOf(s);
     return`<div class="sc-card" data-id="${s.id}"><div class="h">${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}<b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${s.photo?`<img class="sc-photo" src="${phSrc(s.photo)}" alt="现场照片" loading="lazy">`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
   $('#vScenes').innerHTML=`<div class="mcards">${cards}<div class="tot">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div><div class="mtable"><table><thead><tr>${sortHead()}</tr></thead><tbody>`+
-  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
+  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}${esc(s.date).replace('/','/<br>')}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
   `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table></div><p class="hint hintTable">点任一场可查看完整资讯${ADMIN?',并可在窗口里编辑':''}。</p>${ADMIN?'<p class="hint hintCard">点任一张卡片即可编辑。</p>':''}`;
   document.querySelectorAll('th.sortable').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;SORT=SORT.key===k?{key:k,dir:-SORT.dir}:{key:k,dir:1};render()});
@@ -1795,7 +1795,7 @@ function renderScenes(rows){
 }
 
 function stickyCols(){ // 量出前两栏的实际宽度,让第 2、3 栏贴在前一栏右边
-  const th=document.querySelectorAll('#vScenes .mtable thead th');if(th.length<3)return;
+  const th=document.querySelectorAll('#vScenes .mtable thead th');if(th.length<2)return;
   const w1=th[0].getBoundingClientRect().width,w2=th[1].getBoundingClientRect().width,box=$('#vScenes');
   box.style.setProperty('--l2',w1+'px');box.style.setProperty('--l3',(w1+w2)+'px');
 }
