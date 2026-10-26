@@ -169,6 +169,7 @@ body.mview .tabs{gap:14px}
 #vStats>.note{max-width:none;margin:0 0 14px}
 .note b{display:block;color:var(--accent);margin-bottom:2px;letter-spacing:.06em}
 .note p{margin:3px 0;color:#cfcac0}
+.note .hl{color:var(--accent);font-weight:700}
 .piebtn{margin-top:16px;margin-bottom:6px;padding:3px 14px;font-size:13px;border-radius:999px;color:var(--mute)}
 .piebtn.on{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;font-weight:600}
 .epbtn{margin-left:10px;padding:6px 16px;font-size:14px;font-weight:700;border-radius:999px;border:1px solid #fbefc6;background:linear-gradient(180deg,#fbefc6,#e5bf6c);color:#2a210a;box-shadow:0 0 0 0 rgba(251,239,198,.7),0 3px 10px rgba(217,181,108,.35);animation:epglow 2.4s ease-out infinite}
@@ -2001,7 +2002,7 @@ function renderPlan(){
   const list=roles.map(r=>{let p=0,n=0;all.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,p,n}}).sort((a,b)=>planSort==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
   const bar=pc=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
   box.innerHTML=`<div class="note"><b>大计划统计的算法</b>
-    <p>把「拍摄日程表」(PDF,${PLAN.scenes.length} 场)和网站数据库里的场次(${S.scenes.length} 场)合在一起统计,同一集同一场两边都有时只算一次(已拍过的重复场次共 ${ov} 场、${fmt(ovp)} 页,已从日程表里扣除,以数据库为准),合计 <b>${nsc}</b> 场、<b>${fmt(total)}</b> 页。</p>
+    <p>把「拍摄日程表」(PDF,${PLAN.scenes.length} 场)和网站数据库里的场次(${S.scenes.length} 场)合在一起统计,同一集同一场两边都有时只算一次(已拍过的重复场次共 ${ov} 场、${fmt(ovp)} 页,已从日程表里扣除,以数据库为准),合计 <span class="hl">${nsc}</span> 场、<span class="hl">${fmt(total)}</span> 页。</p>
     <p>场次占比 = 该角色有戏的场次数 ÷ 总场次数;页数占比 = 该角色所在场次的页数 ÷ 总页数。一场戏有多位角色时每人各算一次,所以占比加起来会超过 100%。</p>
     <p>⚠ 拍摄日程表只标出 5 位主要角色(祝阮/阮卿卿、陆封、夏玉尔、沈心阳、芈大丽),其他角色的数字只来自数据库,会偏低。</p>
     <p>这一页是独立统计,不影响「戏份占比结算」和其他页面。</p></div>
