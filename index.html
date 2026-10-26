@@ -177,7 +177,6 @@ body.mview .card > .bar label.full{grid-column:1/-1}
 .roles button.pink.s1{background:var(--pink);border-color:#ff9ccc;text-shadow:var(--goldshadow)}
 tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);text-shadow:var(--goldshadow)}
 /* 现场照片 */
-body.gh #photoBox{display:none}
 .pbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
 #pPrev{display:block;margin-top:8px;max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--line);object-fit:contain;background:#0b0b0e}
 #ddPhoto{margin:0 0 8px}
@@ -1505,6 +1504,15 @@ async function secOpen(blob,pw){
     return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},await secKey(pw,salt),ct));
   }catch(e){return null}
 }
+const PHCACHE={}; // 刚上传的照片:部署完成前先用本机的图显示
+const phSrc=p=>PHCACHE[p]||p;
+async function uploadPhotoGH(dataUrl){ // 照片存进仓库 photos/ 资料夹,data.json 里只记路径
+  const path='photos/'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'.jpg';
+  const r=await fetch('https://api.github.com/repos/'+GH_REPO+'/contents/'+path,{method:'PUT',headers:{accept:'application/vnd.github+json',authorization:'Bearer '+GHTOK,'content-type':'application/json'},
+    body:JSON.stringify({message:'网站上传照片',content:dataUrl.split(',')[1],branch:'main'})});
+  if(!r.ok)throw new Error('photo '+r.status);
+  PHCACHE[path]=dataUrl;return path;
+}
 async function fetchGH(auth){
   try{
     const h={accept:'application/vnd.github+json'};
@@ -1605,8 +1613,8 @@ function pushGH(){
         alert('别的管理员刚刚更新过数据,你这次的修改没有保存。\n页面会重新载入最新内容,请再改一次。');
         await load();return;
       }
+      for(const x of S.scenes)if(x.photo&&String(x.photo).startsWith('data:'))x.photo=await uploadPhotoGH(x.photo);
       const out=JSON.parse(JSON.stringify(S));
-      out.scenes.forEach(x=>{if(x.photo&&String(x.photo).startsWith('data:'))delete x.photo});
       const r=await fetch(GH_API,{method:'PUT',headers:{accept:'application/vnd.github+json',authorization:'Bearer '+GHTOK,'content-type':'application/json'},
         body:JSON.stringify({message:'网站更新数据 '+new Date().toISOString().slice(0,16).replace('T',' '),content:b64e(JSON.stringify(out,null,1)+'\n'),sha:GHSHA,branch:'main'})});
       if(r.ok){GHSHA=(await r.json()).content.sha;$('#saved').textContent='已同步到 GitHub,所有人打开都是最新的'}
@@ -1705,7 +1713,7 @@ function renderScenes(rows){
   const chipsOf=s=>S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('');
   const cards=rows.map(s=>{
     const meta=[s.light,s.place,s.main,s.sub].filter(Boolean).map(esc).join(' · '),cast=chipsOf(s);
-    return`<div class="sc-card" data-id="${s.id}"><div class="h"><b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${s.photo?`<img class="sc-photo" src="${s.photo}" alt="现场照片" loading="lazy">`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
+    return`<div class="sc-card" data-id="${s.id}"><div class="h"><b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${s.photo?`<img class="sc-photo" src="${phSrc(s.photo)}" alt="现场照片" loading="lazy">`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
   $('#vScenes').innerHTML=`<div class="mcards">${cards}<div class="tot">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div><div class="mtable"><table><thead><tr>${sortHead()}</tr></thead><tbody>`+
   rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}${s.photo?' <span class="cam" title="有现场照片">📷</span>':''}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
   `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table></div><p class="hint hintTable">点任一场可查看完整资讯${ADMIN?',并可在窗口里编辑':''}。</p>${ADMIN?'<p class="hint hintCard">点任一张卡片即可编辑。</p>':''}`;
@@ -1788,7 +1796,7 @@ $('#dCancel').onclick=()=>$('#dlg').close();
 let draftPhoto='';
 function drawPhoto(){
   const has=!!draftPhoto;
-  $('#pPrev').hidden=!has;if(has)$('#pPrev').src=draftPhoto;else $('#pPrev').removeAttribute('src');
+  $('#pPrev').hidden=!has;if(has)$('#pPrev').src=phSrc(draftPhoto);else $('#pPrev').removeAttribute('src');
   $('#pClear').hidden=!has;$('#pPick').textContent=has?'更换图片':'上传图片';
   $('#pHint').textContent=has?(draftPhoto.startsWith('data:')?`已压缩,约 ${Math.round(draftPhoto.length*0.75/1024)} KB`:'已上传'):'上传后会自动压缩,不会占太多空间。';
 }
@@ -1839,7 +1847,7 @@ function openDetail(id){
   $('#ddTitle').textContent=`第${s.ep}集 · ${s.sc}场`;
   const ph=$('#ddPhoto').firstElementChild;
   $('#ddPhoto').hidden=!s.photo;$('#ddlg').classList.toggle('hasPhoto',!!s.photo);
-  if(s.photo)ph.src=s.photo;else ph.removeAttribute('src');
+  if(s.photo)ph.src=phSrc(s.photo);else ph.removeAttribute('src');
   $('#ddGrid').innerHTML=[['拍摄日期',v(s.date)],['集数',s.ep?`第${s.ep}集`:v('')],['场号',v(s.sc)],['页数',pg||'<i class="nv">—</i>'],['景光',v(s.light)],['景别(地点)',v(s.place),1],['主场景',v(s.main),1],['次场景',v(s.sub),1]]
     .map(([k,h,w])=>`<div class="${w?'wide':''}"><span>${k}</span><b>${h}</b></div>`).join('');
   $('#ddSum').innerHTML=v(s.summary);
