@@ -1882,7 +1882,7 @@ function renderPie(rows){
     a0=a1;
   });
   const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b ${x.n==='其他'?'':`class="rolelink" data-role="${esc(x.n)}"`}>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
-  $('#vStats').innerHTML=`<div class="pie"><button class="pieback" type="button">← 返回长条图</button><h3>角色戏份占比<small>范围:${esc(scope)}</small></h3>
+  $('#vStats').innerHTML=`<div class="pie"><button class="pieback" type="button">← 返回长条图</button><h3>角色戏份占比(按页数)<small>统计范围:${esc(scope==='全部场次'?'不筛选(包含所有场次)':scope)}</small></h3>
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色占比圆饼图">${svg}</svg>
     <ul class="plegend">${legend}</ul>
 <div class="note"><b>圆饼图的算法</b>
