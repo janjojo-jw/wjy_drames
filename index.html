@@ -172,6 +172,11 @@ body.mview .tabs{gap:14px}
 .piebtn{margin-top:16px;margin-bottom:6px;padding:3px 14px;font-size:13px;border-radius:999px;color:var(--mute)}
 .piebtn.on{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;font-weight:600}
 .rolelink{cursor:pointer}
+b.rolelink{border-bottom:1px dotted var(--accent);padding-bottom:1px}
+b.rolelink::after{content:" ›";color:var(--accent);font-weight:400}
+.chip.rolelink:hover{border-color:var(--accent);color:#fff3d1}
+.rolehint{margin:0 0 8px;font-size:12.5px;color:#cbbf9e}
+.rolehint b{color:var(--accent)}
 .rolelink:hover{text-decoration:underline;text-underline-offset:3px}
 #rdlg{width:min(560px,94vw);max-height:86vh;padding:14px 16px;border-radius:12px;border:1px solid #6d6880;background:linear-gradient(160deg,#3d394b,#2d2b38);color:#f2eefb;box-shadow:0 24px 60px -16px #000}
 #rdlg::backdrop{background:rgba(0,0,0,.55)}
@@ -340,6 +345,7 @@ body.mview .hintCard{display:block}
       <label>角色<select id="fRole"></select></label>
       <div class="full srow"><label>搜寻<input id="fQ" placeholder="场景、内容…"></label><label class="pchk"><input type="checkbox" id="fPhoto">📷 只看有照片</label></div>
     </div>
+    <p class="hint rolehint" id="roleHint">💡 点一行看这场的详情;<b>点角色标签</b>可以看她所有的场次</p>
     <div id="vScenes" class="scroll"></div>
     <div id="vStats" hidden></div>
   </div>
@@ -1823,7 +1829,7 @@ function render(){
   $('#title').firstChild.textContent=S.title||'戏份盘点';
   fillFilters();
   const rows=tab==='stats'?[...S.scenes]:filtered(); // 统计页不使用筛选,永远统计全部场次
-  $('#filterBar').hidden=tab==='stats';
+  $('#filterBar').hidden=tab==='stats';$('#roleHint').hidden=tab!=='scenes';$('#roleHint').innerHTML=VIEW==='card'?'💡 <b>点角色标签</b>可以看她所有的场次':'💡 点一行看这场的详情;<b>点角色标签</b>可以看她所有的场次';
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else if(PIE)renderPie(rows);else renderStats(rows);
@@ -1835,12 +1841,12 @@ function renderScenes(rows){
   if(!rows.length){$('#vScenes').innerHTML='<div class="empty">没有符合的场次</div>';return}
   const tp=rows.reduce((a,s)=>a+(num(s.pages)||0),0);
   const pgOf=s=>num(s.pages)!==null?`${fmt(s.pages)}<small>页</small>`:esc(s.pnote||'');
-  const chipsOf=s=>S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rolelink ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}" data-role="${esc(r)}">${esc(r)}</span>`).join('');
+  const chipsOf=s=>S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rolelink ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}" data-role="${esc(r)}" title="点一下,看她所有的场次">${esc(r)}</span>`).join('');
   const cards=rows.map(s=>{
     const meta=[s.light,s.place,s.main,s.sub].filter(Boolean).map(esc).join(' · '),cast=chipsOf(s);
     return`<div class="sc-card" data-id="${s.id}"><div class="h">${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}<b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${s.photo?`<img class="sc-photo" src="${phSrc(s.photo)}" alt="现场照片" loading="lazy">`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
   $('#vScenes').innerHTML=`<div class="mcards">${cards}<div class="tot">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div><div class="mtable"><table><thead><tr>${sortHead()}</tr></thead><tbody>`+
-  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}${esc(s.date).replace('/','/<br>')}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rolelink ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}" data-role="${esc(r)}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
+  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}${esc(s.date).replace('/','/<br>')}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rolelink ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}" data-role="${esc(r)}" title="点一下,看她所有的场次">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
   `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table></div><p class="hint hintTable">点任一场可查看完整资讯${ADMIN?',并可在窗口里编辑':''}。</p>${ADMIN?'<p class="hint hintCard">点任一张卡片即可编辑。</p>':''}`;
   document.querySelectorAll('th.sortable').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;SORT=SORT.key===k?{key:k,dir:-SORT.dir}:{key:k,dir:1};render()});
@@ -1882,7 +1888,7 @@ function renderPie(rows){
       svg+=`<polyline points="${lx.toFixed(1)},${ly.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)} ${ax.toFixed(1)},${ey.toFixed(1)}" fill="none" stroke="${x.c}" stroke-width="1.5"/><text class="pl out" x="${(ax+(right?4:-4)).toFixed(1)}" y="${(ey+4).toFixed(1)}" text-anchor="${right?'start':'end'}">${esc(x.n)} ${pct}</text>`}
     a0=a1;
   });
-  const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b ${x.n==='其他'?'':`class="rolelink" data-role="${esc(x.n)}"`}>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
+  const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b ${x.n==='其他'?'':`class="rolelink" data-role="${esc(x.n)}" title="点一下,看她所有的场次"`}>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
   $('#vStats').innerHTML=`<div class="pie"><button class="pieback" type="button">← 返回长条图</button><h3>角色戏份占比(按页数)<small>统计范围:包含所有场次</small></h3>
     <div class="note"><b>圆饼图的算法</b>
       <p>每一块 = 该角色的页数 ÷ 所有角色页数的加总(${fmt(sum)} 页),各块加起来刚好 100%。</p>
@@ -1890,6 +1896,7 @@ function renderPie(rows){
       <p>因此这里的百分比和「戏份占比结算」长条图的页数占比不同:圆饼图表示「在所有角色的戏份总量里占几成」,长条图表示「占了整部戏多少篇幅」。</p>
       <p>只列前 6 位有名字的角色,其余合并为「其他」。</p></div>
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色占比圆饼图">${svg}</svg>
+    <p class="rolehint" style="margin:10px auto 0;max-width:520px">💡 <b>点角色名</b>可以看她所有的场次</p>
     <ul class="plegend">${legend}</ul>
 </div>`;
 }
@@ -1947,11 +1954,12 @@ function renderStats(rows){
     <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>
   <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围</span></div></div>
   <div class="bar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button></div>
+  <p class="rolehint" style="margin:8px 0 0">💡 <b>点角色名</b>可以看她所有的场次</p>
   <div class="mcards" style="margin-top:10px">`+
-  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b class="rolelink" data-role="${esc(x.r)}">${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
+  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b class="rolelink" data-role="${esc(x.r)}" title="点一下,看她所有的场次">${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
   `</div>
   <div class="scroll mtable" style="margin-top:10px"><table><thead><tr><th>#</th><th>角色</th><th class="num">场次</th><th class="num">场次占比</th><th style="width:22%"></th><th class="num">页数</th><th class="num">页数占比</th><th style="width:22%"></th></tr></thead><tbody>`+
-  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b class="rolelink" data-role="${esc(x.r)}">${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+
+  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b class="rolelink" data-role="${esc(x.r)}" title="点一下,看她所有的场次">${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+
   `</tbody></table></div>`+epChart(rows);
   document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{sortBy=b.dataset.s;render()});
 }
@@ -2064,7 +2072,7 @@ function openDetail(id){
   $('#ddSum').innerHTML=v(s.summary);
   const cast=S.roles.filter(r=>s.cast[r]);
   $('#ddCastLab').textContent=`有戏份的角色(${cast.length})`;
-  $('#ddCast').innerHTML=cast.length?cast.map(r=>`<span class="chip rolelink ${r===PINK?'pink':''}" data-role="${esc(r)}">${esc(r)}</span>`).join(''):'<span class="hint">没有角色戏份</span>';
+  $('#ddCast').innerHTML=cast.length?cast.map(r=>`<span class="chip rolelink ${r===PINK?'pink':''}" data-role="${esc(r)}" title="点一下,看她所有的场次">${esc(r)}</span>`).join(''):'<span class="hint">没有角色戏份</span>';
   $('#ddEdit').hidden=!ADMIN;
   $('#ddlg').showModal();
 }
