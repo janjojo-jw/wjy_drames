@@ -216,8 +216,8 @@ b.rolelink::after{content:" ›";color:var(--accent);font-weight:400}
 .eplab{font-size:13px;line-height:1.3}.eplab small{display:block;color:var(--mute);font-size:11px}
 .epbar{display:flex;height:26px;border-radius:5px;overflow:hidden;background:#101014}
 .epbar div{display:flex;align-items:center;justify-content:center;font:600 11px sans-serif;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);overflow:hidden;white-space:nowrap;border-right:1px solid #17171c;min-width:0}
-.pieback{font-size:14px;font-weight:600;padding:6px 16px;border-radius:999px;color:var(--accent);border:1px solid var(--accent);background:rgba(217,181,108,.12);margin-top:4px}
-.pieback:hover{background:rgba(217,181,108,.24);color:#fbefc6;border-color:#fbefc6}
+.pieback,.coback{font-size:14px;font-weight:600;padding:6px 16px;border-radius:999px;color:var(--accent);border:1px solid var(--accent);background:rgba(217,181,108,.12);margin-top:4px}
+.pieback:hover,.coback:hover{background:rgba(217,181,108,.24);color:#fbefc6;border-color:#fbefc6}
 .pie svg{display:block;width:100%;max-width:520px;height:auto;margin:6px auto}
 .pie .pl{fill:#fff;font:700 15px sans-serif;paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:3px;stroke-linejoin:round}
 .pie .pl.p2{font-size:13px;font-weight:600}
@@ -363,6 +363,7 @@ body.mview .hintCard{display:block}
     <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比结算</button><button data-t="plan">大计划</button></div>
     <div class="vsw" role="group" aria-label="排版"><span class="hint">排版</span><button data-v="table" class="on">电脑版</button><button data-v="card">手机版</button></div>
     <button type="button" class="piebtn" id="pieBtn" hidden>圆饼图</button>
+    <button type="button" class="piebtn" id="coBtn" hidden>对戏占比</button>
   </div>
 
   <div class="card" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
@@ -1861,7 +1862,7 @@ function render(){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else if(tab==='plan')renderPlan();else if(PIE)renderPie(rows);else if(EPV)$('#vStats').innerHTML=epChart(rows);else renderStats(rows);
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
-  $('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「戏份占比结算」页出现
+  $('#coBtn').hidden=tab!=='plan';$('#coBtn').classList.toggle('on',COV);$('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「戏份占比结算」页出现
 }
 
 function renderScenes(rows){
@@ -1966,6 +1967,8 @@ function epChart(rows){
   return`<div class="epc"><button class="pieback" type="button">← 返回长条图</button><h3>每集戏份分布(按页数)</h3><div class="note"><b>这张图怎么看</b><p>每一条是一集;条里各色块是各角色在这一集的页数占比(该角色页数 ÷ 这一集所有角色页数加总),颜色和圆饼图相同。</p><p>色块越宽,代表那个角色在这一集的戏越重;鼠标移上去(手机长按)可以看到页数。左边的页数和场次数是这一集的实际总量。</p></div>
     <div class="epleg">${leg}</div>${segs}</div>`;
 }
+$('#coBtn').onclick=()=>{COV=!COV;render()}; // 对戏占比自成一页
+document.addEventListener('click',e=>{if(e.target.closest('.coback')){COV=false;render()}});
 $('#pieBtn').onclick=()=>{PIE=!PIE;EPV=false;render()}; // 圆饼图自成一页,跟排版无关
 document.addEventListener('click',e=>{if(e.target.closest('.pieback')){PIE=false;EPV=false;tab='stats';render()}});
 function renderStats(rows){
@@ -1996,7 +1999,7 @@ function renderStats(rows){
 
 
 /* ---- 大计划:拍摄日程表(PDF) + 数据库场次 合并统计(独立页面,不影响其他统计) ---- */
-let PLAN=null,PLANERR=false,planSort='p',planLead='祝阮/阮卿卿';
+let PLAN=null,PLANERR=false,planSort='p',planLead='祝阮/阮卿卿',COV=false;
 fetch('plan.json',{cache:'no-cache'}).then(r=>r.json()).then(j=>{PLAN=j;if(tab==='plan')render()}).catch(()=>{PLANERR=true;if(tab==='plan')render()});
 function renderPlan(){
   const box=$('#vStats');
@@ -2026,7 +2029,9 @@ function renderPlan(){
   const co=roles.filter(r=>r!==planLead).map(r=>{let n=0,p=0;mine.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,n,p}}).filter(x=>x.n).sort((a,b)=>b.p-a.p||b.n-a.n);
   const solo=mine.filter(x=>x.cast.size===1),sn=solo.length,sp=solo.reduce((a,x)=>a+(x.p||0),0);
   const row=(label,n,p)=>{const ps=mn?n/mn*100:0,pp=mp?p/mp*100:0;return`<div class="st-card"><div class="h"><b>${esc(label)}</b></div><div class="r"><span>场次</span><strong>${n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`};
-  box.insertAdjacentHTML('beforeend',`<h3 style="margin:26px 0 6px;font-size:16px">对戏占比<small style="margin-left:8px;color:var(--mute);font-weight:400">谁跟谁一起出场</small></h3>
+  if(COV)box.innerHTML='<button class="coback" type="button">← 返回大计划统计</button>';
+  else{document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{planSort=b.dataset.s;render()});return}
+  box.insertAdjacentHTML('beforeend',`<h3 style="margin:14px 0 6px;font-size:16px">对戏占比<small style="margin-left:8px;color:var(--mute);font-weight:400">谁跟谁一起出场</small></h3>
   <div class="note" style="margin:0 0 10px"><p>看「<select id="planLead" style="font:inherit;background:#121217;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 6px">${roles.map(r=>`<option ${r===planLead?'selected':''}>${esc(r)}</option>`).join('')}</select>」的戏,有多少和别的角色同场。</p>
   <p>该角色共有 <span class="hl">${mn}</span> 场、<span class="hl">${fmt(mp)}</span> 页。占比 = 和某角色同场的场次(页数)÷ 她自己的总场次(页数)。一场里有好几个人时,每个人各算一次,所以占比加起来会超过 100%。</p></div>
   <div class="mcards">${row('只有 TA 一人(没有其他角色)',sn,sp)}${co.map(x=>row('和 '+x.r+' 同场',x.n,x.p)).join('')}</div>`);
@@ -2219,7 +2224,7 @@ $('#mCancel').onclick=()=>{
 };
 
 /* ---- tabs / filters ---- */
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;PIE=false;EPV=false;render()});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;PIE=false;EPV=false;COV=false;render()});
 
 /* ---- 排版切换:电脑版(表格)/ 手机版(卡片),默认电脑版,记住选择 ---- */
 let VIEW='table';
