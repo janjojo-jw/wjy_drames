@@ -1795,6 +1795,7 @@ function render(){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else if(PIE)renderPie(rows);else renderStats(rows);
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',PIE?b.dataset.v==='pie':b.dataset.v===VIEW));
+  $('.vsw button[data-v=pie]').hidden=tab!=='stats'; // 圆饼图按钮只在「戏份占比结算」页出现
 }
 
 function renderScenes(rows){
