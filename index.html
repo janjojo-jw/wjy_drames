@@ -106,9 +106,29 @@ dialog{border-color:#3a3a43}
 header{padding-top:calc(34px + env(safe-area-inset-top));padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
 main{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));padding-bottom:calc(70px + env(safe-area-inset-bottom))}
 @media(max-width:600px){header{padding-top:calc(24px + env(safe-area-inset-top))}}
+/* --- 顶部横幅 --- */
+.banner{position:relative;display:flex;align-items:flex-end;min-height:clamp(250px,32vw,400px);
+ background:#0e0e11 url(banner.jpg) 50% 58%/cover no-repeat}
+.banner::before{content:"";position:absolute;inset:0;pointer-events:none;
+ background:linear-gradient(90deg,rgba(14,14,17,.9) 0,rgba(14,14,17,.6) 36%,rgba(14,14,17,0) 66%),
+  linear-gradient(180deg,rgba(14,14,17,0) 66%,var(--bg) 100%)}
+.banner header{position:relative;width:100%;flex-direction:column;align-items:flex-start;justify-content:flex-end;
+ gap:16px;padding:calc(env(safe-area-inset-top) + 28px) 20px 20px}
+.banner h1{padding:0;background:none;box-shadow:none;border-radius:0;font-size:clamp(28px,4.4vw,46px);letter-spacing:.2em;
+ color:#fbefc6;text-shadow:0 2px 14px rgba(0,0,0,.65)}
+.banner h1 small{color:#cdbf94;font-size:12px;letter-spacing:.08em;text-shadow:none}
+.banner h1 small:empty{display:none}
+.banner .bar button:not(.primary){background:rgba(14,14,17,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+@media(max-width:600px){
+ .banner{min-height:370px;background-size:100% auto;background-position:50% -56px}
+ .banner::before{background:linear-gradient(180deg,rgba(14,14,17,.05) 0,rgba(14,14,17,0) 45%,rgba(14,14,17,.6) 72%,var(--bg) 100%)}
+ .banner header{padding-top:calc(env(safe-area-inset-top) + 24px)}
+ .banner h1{font-size:25px;letter-spacing:.14em}
+}
 </style>
 </head>
 <body>
+<div class="banner">
 <header>
   <h1 id="title">戏份盘点<small id="saved"></small></h1>
   <div class="bar">
@@ -123,6 +143,7 @@ main{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env
     <input type="file" id="file" accept=".json" hidden>
   </div>
 </header>
+</div>
 <main>
   <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比结算</button></div>
 
