@@ -1996,7 +1996,7 @@ function renderStats(rows){
 
 
 /* ---- 大计划:拍摄日程表(PDF) + 数据库场次 合并统计(独立页面,不影响其他统计) ---- */
-let PLAN=null,PLANERR=false,planSort='p';
+let PLAN=null,PLANERR=false,planSort='p',planLead='祝阮/阮卿卿';
 fetch('plan.json',{cache:'no-cache'}).then(r=>r.json()).then(j=>{PLAN=j;if(tab==='plan')render()}).catch(()=>{PLANERR=true;if(tab==='plan')render()});
 function renderPlan(){
   const box=$('#vStats');
@@ -2021,6 +2021,16 @@ function renderPlan(){
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b>${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
   `</div><div class="scroll mtable" style="margin-top:10px"><table><thead><tr><th>#</th><th>角色</th><th class="num">场次</th><th class="num">场次占比</th><th style="width:22%"></th><th class="num">页数</th><th class="num">页数占比</th><th style="width:22%"></th></tr></thead><tbody>`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+`</tbody></table></div>`;
+  if(!roles.includes(planLead))planLead=PINK;
+  const mine=all.filter(x=>x.cast.has(planLead)),mn=mine.length,mp=mine.reduce((a,x)=>a+(x.p||0),0);
+  const co=roles.filter(r=>r!==planLead).map(r=>{let n=0,p=0;mine.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,n,p}}).filter(x=>x.n).sort((a,b)=>b.p-a.p||b.n-a.n);
+  const solo=mine.filter(x=>x.cast.size===1),sn=solo.length,sp=solo.reduce((a,x)=>a+(x.p||0),0);
+  const row=(label,n,p)=>{const ps=mn?n/mn*100:0,pp=mp?p/mp*100:0;return`<div class="st-card"><div class="h"><b>${esc(label)}</b></div><div class="r"><span>场次</span><strong>${n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`};
+  box.insertAdjacentHTML('beforeend',`<h3 style="margin:26px 0 6px;font-size:16px">对戏占比<small style="margin-left:8px;color:var(--mute);font-weight:400">谁跟谁一起出场</small></h3>
+  <div class="note" style="margin:0 0 10px"><p>看「<select id="planLead" style="font:inherit;background:#121217;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 6px">${roles.map(r=>`<option ${r===planLead?'selected':''}>${esc(r)}</option>`).join('')}</select>」的戏,有多少和别的角色同场。</p>
+  <p>该角色共有 <span class="hl">${mn}</span> 场、<span class="hl">${fmt(mp)}</span> 页。占比 = 和某角色同场的场次(页数)÷ 她自己的总场次(页数)。一场里有好几个人时,每个人各算一次,所以占比加起来会超过 100%。</p></div>
+  <div class="mcards">${row('只有 TA 一人(没有其他角色)',sn,sp)}${co.map(x=>row('和 '+x.r+' 同场',x.n,x.p)).join('')}</div>`);
+  $('#planLead').onchange=e=>{planLead=e.target.value;render()};
   document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{planSort=b.dataset.s;render()});
 }
 
