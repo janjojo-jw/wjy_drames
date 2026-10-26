@@ -1,0 +1,1542 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>戲份盤點</title>
+<style>
+:root{--bg:#f6f3ee;--card:#fff;--ink:#231f1b;--mute:#7b7168;--line:#e4ddd3;--accent:#9b3d2e;--accent2:#2f5d62;--chip:#efe9df;--bar:#c9694f}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1917;--card:#252220;--ink:#efe9e1;--mute:#a39a8f;--line:#38332f;--accent:#e0836b;--accent2:#7fb3b8;--chip:#332e2a;--bar:#d9765c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"PingFang TC","Microsoft JhengHei","Microsoft YaHei",sans-serif}
+header{padding:20px 16px 8px;max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+h1{font-size:22px;margin:0;letter-spacing:.04em}
+h1 small{font-size:13px;color:var(--mute);font-weight:400;margin-left:8px}
+main{max-width:1280px;margin:0 auto;padding:0 16px 60px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--line);background:var(--card);padding:6px 12px;border-radius:8px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.danger{color:var(--accent)}
+select,input,textarea{border:1px solid var(--line);background:var(--card);padding:6px 8px;border-radius:8px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
+.card h2{font-size:16px;margin:0 0 12px}
+.tabs{display:flex;gap:4px;margin:10px 0 0;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 14px}
+.tabs button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+td.wrap{white-space:normal;min-width:150px}
+th{font-weight:600;color:var(--mute);font-size:12px}
+tr.row:hover{background:var(--chip)}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 9px;margin:1px 2px 1px 0;font-size:12.5px}
+.chip.z{opacity:.6;border:1px dashed var(--mute);background:none}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.meter{height:10px;background:var(--chip);border-radius:5px;min-width:120px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--bar)}
+.sum{display:flex;gap:12px;flex-wrap:wrap}
+.sum div{background:var(--chip);border-radius:10px;padding:8px 14px}
+.sum b{display:block;font-size:20px}
+.sum span{font-size:12px;color:var(--mute)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:18px;width:min(720px,94vw);max-height:92vh}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mute)}
+label input,label select,label textarea{display:block;width:100%;margin-top:3px;font-size:15px;color:var(--ink)}
+.roles{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.roles button{padding:3px 11px;border-radius:999px;font-size:13px}
+.roles button.s1{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.roles button.s2{border-style:dashed;border-color:var(--accent2);color:var(--accent2)}
+.hint{font-size:12px;color:var(--mute)}
+.opt{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+.opt .chip button{border:0;background:none;padding:0 0 0 6px;color:var(--mute)}
+.opt .chip button.rn{padding:0 2px 0 6px}
+.add{display:flex;gap:6px;margin-top:6px}
+.add input{flex:1}
+.foot{margin-top:16px;display:flex;justify-content:flex-end;gap:8px}
+.empty{color:var(--mute);padding:24px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">戲份盤點<small id="saved"></small></h1>
+  <div class="bar">
+    <button class="primary" id="addScene">＋ 新增場次</button>
+    <button id="manage">選單／角色管理</button>
+    <button id="exp">匯出 JSON</button>
+    <button id="csv">匯出 CSV</button>
+    <button id="imp">匯入 JSON</button>
+    <button id="reset" class="danger">還原網站資料</button>
+    <input type="file" id="file" accept=".json" hidden>
+  </div>
+</header>
+<main>
+  <div class="tabs"><button data-t="scenes" class="on">場次表</button><button data-t="stats">戲份占比結算</button></div>
+
+  <div class="card" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
+    <div class="bar" style="margin-bottom:12px">
+      <label>集數<select id="fEp"></select></label>
+      <label>拍攝日期<select id="fDate"></select></label>
+      <label>角色<select id="fRole"></select></label>
+      <label>搜尋<input id="fQ" placeholder="場景、內容…"></label>
+    </div>
+    <div id="vScenes" class="scroll"></div>
+    <div id="vStats" hidden></div>
+  </div>
+</main>
+
+<dialog id="dlg">
+  <form method="dialog" id="form">
+    <h2 id="dTitle" style="margin-top:0">場次</h2>
+    <div class="grid">
+      <label>拍攝日期<input name="date" list="l-date" placeholder="10.21 或 10.21-10.22"></label>
+      <label>集數<input name="ep" type="number" min="1" required></label>
+      <label>場號<input name="sc" required placeholder="如 4C、26A"></label>
+      <label>景光<input name="light" list="l-light"></label>
+      <label>景別（地點）<input name="place" list="l-place"></label>
+      <label>主場景<input name="main" list="l-main"></label>
+      <label>次場景<input name="sub" list="l-sub"></label>
+      <label>頁數<input name="pages" placeholder="0.5；閃回填 /"></label>
+    </div>
+    <label style="margin-top:10px">內容概要<textarea name="summary" rows="2"></textarea></label>
+    <div style="margin-top:12px">
+      <label>出場角色（點一下切換）</label>
+      <div class="hint">空白＝不在場　<b style="color:var(--accent2)">實心</b>＝在場並計入頁數　虛線＝在場但不計頁（如閃回、背景）</div>
+      <div class="roles" id="dRoles"></div>
+    </div>
+    <div class="foot">
+      <button type="button" class="danger" id="dDel">刪除此場</button>
+      <span style="flex:1"></span>
+      <button type="button" id="dCancel">取消</button>
+      <button class="primary" id="dSave">儲存</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="mdlg">
+  <h2 style="margin-top:0">選單／角色管理</h2>
+  <p class="hint">選單選項會自動收錄場次裡出現過的內容；這裡可以額外預設選項。刪除選項不會改動既有場次。</p>
+  <div id="mBody"></div>
+  <div class="foot"><button class="primary" id="mClose">完成</button></div>
+</dialog>
+
+<datalist id="l-date"></datalist><datalist id="l-light"></datalist><datalist id="l-place"></datalist><datalist id="l-main"></datalist><datalist id="l-sub"></datalist>
+
+<script id="seed" type="application/json">{
+ "title": "刀笔娘子戏份盘点",
+ "roles": [
+  "祝阮/阮卿卿",
+  "陆封",
+  "沈心阳",
+  "芈大丽",
+  "单元配角",
+  "陆二",
+  "林鸢",
+  "赵丽华",
+  "沈麟趾",
+  "王夫人",
+  "许妮子",
+  "端王",
+  "上官华",
+  "沈念卿",
+  "肖三郎",
+  "陈氏",
+  "兰老夫人",
+  "兰书亦",
+  "张玉娘",
+  "高大郎",
+  "明月",
+  "金大郎"
+ ],
+ "scenes": [
+  {
+   "id": 1,
+   "date": "10.26",
+   "ep": 1,
+   "sc": "4C",
+   "light": "冬雪",
+   "place": "太平县",
+   "main": "城郊山道",
+   "sub": "",
+   "summary": "【6年前】沈家逃跑",
+   "pages": 0.05,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "沈心阳": 1,
+    "赵丽华": 1,
+    "沈麟趾": 1
+   }
+  },
+  {
+   "id": 2,
+   "date": "10.26",
+   "ep": 1,
+   "sc": "5",
+   "light": "冬雪",
+   "place": "太平县",
+   "main": "蓬莱山山道",
+   "sub": "马车内外",
+   "summary": "【6年前】逃跑途中阮难产被弃",
+   "pages": 1.3,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "沈心阳": 1,
+    "陆二": 2,
+    "赵丽华": 1,
+    "沈麟趾": 1
+   }
+  },
+  {
+   "id": 3,
+   "date": "10.25",
+   "ep": 1,
+   "sc": "11",
+   "light": "秋",
+   "place": "太平县",
+   "main": "张媒氏家",
+   "sub": "",
+   "summary": "陈怒冲张媒氏家被反制",
+   "pages": 0.45,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 2,
+    "芈大丽": 2
+   }
+  },
+  {
+   "id": 4,
+   "date": "10.22",
+   "ep": 1,
+   "sc": "35A",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山",
+   "sub": "墓群山道",
+   "summary": "出殡队伍上山下葬",
+   "pages": 0.75,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "王夫人": 1,
+    "许妮子": 2
+   }
+  },
+  {
+   "id": 5,
+   "date": "10.20",
+   "ep": 1,
+   "sc": "35B",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山",
+   "sub": "棺材内",
+   "summary": "妮子棺内挣扎",
+   "pages": 0.15,
+   "pnote": "",
+   "cast": {
+    "许妮子": 1
+   }
+  },
+  {
+   "id": 6,
+   "date": "10.22",
+   "ep": 2,
+   "sc": "1",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山",
+   "sub": "道路  (另一条)\n/马车内",
+   "summary": "卿卿赶赴墓地",
+   "pages": 0.5,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "王夫人": 2,
+    "许妮子": 2
+   }
+  },
+  {
+   "id": 7,
+   "date": "10.21-10.22",
+   "ep": 2,
+   "sc": "2",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王二郎墓\n【下葬",
+   "summary": "卿卿跃棺以簪刀相胁",
+   "pages": 1.1,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 2,
+    "陆二": 2,
+    "王夫人": 1,
+    "许妮子": 2
+   }
+  },
+  {
+   "id": 8,
+   "date": "10.18",
+   "ep": 2,
+   "sc": "3",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山王氏墓群",
+   "sub": "王大郎慕【完整",
+   "summary": "陆封挖墓听见卿喊声",
+   "pages": 0.4,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1,
+    "陆二": 1
+   }
+  },
+  {
+   "id": 9,
+   "date": "10.21",
+   "ep": 2,
+   "sc": "3ins",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王二郎墓\n【下葬",
+   "summary": "封主观：二郎墓方向",
+   "pages": 0.05,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 2,
+    "陆二": 2,
+    "王夫人": 1,
+    "许妮子": 2
+   }
+  },
+  {
+   "id": 10,
+   "date": "10.21-10.22",
+   "ep": 2,
+   "sc": "4",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王二郎墓\n【下葬",
+   "summary": "割掌逼开棺携妮子逃",
+   "pages": 2,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1,
+    "陆二": 1,
+    "王夫人": 1,
+    "许妮子": 1
+   }
+  },
+  {
+   "id": 11,
+   "date": "10.22",
+   "ep": 2,
+   "sc": "5",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山",
+   "sub": "道路",
+   "summary": "王夫人拿死契要回妮子",
+   "pages": 1.55,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "王夫人": 1,
+    "许妮子": 1
+   }
+  },
+  {
+   "id": 12,
+   "date": "10.20/10.21",
+   "ep": 2,
+   "sc": "6",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王二郎墓\n【下葬",
+   "summary": "陆封拾笺认卿字",
+   "pages": 0.2,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 1,
+    "芈大丽": 2,
+    "陆二": 1
+   }
+  },
+  {
+   "id": 13,
+   "date": "10.21",
+   "ep": 2,
+   "sc": "6ins",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王二郎墓\n【下葬",
+   "summary": "【闪回2-4】\n卿身影单薄满手鲜血",
+   "pages": null,
+   "pnote": "/",
+   "cast": {
+    "王夫人": 2,
+    "许妮子": 2
+   }
+  },
+  {
+   "id": 14,
+   "date": "10.25",
+   "ep": 2,
+   "sc": "14",
+   "light": "秋",
+   "place": "太平县",
+   "main": "孙媒氏家",
+   "sub": "",
+   "summary": "孙媒氏招认受王家指使",
+   "pages": 0.95,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 2,
+    "芈大丽": 1
+   }
+  },
+  {
+   "id": 15,
+   "date": "10.21",
+   "ep": 2,
+   "sc": "16闪3",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王二郎墓\n【下葬",
+   "summary": "【闪回2-4】\n卿威胁王夫人",
+   "pages": null,
+   "pnote": "/",
+   "cast": {
+    "王夫人": 2,
+    "许妮子": 2
+   }
+  },
+  {
+   "id": 16,
+   "date": "10.20-10.22",
+   "ep": 2,
+   "sc": "23",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王二郎菡\n【殉节",
+   "summary": "卿带人砸匾被封拦",
+   "pages": 1.3,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1,
+    "芈大丽": 1,
+    "陆二": 1,
+    "王夫人": 1,
+    "许妮子": 1
+   }
+  },
+  {
+   "id": 17,
+   "date": "10.20-10.22",
+   "ep": 2,
+   "sc": "25",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王二郎墓\n【殉节",
+   "summary": "卿劈匮救妮子",
+   "pages": 0.8,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1,
+    "芈大丽": 1,
+    "陆二": 1,
+    "王夫人": 1,
+    "许妮子": 1
+   }
+  },
+  {
+   "id": 18,
+   "date": "10.20/10.21",
+   "ep": 2,
+   "sc": "27",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王二郎墓\n【殉节",
+   "summary": "陆封决意挖坟取证",
+   "pages": 0.35,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 1,
+    "芈大丽": 2,
+    "陆二": 1
+   }
+  },
+  {
+   "id": 19,
+   "date": "10.18/10.20",
+   "ep": 3,
+   "sc": "8",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王大郎墓\n【挖中",
+   "summary": "陆封撬开王大郎棺",
+   "pages": 0.2,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 1,
+    "芈大丽": 2,
+    "陆二": 1
+   }
+  },
+  {
+   "id": 20,
+   "date": "10.18/10.20",
+   "ep": 3,
+   "sc": "10",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山王氏墓群",
+   "sub": "王大郎慕【挖开",
+   "summary": "开棺见尸骨有致命伤",
+   "pages": 0.35,
+   "pnote": "",
+   "cast": {
+    "陆封": 1
+   }
+  },
+  {
+   "id": 21,
+   "date": "10.22",
+   "ep": 3,
+   "sc": "15",
+   "light": "冬雪",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王大郎墓\n棺材内【未填平】",
+   "summary": "【闪新6年前】\n林茑开棺二人逃跑",
+   "pages": 0.25,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "林鸢": 1,
+    "王夫人": 1
+   }
+  },
+  {
+   "id": 22,
+   "date": "10.17",
+   "ep": 3,
+   "sc": "21",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "土地祠外\n【改县衙前院",
+   "summary": "卿卿掌掴拒认陆封",
+   "pages": 0.75,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1,
+    "陆二": 1
+   }
+  },
+  {
+   "id": 23,
+   "date": "10.17",
+   "ep": 3,
+   "sc": "22",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "门外街道",
+   "summary": "卿卿坦承算计世道",
+   "pages": 1.2,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1
+   }
+  },
+  {
+   "id": 24,
+   "date": "10.26",
+   "ep": 4,
+   "sc": "1",
+   "light": "冬雪",
+   "place": "太平县",
+   "main": "蓬莱山",
+   "sub": "",
+   "summary": "【闪新6年前】祝阮昏死雪地被虏",
+   "pages": 0.45,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 2,
+    "沈心阳": 2,
+    "芈大丽": 2,
+    "单元配角": 2,
+    "林鸢": 1
+   }
+  },
+  {
+   "id": 25,
+   "date": "10.22",
+   "ep": 4,
+   "sc": "2",
+   "light": "冬雪",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王大郎墓\n棺材内",
+   "summary": "【闪新6年前】\n林茑开棺背祝阮出",
+   "pages": 0.5,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 2,
+    "林鸢": 1
+   }
+  },
+  {
+   "id": 26,
+   "date": "10.18",
+   "ep": 4,
+   "sc": "3",
+   "light": "冬雪",
+   "place": "太平县",
+   "main": "蓬莱山",
+   "sub": "山道",
+   "summary": "【闪新6年前】\n林莺背祝阮夜行",
+   "pages": 0.45,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "林鸢": 1
+   }
+  },
+  {
+   "id": 27,
+   "date": "10.18",
+   "ep": 4,
+   "sc": "9",
+   "light": "冬雪",
+   "place": "太平县",
+   "main": "蓬莱山王氏墓群",
+   "sub": "附近树林",
+   "summary": "【闪新6年前】\n林鸢换喜服引追兵",
+   "pages": 0.4,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "林鸢": 1
+   }
+  },
+  {
+   "id": 28,
+   "date": "10.22",
+   "ep": 4,
+   "sc": "11",
+   "light": "冬雪",
+   "place": "太平县",
+   "main": "蓬莱山\n王氏墓群",
+   "sub": "王大郎墓\n【下葬",
+   "summary": "【闪新6年前】\n祝阮墓地看林鸢",
+   "pages": 0.7,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 2,
+    "林鸢": 1
+   }
+  },
+  {
+   "id": 29,
+   "date": "10.18",
+   "ep": 4,
+   "sc": "12",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山",
+   "sub": "林茑之墓",
+   "summary": "祭林茑与陆封对峙",
+   "pages": 0.9,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1
+   }
+  },
+  {
+   "id": 30,
+   "date": "10.23",
+   "ep": 4,
+   "sc": "26",
+   "light": "秋",
+   "place": "太平县",
+   "main": "天妃庙\n【天妃诞辰",
+   "sub": "院子",
+   "summary": "卿卿抢头香为子祈福",
+   "pages": 0.4,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "芈大丽": 2,
+    "王夫人": 2,
+    "沈念卿": 2,
+    "肖三郎": 2,
+    "陈氏": 2
+   }
+  },
+  {
+   "id": 31,
+   "date": "10.23",
+   "ep": 4,
+   "sc": "27",
+   "light": "秋",
+   "place": "太平县",
+   "main": "天妃庙\n【天妃诞辰",
+   "sub": "殿内",
+   "summary": "卿卿掷筊遇念卿心悸\n(念卿出场)",
+   "pages": 0.7,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "芈大丽": 2,
+    "王夫人": 2,
+    "沈念卿": 1,
+    "肖三郎": 2,
+    "陈氏": 2
+   }
+  },
+  {
+   "id": 32,
+   "date": "10.23",
+   "ep": 4,
+   "sc": "28A",
+   "light": "秋",
+   "place": "太平县",
+   "main": "天妃庙\n【天妃诞辰",
+   "sub": "殿外大埕",
+   "summary": "卿见沈家迁回并施粥",
+   "pages": 0.4,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "芈大丽": 2,
+    "王夫人": 2,
+    "沈念卿": 1,
+    "肖三郎": 2,
+    "陈氏": 2
+   }
+  },
+  {
+   "id": 33,
+   "date": "10.23",
+   "ep": 4,
+   "sc": "29",
+   "light": "秋",
+   "place": "太平县",
+   "main": "天妃庙\n【天妃诞辰",
+   "sub": "殿内",
+   "summary": "卿见陈氏咒姑会情郎\n(陈氏、肖三郎出场)",
+   "pages": 0.4,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "芈大丽": 2,
+    "王夫人": 2,
+    "沈念卿": 2,
+    "肖三郎": 1,
+    "陈氏": 1
+   }
+  },
+  {
+   "id": 34,
+   "date": "10.23",
+   "ep": 5,
+   "sc": "12闪1",
+   "light": "秋",
+   "place": "太平县",
+   "main": "天妃庙\n【天妃诞辰",
+   "sub": "殿内",
+   "summary": "【闪回4-29】\n卿初次遇陈氏",
+   "pages": null,
+   "pnote": "/",
+   "cast": {
+    "芈大丽": 2,
+    "王夫人": 2,
+    "沈念卿": 2,
+    "肖三郎": 2,
+    "陈氏": 2
+   }
+  },
+  {
+   "id": 35,
+   "date": "10.26",
+   "ep": 6,
+   "sc": "28闪1",
+   "light": "冬",
+   "place": "太平县",
+   "main": "蓬莱山山道",
+   "sub": "马车内外",
+   "summary": "【闪回6年前1-5】逃跑途中阮难产被弃",
+   "pages": null,
+   "pnote": "/",
+   "cast": {
+    "陆二": 2,
+    "赵丽华": 2,
+    "沈麟趾": 2
+   }
+  },
+  {
+   "id": 36,
+   "date": "10.26",
+   "ep": 7,
+   "sc": "1A",
+   "light": "冬",
+   "place": "太平县",
+   "main": "蓬莱山山道",
+   "sub": "马车内外",
+   "summary": "【梦境同1-5】雪夜弃子梦魇交织",
+   "pages": null,
+   "pnote": "/",
+   "cast": {
+    "芈大丽": 2,
+    "单元配角": 2,
+    "陆二": 2
+   }
+  },
+  {
+   "id": 37,
+   "date": "10.24",
+   "ep": 7,
+   "sc": "7",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "签押房【改案牍库",
+   "summary": "陆封疑幕后赵丽华",
+   "pages": 0.6,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 1,
+    "陆二": 1
+   }
+  },
+  {
+   "id": 38,
+   "date": "10.19",
+   "ep": 7,
+   "sc": "20",
+   "light": "秋",
+   "place": "太平县",
+   "main": "树林\n【近妒妇津",
+   "sub": "",
+   "summary": "揭玉娘女匪签和离",
+   "pages": 0.9,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 2,
+    "芈大丽": 1,
+    "张玉娘": 1,
+    "高大郎": 1
+   }
+  },
+  {
+   "id": 39,
+   "date": "10.18",
+   "ep": 8,
+   "sc": "21B",
+   "light": "秋",
+   "place": "",
+   "main": "官道",
+   "sub": "",
+   "summary": "密折快马赴京",
+   "pages": 0.05,
+   "pnote": "",
+   "cast": {}
+  },
+  {
+   "id": 40,
+   "date": "10.24",
+   "ep": 11,
+   "sc": "3",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "陆封卧室【改案牍库",
+   "summary": "师爷抓封收拾烂摊子",
+   "pages": 0.3,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 1,
+    "陆二": 2
+   }
+  },
+  {
+   "id": 41,
+   "date": "10.17",
+   "ep": 11,
+   "sc": "11",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "死牢",
+   "summary": "胡成才夺刀被卿反杀",
+   "pages": null,
+   "pnote": "补",
+   "cast": {
+    "祝阮/阮卿卿": 2
+   }
+  },
+  {
+   "id": 42,
+   "date": "10.17",
+   "ep": 11,
+   "sc": "12",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "死牢外内",
+   "summary": "陆封见胡成才气绝",
+   "pages": 0.2,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1
+   }
+  },
+  {
+   "id": 43,
+   "date": "10.17",
+   "ep": 11,
+   "sc": "14",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "死牢外狭道",
+   "summary": "陆封定案以自身作保",
+   "pages": 0.5,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1
+   }
+  },
+  {
+   "id": 44,
+   "date": "10.26",
+   "ep": 11,
+   "sc": "22",
+   "light": "冬",
+   "place": "太平县",
+   "main": "蓬莱山山道",
+   "sub": "马车内外",
+   "summary": "【闪回1-5】逃跑途中阮难产被弃",
+   "pages": null,
+   "pnote": "/",
+   "cast": {
+    "陆二": 2
+   }
+  },
+  {
+   "id": 45,
+   "date": "10.24",
+   "ep": 12,
+   "sc": "18",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "书房【改案牍库",
+   "summary": "陆封闻讯赶赴讼铺",
+   "pages": 0.15,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 1,
+    "陆二": 1
+   }
+  },
+  {
+   "id": 46,
+   "date": "10.24",
+   "ep": 12,
+   "sc": "20",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "案牍库",
+   "summary": "陆封查乐籍得密信",
+   "pages": 0.3,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 1,
+    "陆二": 1
+   }
+  },
+  {
+   "id": 47,
+   "date": "10.24",
+   "ep": 13,
+   "sc": "8",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "后院【改案牍库",
+   "summary": "卿计划从兰家查起",
+   "pages": 0.9,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1,
+    "陆二": 2
+   }
+  },
+  {
+   "id": 48,
+   "date": "10.21",
+   "ep": 14,
+   "sc": "11",
+   "light": "秋",
+   "place": "太平县",
+   "main": "乱葬岗",
+   "sub": "",
+   "summary": "乱葬岗截埋尸打手",
+   "pages": 0.55,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 1,
+    "芈大丽": 2,
+    "陆二": 1,
+    "端王": 2
+   }
+  },
+  {
+   "id": 49,
+   "date": "10.26",
+   "ep": 15,
+   "sc": "2ins",
+   "light": "冬",
+   "place": "太平县",
+   "main": "蓬莱山山道",
+   "sub": "马车内外",
+   "summary": "【闪回6年前1-5】阮斜倚在墓碑前",
+   "pages": null,
+   "pnote": "/",
+   "cast": {
+    "陆封": 2,
+    "沈心阳": 2,
+    "芈大丽": 2,
+    "单元配角": 2,
+    "陆二": 2
+   }
+  },
+  {
+   "id": 50,
+   "date": "10.25",
+   "ep": 16,
+   "sc": "20",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "大门衙鼓处",
+   "summary": "书亦击鸣冤鼓",
+   "pages": 0.15,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "沈心阳": 2,
+    "芈大丽": 2,
+    "许妮子": 2,
+    "兰书亦": 1
+   }
+  },
+  {
+   "id": 51,
+   "date": "10.25",
+   "ep": 16,
+   "sc": "22",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "大门衙鼓处",
+   "summary": "书亦击鼓",
+   "pages": 0.05,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "沈心阳": 2,
+    "芈大丽": 2,
+    "许妮子": 2,
+    "兰书亦": 1
+   }
+  },
+  {
+   "id": 52,
+   "date": "10.25",
+   "ep": 16,
+   "sc": "24",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "公堂",
+   "summary": "公堂散发示女身",
+   "pages": 0.15,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "沈心阳": 1,
+    "芈大丽": 2,
+    "陆二": 2,
+    "许妮子": 2,
+    "兰书亦": 1
+   }
+  },
+  {
+   "id": 53,
+   "date": "10.23",
+   "ep": 16,
+   "sc": "25",
+   "light": "秋",
+   "place": "太平县",
+   "main": "兰府宗祠【丧",
+   "sub": "正堂",
+   "summary": "【闪新】旁支逼宫夺产",
+   "pages": 0.2,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 2,
+    "兰老夫人": 1,
+    "兰书亦": 2
+   }
+  },
+  {
+   "id": 54,
+   "date": "10.23",
+   "ep": 16,
+   "sc": "26A",
+   "light": "秋",
+   "place": "太平县",
+   "main": "兰府宗祠",
+   "sub": "后堂",
+   "summary": "【闪新】束胸易装承家业",
+   "pages": 0.8,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 2,
+    "兰老夫人": 1,
+    "兰书亦": 1
+   }
+  },
+  {
+   "id": 55,
+   "date": "10.23",
+   "ep": 16,
+   "sc": "26B",
+   "light": "秋",
+   "place": "太平县",
+   "main": "兰府宗祠",
+   "sub": "后堂",
+   "summary": "【闪新】束胸易装承家业",
+   "pages": 0.2,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 2,
+    "兰老夫人": 1,
+    "兰书亦": 1
+   }
+  },
+  {
+   "id": 56,
+   "date": "10.25",
+   "ep": 16,
+   "sc": "27",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "公堂",
+   "summary": "【接16-24】自曝女身状告自己",
+   "pages": 0.1,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "沈心阳": 1,
+    "芈大丽": 2,
+    "陆二": 2,
+    "许妮子": 2,
+    "兰书亦": 1
+   }
+  },
+  {
+   "id": 57,
+   "date": "10.23",
+   "ep": 16,
+   "sc": "28",
+   "light": "秋",
+   "place": "太平县",
+   "main": "兰府\n【改兰府宗祠",
+   "sub": "二房花厅\n【后堂",
+   "summary": "老夫人得知书亦状告",
+   "pages": 0.25,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 2,
+    "兰老夫人": 1,
+    "兰书亦": 2
+   }
+  },
+  {
+   "id": 58,
+   "date": "10.25",
+   "ep": 16,
+   "sc": "29",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "公堂",
+   "summary": "【接16-27】判流放",
+   "pages": 1.5,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "沈心阳": 1,
+    "芈大丽": 2,
+    "许妮子": 2,
+    "兰老夫人": 1,
+    "兰书亦": 1
+   }
+  },
+  {
+   "id": 59,
+   "date": "10.18",
+   "ep": 18,
+   "sc": "23B",
+   "light": "秋",
+   "place": "太平县",
+   "main": "官道",
+   "sub": "",
+   "summary": "驿兵疯狂飞奔",
+   "pages": 0.05,
+   "pnote": "",
+   "cast": {}
+  },
+  {
+   "id": 60,
+   "date": "10.24",
+   "ep": 22,
+   "sc": "11",
+   "light": "秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "案牍库",
+   "summary": "查掠卖案疑涉海运",
+   "pages": 0.6,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1,
+    "陆二": 2,
+    "王夫人": 2
+   }
+  },
+  {
+   "id": 61,
+   "date": "10.24",
+   "ep": 23,
+   "sc": "13",
+   "light": "深秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "甬道",
+   "summary": "怀疑端王参与爬龟妇案",
+   "pages": 0.65,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1,
+    "陆二": 2,
+    "王夫人": 2
+   }
+  },
+  {
+   "id": 62,
+   "date": "10.26",
+   "ep": 24,
+   "sc": "3",
+   "light": "深秋",
+   "place": "太平县",
+   "main": "县衙",
+   "sub": "衙外空地",
+   "summary": "明月金大郎重逢",
+   "pages": 0.95,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 2,
+    "陆封": 2,
+    "沈心阳": 2,
+    "芈大丽": 2,
+    "单元配角": 2,
+    "陆二": 2,
+    "明月": 1,
+    "金大郎": 1
+   }
+  },
+  {
+   "id": 63,
+   "date": "10.19",
+   "ep": 24,
+   "sc": "23",
+   "light": "冬",
+   "place": "太平县",
+   "main": "山亭",
+   "sub": "",
+   "summary": "山亭端王欲杀卿卿",
+   "pages": 1.1,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 2,
+    "端王": 1,
+    "上官华": 1
+   }
+  },
+  {
+   "id": 64,
+   "date": "10.19",
+   "ep": 24,
+   "sc": "24",
+   "light": "冬",
+   "place": "太平县",
+   "main": "山亭",
+   "sub": "",
+   "summary": "陆封救卿卿",
+   "pages": 0.9,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "陆封": 1,
+    "端王": 1
+   }
+  },
+  {
+   "id": 65,
+   "date": "10.17",
+   "ep": 27,
+   "sc": "9",
+   "light": "冬",
+   "place": "太平县",
+   "main": "县衙门口街道",
+   "sub": "告示墙前",
+   "summary": "告示褫夺族人科举",
+   "pages": 0.2,
+   "pnote": "",
+   "cast": {}
+  }
+ ]
+}</script>
+<script>
+const KEY='xifen-v1';
+let S={title:'戲份盤點',roles:[],scenes:[],opts:{light:[],place:[],main:[],sub:[]}};
+let tab='scenes', editing=null, draft={};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>(Math.round(n*100)/100).toString();
+const cut=s=>String(s||'').replace(/\n/g,' ');
+
+async function load(){
+  let d=null;
+  try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  if(!d){
+    try{const r=await fetch('data.json',{cache:'no-cache'});if(r.ok)d=await r.json()}catch(e){}
+  }
+  if(!d)d=JSON.parse($('#seed').textContent);
+  S=Object.assign({opts:{}},d);
+  S.opts=Object.assign({light:[],place:[],main:[],sub:[]},S.opts);
+  render();
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));$('#saved').textContent='已儲存於此瀏覽器'}
+  catch(e){$('#saved').textContent='無法儲存（請用匯出 JSON 備份）'}
+}
+function commit(){save();render()}
+
+const num=v=>typeof v==='number'?v:null;
+function pageOf(sc,r){return sc.cast[r]===1?(num(sc.pages)||0):0}
+function filtered(){
+  const ep=$('#fEp').value,dt=$('#fDate').value,ro=$('#fRole').value,q=$('#fQ').value.trim().toLowerCase();
+  return sorted().filter(s=>(!ep||String(s.ep)===ep)&&(!dt||s.date===dt)&&(!ro||s.cast[ro])&&
+    (!q||[s.main,s.sub,s.summary,s.place,s.sc].join(' ').toLowerCase().includes(q)));
+}
+function sorted(){
+  const k=s=>parseInt(s.sc)||0;
+  return [...S.scenes].sort((a,b)=>a.ep-b.ep||k(a)-k(b)||String(a.sc).localeCompare(String(b.sc),'zh',{numeric:true}));
+}
+function uniq(a){return [...new Set(a.filter(Boolean))]}
+function options(f){return uniq([...(S.opts[f]||[]),...S.scenes.map(s=>cut(s[f]))])}
+
+function fillFilters(){
+  const keep={ep:$('#fEp').value,dt:$('#fDate').value,ro:$('#fRole').value};
+  const eps=uniq(S.scenes.map(s=>s.ep)).sort((a,b)=>a-b);
+  const dates=uniq(S.scenes.map(s=>s.date)).sort((a,b)=>String(a).localeCompare(String(b),'zh',{numeric:true}));
+  $('#fEp').innerHTML='<option value="">全部</option>'+eps.map(e=>`<option value="${e}">第${e}集</option>`).join('');
+  $('#fDate').innerHTML='<option value="">全部</option>'+dates.map(e=>`<option>${esc(e)}</option>`).join('');
+  $('#fRole').innerHTML='<option value="">全部</option>'+S.roles.map(e=>`<option>${esc(e)}</option>`).join('');
+  $('#fEp').value=keep.ep;$('#fDate').value=keep.dt;$('#fRole').value=keep.ro;
+  for(const f of ['date','light','place','main','sub'])
+    $('#l-'+f).innerHTML=(f==='date'?dates:options(f)).map(o=>`<option value="${esc(o)}">`).join('');
+}
+
+function render(){
+  document.title=S.title||'戲份盤點';
+  $('#title').firstChild.textContent=S.title||'戲份盤點';
+  fillFilters();
+  const rows=filtered();
+  $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  if(tab==='scenes')renderScenes(rows);else renderStats(rows);
+}
+
+function renderScenes(rows){
+  if(!rows.length){$('#vScenes').innerHTML='<div class="empty">沒有符合的場次</div>';return}
+  const tp=rows.reduce((a,s)=>a+(num(s.pages)||0),0);
+  $('#vScenes').innerHTML=`<table><thead><tr><th>日期</th><th>集</th><th>場</th><th>景光</th><th>地點</th><th>主場景</th><th>次場景</th><th>內容概要</th><th class="num">頁</th><th>角色</th></tr></thead><tbody>`+
+  rows.map(s=>`<tr class="row" data-id="${s.id}" style="cursor:pointer"><td>${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
+  `</tbody><tfoot><tr><th colspan="8">合計 ${rows.length} 場</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table><p class="hint">點任一列即可編輯。</p>`;
+  document.querySelectorAll('tr.row').forEach(tr=>tr.onclick=()=>openScene(+tr.dataset.id));
+}
+
+function renderStats(rows){
+  const total=rows.reduce((a,s)=>a+(num(s.pages)||0),0);
+  const list=S.roles.map(r=>{
+    let p=0,n=0,z=0;
+    rows.forEach(s=>{if(s.cast[r]===1){p+=num(s.pages)||0;n++}else if(s.cast[r]===2)z++});
+    return{r,p,n,z};
+  }).sort((a,b)=>b.p-a.p||b.n-a.n);
+  const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部場次';
+  $('#vStats').innerHTML=`<div class="sum"><div><b>${rows.length}</b><span>場次</span></div><div><b>${fmt(total)}</b><span>總頁數</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>統計範圍（可用上方篩選）</span></div></div>
+  <div class="scroll" style="margin-top:14px"><table><thead><tr><th>#</th><th>角色</th><th class="num">計頁場數</th><th class="num">頁數</th><th class="num">占總頁數</th><th style="width:34%">戲分占比</th><th class="num">不計頁出場</th></tr></thead><tbody>`+
+  list.map((x,i)=>{const pc=total?x.p/total*100:0;return`<tr><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${fmt(x.p)}</td><td class="num">${pc.toFixed(1)}%</td><td><div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div></td><td class="num">${x.z}</td></tr>`}).join('')+
+  `</tbody></table></div><p class="hint">占比＝該角色計入頁數 ÷ 所選場次總頁數。同一場有多位角色同時出現，所以各角色占比相加會超過 100%。</p>`;
+}
+
+/* ---- scene dialog ---- */
+function openScene(id){
+  editing=id;
+  const s=id?S.scenes.find(x=>x.id===id):{date:'',ep:'',sc:'',light:'',place:'',main:'',sub:'',pages:'',summary:'',cast:{}};
+  const f=$('#form');
+  for(const k of ['date','ep','sc','light','place','main','sub','summary'])f[k].value=cut2(s[k]);
+  f.pages.value=num(s.pages)!==null?s.pages:(s.pnote||'');
+  draft={...s.cast};
+  $('#dTitle').textContent=id?'編輯場次':'新增場次';
+  $('#dDel').style.display=id?'':'none';
+  drawRoles();$('#dlg').showModal();
+}
+const cut2=v=>v==null?'':String(v);
+function drawRoles(){
+  $('#dRoles').innerHTML=S.roles.map(r=>`<button type="button" class="${draft[r]?'s'+draft[r]:''}" data-r="${esc(r)}">${esc(r)}</button>`).join('')||'<span class="hint">尚無角色，請到「選單／角色管理」新增。</span>';
+  document.querySelectorAll('#dRoles button').forEach(b=>b.onclick=()=>{const r=b.dataset.r;const n=((draft[r]||0)+1)%3;n?draft[r]=n:delete draft[r];drawRoles()});
+}
+$('#form').onsubmit=e=>{
+  e.preventDefault();
+  const f=e.target,v=n=>f[n].value.trim();
+  const pv=v('pages'),pn=pv===''?null:Number(pv);
+  const rec={date:v('date'),ep:+v('ep'),sc:v('sc'),light:v('light'),place:v('place'),main:v('main'),sub:v('sub'),summary:v('summary'),
+    pages:pn!==null&&!isNaN(pn)?pn:null,pnote:pn!==null&&isNaN(pn)?pv:'',cast:{...draft}};
+  if(editing)Object.assign(S.scenes.find(x=>x.id===editing),rec);
+  else S.scenes.push({id:Math.max(0,...S.scenes.map(x=>x.id))+1,...rec});
+  $('#dlg').close();commit();
+};
+$('#dCancel').onclick=()=>$('#dlg').close();
+$('#dDel').onclick=()=>{if(confirm('確定刪除這一場？')){S.scenes=S.scenes.filter(x=>x.id!==editing);$('#dlg').close();commit()}};
+$('#addScene').onclick=()=>openScene(0);
+
+/* ---- manage dialog ---- */
+const LAB={light:'景光',place:'景別（地點）',main:'主場景',sub:'次場景'};
+function drawManage(){
+  let h=`<b>角色</b><div class="opt">`+S.roles.map((r,i)=>`<span class="chip">${esc(r)}<button class="rn" data-ren="${i}" title="改名">✎</button><button data-delr="${i}" title="刪除">✕</button></span>`).join('')+`</div>
+   <div class="add"><input id="newRole" placeholder="新增角色名稱"><button data-addr>新增</button></div>
+   <p class="hint">改名會同步更新所有場次；刪除角色會一併移除該角色在各場次的紀錄。</p>`;
+  for(const f of ['light','place','main','sub'])
+    h+=`<hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><b>${LAB[f]}選項</b><div class="opt">`+
+    (S.opts[f]||[]).map((o,i)=>`<span class="chip">${esc(o)}<button data-delo="${f}|${i}">✕</button></span>`).join('')+
+    `</div><div class="add"><input data-newo="${f}" placeholder="新增${LAB[f]}選項"><button data-addo="${f}">新增</button></div>
+    <div class="hint">已出現在場次中的其他值也會自動出現在選單。</div>`;
+  $('#mBody').innerHTML=h;
+  const B=$('#mBody');
+  B.querySelector('[data-addr]').onclick=()=>{const v=$('#newRole').value.trim();if(!v)return;if(S.roles.includes(v))return alert('已有這個角色');S.roles.push(v);save();drawManage();render()};
+  $('#newRole').onkeydown=e=>{if(e.key==='Enter')B.querySelector('[data-addr]').click()};
+  B.querySelectorAll('[data-ren]').forEach(b=>b.onclick=()=>{
+    const old=S.roles[+b.dataset.ren],n=(prompt('新名稱',old)||'').trim();
+    if(!n||n===old)return;if(S.roles.includes(n))return alert('已有這個角色');
+    S.roles[+b.dataset.ren]=n;S.scenes.forEach(s=>{if(old in s.cast){s.cast[n]=s.cast[old];delete s.cast[old]}});save();drawManage();render()});
+  B.querySelectorAll('[data-delr]').forEach(b=>b.onclick=()=>{
+    const r=S.roles[+b.dataset.delr];if(!confirm(`刪除角色「${r}」？各場次中的紀錄也會移除。`))return;
+    S.roles.splice(+b.dataset.delr,1);S.scenes.forEach(s=>delete s.cast[r]);save();drawManage();render()});
+  B.querySelectorAll('[data-addo]').forEach(b=>b.onclick=()=>{
+    const f=b.dataset.addo,i=B.querySelector(`[data-newo="${f}"]`),v=i.value.trim();if(!v)return;
+    if(!S.opts[f].includes(v))S.opts[f].push(v);save();drawManage();render()});
+  B.querySelectorAll('[data-newo]').forEach(i=>i.onkeydown=e=>{if(e.key==='Enter')B.querySelector(`[data-addo="${i.dataset.newo}"]`).click()});
+  B.querySelectorAll('[data-delo]').forEach(b=>b.onclick=()=>{const[f,i]=b.dataset.delo.split('|');S.opts[f].splice(+i,1);save();drawManage();render()});
+}
+$('#manage').onclick=()=>{drawManage();$('#mdlg').showModal()};
+$('#mClose').onclick=()=>$('#mdlg').close();
+
+/* ---- tabs / filters ---- */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
+['fEp','fDate','fRole'].forEach(i=>$('#'+i).onchange=render);$('#fQ').oninput=render;
+
+/* ---- import / export ---- */
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$('#exp').onclick=()=>dl('data.json',JSON.stringify(S,null,1),'application/json');
+$('#csv').onclick=()=>{
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const head=['拍攝日期','集數','場號','景光','景別','主場景','次場景','內容概要','頁數',...S.roles];
+  const lines=[head.map(q).join(',')];
+  sorted().forEach(s=>lines.push([s.date,s.ep,s.sc,s.light,s.place,cut(s.main),cut(s.sub),cut(s.summary),num(s.pages)!==null?s.pages:s.pnote,...S.roles.map(r=>s.cast[r]===1?s.pages:s.cast[r]===2?'/':'')].map(q).join(',')));
+  const tot=S.roles.map(r=>fmt(S.scenes.reduce((a,s)=>a+pageOf(s,r),0)));
+  lines.push(['合計','','','','','','','',fmt(S.scenes.reduce((a,s)=>a+(num(s.pages)||0),0)),...tot].map(q).join(','));
+  dl('戲份盤點.csv','﻿'+lines.join('\r\n'),'text/csv');
+};
+$('#imp').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const d=JSON.parse(await f.text());if(!Array.isArray(d.roles)||!Array.isArray(d.scenes))throw 0;
+    if(!confirm('匯入會取代目前此瀏覽器中的資料，確定嗎？'))return;
+    S=Object.assign({opts:{light:[],place:[],main:[],sub:[]}},d);commit()}
+  catch(_){alert('檔案格式不正確')}
+  e.target.value='';
+};
+$('#reset').onclick=()=>{if(confirm('清除此瀏覽器中的修改，還原為網站上的 data.json？'))
+  {try{localStorage.removeItem(KEY)}catch(e){}$('#saved').textContent='';load()}};
+
+load();
+</script>
+</body>
+</html>
