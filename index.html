@@ -339,6 +339,8 @@ body.mview .hintCard{display:block}
 @media(max-width:700px){.sum div{padding:9px 8px;text-align:center}}
 .dedup{margin:8px 0 0;font-size:13px;color:var(--mute)}
 .dedup b{color:var(--accent);display:inline}
+@media(min-width:701px){.topbtns .epbtn{flex:none!important}}
+.topbtns{margin:0 0 12px;gap:8px}.topbtns .epbtn{margin-left:0;flex:1 1 0;text-align:center}
 </style>
 </head>
 <body>
@@ -1980,12 +1982,13 @@ function renderStats(rows){
   }).sort((a,b)=>sortBy==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
   const scope='全部场次';
   const bar=(pc,pink)=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
-  $('#vStats').innerHTML=`<div class="note"><b>长条图的算法</b>
+  $('#vStats').innerHTML=`<div class="bar sortbar topbtns"><button class="epbtn" type="button">📊 每集分布</button><button class="epbtn cobtn" type="button">🤝 对戏占比</button></div>
+  <div class="note"><b>长条图的算法</b>
     <p>场次占比 = 该角色有戏的场次数 ÷ 所选范围的总场次数(${nsc} 场)</p>
     <p>页数占比 = 该角色的页数 ÷ 所选范围的总页数(${fmt(total)} 页)</p>
     <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>
   <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围</span></div></div>
-  <div class="bar sortbar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button><button class="epbtn" type="button">📊 每集分布</button><button class="epbtn cobtn" type="button">🤝 对戏占比</button></div>
+  <div class="bar sortbar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button></div>
   <p class="rolehint" style="margin:10px 0 0">💡 <b>点角色名</b>可以看她所有的场次</p>
   <div class="mcards" style="margin-top:10px">`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b class="rolelink" data-role="${esc(x.r)}" title="点一下,看她所有的场次">${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
