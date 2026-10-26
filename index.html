@@ -200,7 +200,13 @@ tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);t
 #pdlg img{display:block;max-width:calc(96vw - 12px);max-height:calc(92vh - 12px);object-fit:contain;border-radius:8px}
 .sc-photo{display:block;width:100%;max-height:190px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--line);cursor:zoom-in}
 .cam{position:absolute;left:0;top:12px;font-size:7px;line-height:1;opacity:.9;pointer-events:none} /* 贴在行首、不占位,不会撑大栏位 */
-#vScenes tbody tr td:first-child{position:relative}
+/* 左右滑动时,日期/集/场 三栏固定在左边,方便对照后面的内容 */
+#vScenes .mtable thead th:nth-child(-n+3),#vScenes .mtable tbody td:nth-child(-n+3){position:sticky;background:#17171c;z-index:2}
+#vScenes .mtable thead th:nth-child(-n+3){z-index:3;background:#1b1b21}
+#vScenes .mtable thead th:nth-child(1),#vScenes .mtable tbody td:nth-child(1){left:0}
+#vScenes .mtable thead th:nth-child(2),#vScenes .mtable tbody td:nth-child(2){left:var(--l2,97px)}
+#vScenes .mtable thead th:nth-child(3),#vScenes .mtable tbody td:nth-child(3){left:var(--l3,141px);box-shadow:6px 0 8px -6px rgba(0,0,0,.7);border-right:1px solid #3a3a43}
+#vScenes .mtable tbody tr.row:hover td:nth-child(-n+3){background:#2a2923}
 .sc-card .h .cam{position:static;font-size:12px;margin-right:-4px}
 /* 场次表:行与行之间的分隔线加深 */
 #vScenes tbody td{border-bottom:1px solid #5c5c68}
@@ -1783,10 +1789,18 @@ function renderScenes(rows){
     const k=th.dataset.k;SORT=SORT.key===k?{key:k,dir:-SORT.dir}:{key:k,dir:1};render()});
   document.querySelectorAll('.sc-photo').forEach(im=>im.onclick=e=>{e.stopPropagation();showBig(im.getAttribute('src'))}); // 卡片上点图片看大图
   document.querySelectorAll('tr.row').forEach(tr=>tr.onclick=()=>openDetail(+tr.dataset.id));
+  stickyCols();
   // 手机版卡片已显示全部资讯,不弹详情窗;只有管理员点卡片才进入编辑
   document.querySelectorAll('.sc-card').forEach(c=>{if(ADMIN)c.onclick=()=>openScene(+c.dataset.id)});
 }
 
+function stickyCols(){ // 量出前两栏的实际宽度,让第 2、3 栏贴在前一栏右边
+  const th=document.querySelectorAll('#vScenes .mtable thead th');if(th.length<3)return;
+  const w1=th[0].getBoundingClientRect().width,w2=th[1].getBoundingClientRect().width,box=$('#vScenes');
+  box.style.setProperty('--l2',w1+'px');box.style.setProperty('--l3',(w1+w2)+'px');
+}
+window.addEventListener('resize',()=>{if(tab==='scenes')stickyCols()});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(tab==='scenes')stickyCols()});
 let sortBy='p';
 function renderStats(rows){
   const total=rows.reduce((a,s)=>a+(num(s.pages)||0),0),nsc=rows.length;
