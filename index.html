@@ -159,6 +159,15 @@ body.mview main{max-width:600px;padding:0 12px 50px}
 body.mview .mtable{display:none}
 body.mview .mcards{display:block}
 body.mview .tabs{gap:14px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:99999;max-width:min(92vw,520px);padding:12px 18px;border-radius:12px;font:600 16px/1.4 sans-serif;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.2s;display:flex;align-items:center;gap:10px}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.busy{background:#2b4f8f}
+.toast.ok{background:#1f7a46}
+.toast.fail{background:#b3261e;pointer-events:auto;cursor:pointer}
+.toast.busy::before{content:"";width:16px;height:16px;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;flex:none}
+.toast.ok::before{content:"✓";font-size:18px}
+.toast.fail::before{content:"✕";font-size:18px}
+@keyframes sp{to{transform:rotate(360deg)}}
 .srow{display:flex;gap:8px;align-items:flex-end;flex:1 1 280px}
 .srow>label:first-child{flex:1;min-width:0}
 .srow input#fQ{width:100%;box-sizing:border-box}
@@ -356,6 +365,7 @@ body.mview .hintCard{display:block}
 
 <datalist id="l-date"></datalist><datalist id="l-light"></datalist><datalist id="l-place"></datalist><datalist id="l-main"></datalist><datalist id="l-sub"></datalist>
 
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script id="seed" type="application/json">{
  "title": "刀笔娘子戏份盘点",
  "roles": [
@@ -1571,6 +1581,18 @@ async function load(){
   $('#saved').textContent='';
   render();
 }
+/* 同步状态:屏幕下方的大提示(同步中=蓝、成功=绿、失败=红,失败要点一下才收起) */
+(function(){
+  const t=$('#toast'),src=$('#saved');let timer=0;
+  new MutationObserver(()=>{
+    const x=src.textContent.trim();clearTimeout(timer);
+    if(!x){t.classList.remove('on');return}
+    const kind=/^同步中/.test(x)?'busy':/失败|无法/.test(x)?'fail':'ok';
+    t.className='toast on '+kind;t.textContent=x+(kind==='fail'?'(点一下关闭)':'');
+    if(kind==='ok')timer=setTimeout(()=>t.classList.remove('on'),4000);
+  }).observe(src,{childList:true,characterData:true,subtree:true});
+  t.onclick=()=>{if(t.classList.contains('fail'))t.classList.remove('on')};
+})();
 /* 回到页面时自动拉取别人的更新(没有开着窗口、也不在保存时才换) */
 async function refreshFromServer(){
   if(GHMODE){
