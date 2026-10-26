@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>戏份盘点</title>
 <style>
-:root{color-scheme:dark;--bg:#0e0e11;--bg2:#15151a;--card:#17171c;--ink:#ece8df;--mute:#8d8a85;--line:#2a2a31;--accent:#c9a35c;--accent2:#c9a35c;--chip:#202027;--bar:linear-gradient(90deg,#8a6a2f,#e0bf7a);--glow:rgba(201,163,92,.14)}
+:root{color-scheme:dark;--bg:#565654;--bg2:#4b4b49;--card:#50504e;--ink:#f4f1ea;--mute:#bdbab2;--line:#6b6b68;--accent:#ecd196;--accent2:#ecd196;--chip:#626260;--bar:linear-gradient(90deg,#a8873f,#f1d99d);--glow:rgba(255,255,255,.07);--pink:#ff4fa3}
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{margin:0;color:var(--ink);font:15px/1.55 -apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
- background:radial-gradient(900px 420px at 15% -10%,var(--glow),transparent 70%),radial-gradient(700px 360px at 100% 0,rgba(90,110,160,.10),transparent 70%),var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
+ background:radial-gradient(900px 420px at 15% -10%,var(--glow),transparent 70%),var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
 header{padding:34px 20px 14px;max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
 h1{font:600 28px/1.2 "Songti SC","Noto Serif CJK SC","Source Han Serif SC","SimSun",serif;margin:0;letter-spacing:.16em;color:#f3ecd9}
 h1::after{content:"";display:block;width:44px;height:2px;margin-top:10px;background:var(--accent)}
@@ -19,13 +19,13 @@ main{max-width:1280px;margin:0 auto;padding:0 20px 70px}
 button,select,input,textarea{font:inherit;color:inherit}
 button{border:1px solid var(--line);background:transparent;padding:7px 14px;border-radius:6px;cursor:pointer;color:var(--ink);transition:.18s;letter-spacing:.03em}
 button:hover{border-color:var(--accent);color:var(--accent)}
-button.primary{background:var(--accent);border-color:var(--accent);color:#1a1405;font-weight:600}
-button.primary:hover{background:#dcb870;color:#1a1405}
+button.primary{background:var(--accent);border-color:var(--accent);color:#2a2208;font-weight:600}
+button.primary:hover{background:#f5e0aa;color:#2a2208}
 button.danger{color:#d98a7a}
 button.danger:hover{border-color:#d98a7a;color:#e8a798}
-select,input,textarea{border:1px solid var(--line);background:#101014;padding:7px 10px;border-radius:6px;min-width:0;outline:none;transition:border-color .18s}
+select,input,textarea{border:1px solid var(--line);background:#48484a;padding:7px 10px;border-radius:6px;min-width:0;outline:none;transition:border-color .18s}
 select:focus,input:focus,textarea:focus{border-color:var(--accent)}
-.card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:14px;box-shadow:0 20px 50px -30px #000}
+.card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:14px;box-shadow:0 20px 50px -30px rgba(0,0,0,.6)}
 .card h2{font-size:16px;margin:0 0 12px}
 .tabs{display:flex;gap:26px;margin:16px 0 0;padding:0 4px}
 .tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 2px;color:var(--mute);letter-spacing:.12em}
@@ -34,27 +34,27 @@ select:focus,input:focus,textarea:focus{border-color:var(--accent)}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{padding:10px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
 td.wrap{white-space:normal;min-width:150px}
-th{font-weight:500;color:var(--mute);font-size:12px;letter-spacing:.12em;border-bottom-color:#3a3a43}
+th{font-weight:500;color:var(--mute);font-size:12px;letter-spacing:.12em;border-bottom-color:#85857f}
 tfoot th{color:var(--accent);font-size:13px;border-bottom:0}
-tr.row:hover{background:rgba(201,163,92,.07)}
-.chip{display:inline-block;background:var(--chip);border:1px solid #2c2c34;border-radius:4px;padding:0 8px;margin:2px 3px 2px 0;font-size:12.5px;color:#d8d3c8}
-.chip.z{opacity:.55;border:1px dashed #55555e;background:none}
+tr.row:hover{background:rgba(255,255,255,.07)}
+.chip{display:inline-block;background:var(--chip);border:1px solid #747471;border-radius:4px;padding:0 8px;margin:2px 3px 2px 0;font-size:12.5px;color:#f1eee7}
+.chip.z{opacity:.7;border:1px dashed #8a8a86;background:none}
 .num{text-align:right;font-variant-numeric:tabular-nums}
-.meter{height:6px;background:#23232a;border-radius:3px;min-width:120px;overflow:hidden}
+.meter{height:6px;background:#44443f;border-radius:3px;min-width:120px;overflow:hidden}
 .meter i{display:block;height:100%;background:var(--bar);border-radius:3px}
 .sum{display:flex;gap:12px;flex-wrap:wrap}
-.sum div{background:#121217;border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:110px}
+.sum div{background:#4a4a48;border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:110px}
 .sum b{display:block;font:600 24px/1.2 "Songti SC","Noto Serif CJK SC",serif;color:#f3ecd9}
 .sum span{font-size:12px;color:var(--mute);letter-spacing:.06em}
-dialog{border:1px solid #34343c;border-radius:14px;background:#141418;color:var(--ink);padding:22px;width:min(720px,94vw);max-height:92vh;box-shadow:0 30px 80px -20px #000}
+dialog{border:1px solid #747471;border-radius:14px;background:#4d4d4b;color:var(--ink);padding:22px;width:min(720px,94vw);max-height:92vh;box-shadow:0 30px 80px -20px #000}
 dialog::backdrop{background:rgba(0,0,0,.65);backdrop-filter:blur(3px)}
 dialog h2{font:600 18px "Songti SC","Noto Serif CJK SC",serif;letter-spacing:.1em;color:#f3ecd9}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 label{display:block;font-size:12px;color:var(--mute);letter-spacing:.06em}
 label input,label select,label textarea{display:block;width:100%;margin-top:4px;font-size:15px;color:var(--ink)}
 .roles{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.roles button{padding:3px 12px;border-radius:999px;font-size:13px;color:#bbb6ab}
-.roles button.s1{background:var(--accent);border-color:var(--accent);color:#1a1405;font-weight:600}
+.roles button{padding:3px 12px;border-radius:999px;font-size:13px;color:#e4e1d9}
+.roles button.s1{background:var(--accent);border-color:var(--accent);color:#2a2208;font-weight:600}
 .roles button.s2{border-style:dashed;border-color:var(--accent);color:var(--accent)}
 .hint{font-size:12px;color:var(--mute)}
 .opt{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
@@ -64,8 +64,15 @@ label input,label select,label textarea{display:block;width:100%;margin-top:4px;
 .add input{flex:1}
 .foot{margin-top:18px;display:flex;justify-content:flex-end;gap:8px}
 .adm[hidden],[hidden]{display:none!important}
+.chip.pink{background:var(--pink);border-color:var(--pink);color:#fff;font-weight:600;box-shadow:0 0 10px rgba(255,79,163,.45)}
+.chip.pink.z{background:none;color:var(--pink);box-shadow:none;border-style:dashed;opacity:1}
+.roles button.pink{border-color:var(--pink);color:var(--pink)}
+.roles button.pink.s1{background:var(--pink);border-color:var(--pink);color:#fff}
+.roles button.pink.s2{border-style:dashed}
+tr.pinkrow td b{color:var(--pink)}
+tr.pinkrow .meter i{background:linear-gradient(90deg,#d83686,#ff7cc0)}
 .empty{color:var(--mute);padding:28px;text-align:center}
-::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#33333b;border-radius:4px}
+::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#7a7a76;border-radius:4px}
 @media(max-width:600px){header{padding-top:24px}h1{font-size:23px}.card{padding:14px}}
 </style>
 </head>
@@ -1391,6 +1398,7 @@ let tab='scenes', editing=null, draft={};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt=n=>(Math.round(n*100)/100).toString();
+const PINK='祝阮/阮卿卿';
 const cut=s=>String(s||'').replace(/\n/g,' ');
 
 async function load(){
@@ -1455,7 +1463,7 @@ function renderScenes(rows){
   if(!rows.length){$('#vScenes').innerHTML='<div class="empty">没有符合的场次</div>';return}
   const tp=rows.reduce((a,s)=>a+(num(s.pages)||0),0);
   $('#vScenes').innerHTML=`<table><thead><tr><th>日期</th><th>集</th><th>场</th><th>景光</th><th>地点</th><th>主场景</th><th>次场景</th><th>内容概要</th><th class="num">页</th><th>角色</th></tr></thead><tbody>`+
-  rows.map(s=>`<tr class="row" data-id="${s.id}" style="${ADMIN?'cursor:pointer':''}"><td>${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
+  rows.map(s=>`<tr class="row" data-id="${s.id}" style="${ADMIN?'cursor:pointer':''}"><td>${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
   `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table>${ADMIN?'<p class="hint">点任一列即可编辑。</p>':''}`;
   if(ADMIN)document.querySelectorAll('tr.row').forEach(tr=>tr.onclick=()=>openScene(+tr.dataset.id));
 }
@@ -1470,7 +1478,7 @@ function renderStats(rows){
   const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部场次';
   $('#vStats').innerHTML=`<div class="sum"><div><b>${rows.length}</b><span>场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围(可用上方筛选)</span></div></div>
   <div class="scroll" style="margin-top:14px"><table><thead><tr><th>#</th><th>角色</th><th class="num">计页场数</th><th class="num">页数</th><th class="num">占总页数</th><th style="width:34%">戏分占比</th><th class="num">不计页出场</th></tr></thead><tbody>`+
-  list.map((x,i)=>{const pc=total?x.p/total*100:0;return`<tr><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${fmt(x.p)}</td><td class="num">${pc.toFixed(1)}%</td><td><div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div></td><td class="num">${x.z}</td></tr>`}).join('')+
+  list.map((x,i)=>{const pc=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${fmt(x.p)}</td><td class="num">${pc.toFixed(1)}%</td><td><div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div></td><td class="num">${x.z}</td></tr>`}).join('')+
   `</tbody></table></div><p class="hint">占比=该角色计入页数 ÷ 所选场次总页数。同一场有多位角色同時出现,所以各角色占比相加会超过 100%。</p>`;
 }
 
@@ -1489,7 +1497,7 @@ function openScene(id){
 }
 const cut2=v=>v==null?'':String(v);
 function drawRoles(){
-  $('#dRoles').innerHTML=S.roles.map(r=>`<button type="button" class="${draft[r]?'s'+draft[r]:''}" data-r="${esc(r)}">${esc(r)}</button>`).join('')||'<span class="hint">尚无角色,请到「选单/角色管理」新增。</span>';
+  $('#dRoles').innerHTML=S.roles.map(r=>`<button type="button" class="${draft[r]?'s'+draft[r]:''} ${r===PINK?'pink':''}" data-r="${esc(r)}">${esc(r)}</button>`).join('')||'<span class="hint">尚无角色,请到「选单/角色管理」新增。</span>';
   document.querySelectorAll('#dRoles button').forEach(b=>b.onclick=()=>{const r=b.dataset.r;const n=((draft[r]||0)+1)%3;n?draft[r]=n:delete draft[r];drawRoles()});
 }
 $('#form').onsubmit=e=>{
