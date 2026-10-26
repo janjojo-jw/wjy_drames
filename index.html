@@ -172,6 +172,11 @@ body.mview .tabs{gap:14px}
 .piebtn{margin-top:16px;margin-bottom:6px;padding:3px 14px;font-size:13px;border-radius:999px;color:var(--mute)}
 .piebtn.on{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;font-weight:600}
 .epbtn{margin-left:10px;padding:6px 16px;font-size:14px;font-weight:700;border-radius:999px;border:1px solid #fbefc6;background:linear-gradient(180deg,#fbefc6,#e5bf6c);color:#2a210a;box-shadow:0 0 0 0 rgba(251,239,198,.7),0 3px 10px rgba(217,181,108,.35);animation:epglow 2.4s ease-out infinite}
+.sortbar{flex-wrap:nowrap;gap:6px}
+.sortbar .hint{white-space:nowrap}
+.sortbar button{white-space:nowrap;flex:none}
+@media(max-width:480px){.epbtn{margin-left:2px;padding:5px 11px;font-size:13px}.sortb{padding:3px 10px}}
+@media(max-width:350px){.sortbar .hint{display:none}.epbtn{padding:5px 8px;font-size:12px}}
 .epbtn:hover{filter:brightness(1.06);color:#2a210a}
 @keyframes epglow{0%{box-shadow:0 0 0 0 rgba(251,239,198,.65),0 3px 10px rgba(217,181,108,.35)}70%,100%{box-shadow:0 0 0 10px rgba(251,239,198,0),0 3px 10px rgba(217,181,108,.35)}}
 @media(prefers-reduced-motion:reduce){.epbtn{animation:none}}
@@ -1957,7 +1962,7 @@ function renderStats(rows){
     <p>页数占比 = 该角色的页数 ÷ 所选范围的总页数(${fmt(total)} 页)</p>
     <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>
   <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围</span></div></div>
-  <div class="bar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button><button class="epbtn" type="button">📊 每集戏份分布 ›</button></div>
+  <div class="bar sortbar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button><button class="epbtn" type="button">📊 每集戏份分布 ›</button></div>
   <p class="rolehint" style="margin:8px 0 0">💡 <b>点角色名</b>可以看她所有的场次</p>
   <div class="mcards" style="margin-top:10px">`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b class="rolelink" data-role="${esc(x.r)}" title="点一下,看她所有的场次">${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
