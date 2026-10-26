@@ -1984,7 +1984,7 @@ function renderStats(rows){
   }).sort((a,b)=>sortBy==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
   const scope='全部场次';
   const bar=(pc,pink)=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
-  $('#vStats').innerHTML=`<div class="bar sortbar topbtns"><button class="epbtn" type="button">📊 每集分布</button><button class="epbtn cobtn" type="button">🤝 对戏占比</button></div>
+  $('#vStats').innerHTML=`<div class="bar sortbar topbtns"><button class="epbtn" type="button">📊 每集戏份分布</button><button class="epbtn cobtn" type="button">🤝 对戏占比</button></div>
   <div class="note"><b>长条图的算法</b>
     <p>场次占比 = 该角色有戏的场次数 ÷ 所选范围的总场次数(${nsc} 场)</p>
     <p>页数占比 = 该角色的页数 ÷ 所选范围的总页数(${fmt(total)} 页)</p>
