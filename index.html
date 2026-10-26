@@ -333,6 +333,12 @@ body.mview .hintCard{display:block}
 }
 .tabs button{white-space:nowrap}
 @media(max-width:700px){.tabs,body.mview .tabs{gap:4px}.tabs button.on,.tabs button:not(.on){padding:8px 11px;letter-spacing:.02em;font-size:14px}}
+.sum div{white-space:nowrap}
+.sum div b{overflow-wrap:normal}
+.sum div{flex:1 1 0}
+@media(max-width:700px){.sum div{padding:9px 8px;text-align:center}}
+.dedup{margin:8px 0 0;font-size:13px;color:var(--mute)}
+.dedup b{color:var(--accent);display:inline}
 </style>
 </head>
 <body>
@@ -2008,7 +2014,8 @@ function renderPlan(){
     <p>场次占比 = 该角色有戏的场次数 ÷ 总场次数;页数占比 = 该角色所在场次的页数 ÷ 总页数。一场戏有多位角色时每人各算一次,所以占比加起来会超过 100%。</p>
     <p>⚠ 拍摄日程表只标出 5 位主要角色(祝阮/阮卿卿、陆封、夏玉尔、沈心阳、芈大丽),其他角色的数字只来自数据库,会偏低。</p>
     <p>这一页是独立统计,不影响「戏份占比结算」和其他页面。</p></div>
-  <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${PLAN.scenes.length}</b><span>日程表场次</span></div><div><b>${S.scenes.length}</b><span>数据库场次</span></div><div><b>−${ov}场 −${fmt(ovp)}页</b><span>重复已扣除</span></div></div>
+  <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${PLAN.scenes.length}</b><span>日程表</span></div><div><b>${S.scenes.length}</b><span>数据库</span></div></div>
+  <p class="dedup">重复已扣除:<b>−${ov} 场、−${fmt(ovp)} 页</b>(日程表和数据库都有的场次只算一次)</p>
   <div class="bar sortbar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${planSort==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${planSort==='n'?'on':''}" data-s="n">按场次</button></div>
   <div class="mcards" style="margin-top:10px">`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b>${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
