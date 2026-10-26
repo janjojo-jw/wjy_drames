@@ -1910,7 +1910,6 @@ function renderPie(rows){
       <p>因此这里的百分比和「戏份占比结算」长条图的页数占比不同:圆饼图表示「在所有角色的戏份总量里占几成」,长条图表示「占了整部戏多少篇幅」。</p>
       <p>只列前 6 位有名字的角色,其余合并为「其他」。</p></div>
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色占比圆饼图">${svg}</svg>
-    <p class="rolehint" style="margin:10px auto 0;max-width:520px">💡 <b>点角色名</b>可以看她所有的场次</p>
     <ul class="plegend">${legend}</ul>
 </div>`;
 }
@@ -1968,7 +1967,6 @@ function renderStats(rows){
     <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>
   <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围</span></div></div>
   <div class="bar sortbar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button><button class="epbtn" type="button">📊 每集戏份分布 ›</button></div>
-  <p class="rolehint" style="margin:8px 0 0">💡 <b>点角色名</b>可以看她所有的场次</p>
   <div class="mcards" style="margin-top:10px">`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b class="rolelink" data-role="${esc(x.r)}" title="点一下,看她所有的场次">${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
   `</div>
