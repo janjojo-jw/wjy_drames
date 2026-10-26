@@ -1616,15 +1616,16 @@ $('#ddlg').addEventListener('click',e=>{
 
 /* ---- manage dialog ---- */
 const LAB={light:'景光',place:'景别(地点)',main:'主场景',sub:'次场景'};
+const lists={light:[],place:[],main:[],sub:[]}; // 管理窗里各栏当前列出的选项(预设 + 场次里出现过的)
 function drawManage(){
   let h=`<b>角色</b><div class="opt">`+S.roles.map((r,i)=>`<span class="chip">${esc(r)}<button class="rn" data-ren="${i}" title="改名">✎</button><button data-delr="${i}" title="删除">✕</button></span>`).join('')+`</div>
    <div class="add"><input id="newRole" placeholder="新增角色名称"><button data-addr>新增</button></div>
    <p class="hint">改名会同步更新所有场次;删除角色会一并移除该角色在各场次的纪录。</p>`;
   for(const f of ['light','place','main','sub'])
     h+=`<hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><b>${LAB[f]}选项</b><div class="opt">`+
-    (S.opts[f]||[]).map((o,i)=>`<span class="chip">${esc(o)}<button data-delo="${f}|${i}">✕</button></span>`).join('')+
+    (lists[f]=options(f)).map((o,i)=>`<span class="chip">${esc(o)}<button class="rn" data-reno="${f}|${i}" title="改名">✎</button>${(S.opts[f]||[]).includes(o)?`<button data-delo="${f}|${i}" title="删除">✕</button>`:''}</span>`).join('')+
     `</div><div class="add"><input data-newo="${f}" placeholder="新增${LAB[f]}选项"><button data-addo="${f}">新增</button></div>
-    <div class="hint">已出现在场次中的其他值也会自动出现在选单。</div>`;
+    <div class="hint">场次里出现过的值会自动列在这里;改名会同步更新所有场次,只有手动新增的选项才能删除。</div>`;
   $('#mBody').innerHTML=h;
   const B=$('#mBody');
   B.querySelector('[data-addr]').onclick=()=>{const v=$('#newRole').value.trim();if(!v)return;if(S.roles.includes(v))return alert('已有这个角色');S.roles.push(v);save();drawManage();render()};
@@ -1640,7 +1641,18 @@ function drawManage(){
     const f=b.dataset.addo,i=B.querySelector(`[data-newo="${f}"]`),v=i.value.trim();if(!v)return;
     if(!S.opts[f].includes(v))S.opts[f].push(v);save();drawManage();render()});
   B.querySelectorAll('[data-newo]').forEach(i=>i.onkeydown=e=>{if(e.key==='Enter')B.querySelector(`[data-addo="${i.dataset.newo}"]`).click()});
-  B.querySelectorAll('[data-delo]').forEach(b=>b.onclick=()=>{const[f,i]=b.dataset.delo.split('|');S.opts[f].splice(+i,1);save();drawManage();render()});
+  B.querySelectorAll('[data-delo]').forEach(b=>b.onclick=()=>{
+    const[f,i]=b.dataset.delo.split('|'),o=lists[f][+i];
+    S.opts[f]=S.opts[f].filter(x=>x!==o);save();drawManage();render()});
+  // 改名:同步改掉所有场次里用到这个名称的地方;若新名称已存在则合并
+  B.querySelectorAll('[data-reno]').forEach(b=>b.onclick=()=>{
+    const[f,i]=b.dataset.reno.split('|'),old=lists[f][+i];
+    const n=(prompt(`${LAB[f]}改名`,old)||'').trim();
+    if(!n||n===old)return;
+    if(lists[f].includes(n)&&!confirm(`「${n}」已经存在。要把「${old}」合并成「${n}」吗?`))return;
+    S.opts[f]=uniq((S.opts[f]||[]).map(x=>x===old?n:x));
+    S.scenes.forEach(s=>{if(cut(s[f])===old)s[f]=n});
+    save();drawManage();render()});
 }
 /* 管理窗里的新增/改名/删除会立刻生效;「取消」= 放弃这次打开窗口后做的所有改动 */
 let manageSnap=null;
