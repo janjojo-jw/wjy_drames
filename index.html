@@ -185,7 +185,9 @@ tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);t
 #pdlg{width:auto;max-width:96vw;padding:6px;background:#000;border-color:#555;cursor:zoom-out}
 #pdlg img{display:block;max-width:calc(96vw - 12px);max-height:calc(92vh - 12px);object-fit:contain;border-radius:8px}
 .sc-photo{display:block;width:100%;max-height:190px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--line);cursor:zoom-in}
-.cam{font-size:11px;opacity:.85}
+.cam{position:absolute;left:0;top:12px;font-size:7px;line-height:1;opacity:.9;pointer-events:none} /* 贴在行首、不占位,不会撑大栏位 */
+#vScenes tbody tr td:first-child{position:relative}
+.sc-card .h .cam{position:static;font-size:12px;margin-right:-4px}
 /* 场次表:行与行之间的分隔线加深 */
 #vScenes tbody td{border-bottom:1px solid #5c5c68}
 #vScenes tbody tr:last-child td{border-bottom-color:#7a7a86}
@@ -1721,9 +1723,9 @@ function renderScenes(rows){
   const chipsOf=s=>S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('');
   const cards=rows.map(s=>{
     const meta=[s.light,s.place,s.main,s.sub].filter(Boolean).map(esc).join(' · '),cast=chipsOf(s);
-    return`<div class="sc-card" data-id="${s.id}"><div class="h"><b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${s.photo?`<img class="sc-photo" src="${phSrc(s.photo)}" alt="现场照片" loading="lazy">`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
+    return`<div class="sc-card" data-id="${s.id}"><div class="h">${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}<b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${s.photo?`<img class="sc-photo" src="${phSrc(s.photo)}" alt="现场照片" loading="lazy">`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
   $('#vScenes').innerHTML=`<div class="mcards">${cards}<div class="tot">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div><div class="mtable"><table><thead><tr>${sortHead()}</tr></thead><tbody>`+
-  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}${s.photo?' <span class="cam" title="有现场照片">📷</span>':''}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
+  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
   `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table></div><p class="hint hintTable">点任一场可查看完整资讯${ADMIN?',并可在窗口里编辑':''}。</p>${ADMIN?'<p class="hint hintCard">点任一张卡片即可编辑。</p>':''}`;
   document.querySelectorAll('th.sortable').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;SORT=SORT.key===k?{key:k,dir:-SORT.dir}:{key:k,dir:1};render()});
