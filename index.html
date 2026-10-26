@@ -1883,13 +1883,14 @@ function renderPie(rows){
   });
   const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b ${x.n==='其他'?'':`class="rolelink" data-role="${esc(x.n)}"`}>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
   $('#vStats').innerHTML=`<div class="pie"><button class="pieback" type="button">← 返回长条图</button><h3>角色戏份占比(按页数)<small>统计范围:${esc(scope==='全部场次'?'不筛选(包含所有场次)':scope)}</small></h3>
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色占比圆饼图">${svg}</svg>
-    <ul class="plegend">${legend}</ul>
-<div class="note"><b>圆饼图的算法</b>
+    <div class="note"><b>圆饼图的算法</b>
       <p>每一块 = 该角色的页数 ÷ 所有角色页数的加总(${fmt(sum)} 页),各块加起来刚好 100%。</p>
       <p>一场戏有多位角色时,每位角色都各算一次整场页数,所以这个加总(${fmt(sum)} 页)会比实际总页数(${fmt(rows.reduce((a,s)=>a+(num(s.pages)||0),0))} 页)大。</p>
       <p>因此这里的百分比和「戏份占比结算」长条图的页数占比不同:圆饼图表示「在所有角色的戏份总量里占几成」,长条图表示「占了整部戏多少篇幅」。</p>
-      <p>只列前 6 位有名字的角色,其余合并为「其他」。</p></div></div>`;
+      <p>只列前 6 位有名字的角色,其余合并为「其他」。</p></div>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色占比圆饼图">${svg}</svg>
+    <ul class="plegend">${legend}</ul>
+</div>`;
 }
 /* 点角色名:列出她所有的场次 */
 function openRole(r){
