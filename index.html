@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hans">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>戲份盤點</title>
+<title>戏份盘点</title>
 <style>
 :root{--bg:#f6f3ee;--card:#fff;--ink:#231f1b;--mute:#7b7168;--line:#e4ddd3;--accent:#9b3d2e;--accent2:#2f5d62;--chip:#efe9df;--bar:#c9694f}
 @media (prefers-color-scheme:dark){:root{--bg:#1b1917;--card:#252220;--ink:#efe9e1;--mute:#a39a8f;--line:#38332f;--accent:#e0836b;--accent2:#7fb3b8;--chip:#332e2a;--bar:#d9765c}}
@@ -56,31 +56,34 @@ label input,label select,label textarea{display:block;width:100%;margin-top:3px;
 .add{display:flex;gap:6px;margin-top:6px}
 .add input{flex:1}
 .foot{margin-top:16px;display:flex;justify-content:flex-end;gap:8px}
+.adm[hidden],[hidden]{display:none!important}
 .empty{color:var(--mute);padding:24px;text-align:center}
 </style>
 </head>
 <body>
 <header>
-  <h1 id="title">戲份盤點<small id="saved"></small></h1>
+  <h1 id="title">戏份盘点<small id="saved"></small></h1>
   <div class="bar">
-    <button class="primary" id="addScene">＋ 新增場次</button>
-    <button id="manage">選單／角色管理</button>
-    <button id="exp">匯出 JSON</button>
-    <button id="csv">匯出 CSV</button>
-    <button id="imp">匯入 JSON</button>
-    <button id="reset" class="danger">還原網站資料</button>
+    <button class="primary adm" id="addScene" hidden>+ 新增场次</button>
+    <button class="adm" id="manage" hidden>选单/角色管理</button>
+    <button class="adm" id="exp" hidden>导出 JSON</button>
+    <button id="csv">导出 CSV</button>
+    <button class="adm" id="imp" hidden>导入 JSON</button>
+    <button class="adm danger" id="reset" hidden>还原网站数据</button>
+    <button id="login">管理员登录</button>
+    <button id="logout" class="danger" hidden>退出管理员</button>
     <input type="file" id="file" accept=".json" hidden>
   </div>
 </header>
 <main>
-  <div class="tabs"><button data-t="scenes" class="on">場次表</button><button data-t="stats">戲份占比結算</button></div>
+  <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比结算</button></div>
 
   <div class="card" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
     <div class="bar" style="margin-bottom:12px">
-      <label>集數<select id="fEp"></select></label>
-      <label>拍攝日期<select id="fDate"></select></label>
+      <label>集数<select id="fEp"></select></label>
+      <label>拍摄日期<select id="fDate"></select></label>
       <label>角色<select id="fRole"></select></label>
-      <label>搜尋<input id="fQ" placeholder="場景、內容…"></label>
+      <label>搜寻<input id="fQ" placeholder="场景、内容…"></label>
     </div>
     <div id="vScenes" class="scroll"></div>
     <div id="vStats" hidden></div>
@@ -89,37 +92,47 @@ label input,label select,label textarea{display:block;width:100%;margin-top:3px;
 
 <dialog id="dlg">
   <form method="dialog" id="form">
-    <h2 id="dTitle" style="margin-top:0">場次</h2>
+    <h2 id="dTitle" style="margin-top:0">场次</h2>
     <div class="grid">
-      <label>拍攝日期<input name="date" list="l-date" placeholder="10.21 或 10.21-10.22"></label>
-      <label>集數<input name="ep" type="number" min="1" required></label>
-      <label>場號<input name="sc" required placeholder="如 4C、26A"></label>
+      <label>拍摄日期<input name="date" list="l-date" placeholder="10.21 或 10.21-10.22"></label>
+      <label>集数<input name="ep" type="number" min="1" required></label>
+      <label>场号<input name="sc" required placeholder="如 4C、26A"></label>
       <label>景光<input name="light" list="l-light"></label>
-      <label>景別（地點）<input name="place" list="l-place"></label>
-      <label>主場景<input name="main" list="l-main"></label>
-      <label>次場景<input name="sub" list="l-sub"></label>
-      <label>頁數<input name="pages" placeholder="0.5；閃回填 /"></label>
+      <label>景别(地点)<input name="place" list="l-place"></label>
+      <label>主场景<input name="main" list="l-main"></label>
+      <label>次场景<input name="sub" list="l-sub"></label>
+      <label>页数<input name="pages" placeholder="0.5;闪回填 /"></label>
     </div>
-    <label style="margin-top:10px">內容概要<textarea name="summary" rows="2"></textarea></label>
+    <label style="margin-top:10px">内容概要<textarea name="summary" rows="2"></textarea></label>
     <div style="margin-top:12px">
-      <label>出場角色（點一下切換）</label>
-      <div class="hint">空白＝不在場　<b style="color:var(--accent2)">實心</b>＝在場並計入頁數　虛線＝在場但不計頁（如閃回、背景）</div>
+      <label>出场角色(点一下切换)</label>
+      <div class="hint">空白=不在场 <b style="color:var(--accent2)">实心</b>=在场并计入页数 虚线=在场但不计页(如闪回、背景)</div>
       <div class="roles" id="dRoles"></div>
     </div>
     <div class="foot">
-      <button type="button" class="danger" id="dDel">刪除此場</button>
+      <button type="button" class="danger" id="dDel">删除此场</button>
       <span style="flex:1"></span>
       <button type="button" id="dCancel">取消</button>
-      <button class="primary" id="dSave">儲存</button>
+      <button class="primary" id="dSave">储存</button>
     </div>
   </form>
 </dialog>
 
 <dialog id="mdlg">
-  <h2 style="margin-top:0">選單／角色管理</h2>
-  <p class="hint">選單選項會自動收錄場次裡出現過的內容；這裡可以額外預設選項。刪除選項不會改動既有場次。</p>
+  <h2 style="margin-top:0">选单/角色管理</h2>
+  <p class="hint">选单选项会自动收录场次里出现过的内容;这里可以额外预设选项。删除选项不会改动既有场次。</p>
   <div id="mBody"></div>
   <div class="foot"><button class="primary" id="mClose">完成</button></div>
+</dialog>
+
+<dialog id="ldlg">
+  <form id="lform">
+    <h2 style="margin-top:0">管理员登录</h2>
+    <label>账号<input name="u" autocomplete="username" required></label>
+    <label style="margin-top:10px">密码<input name="p" type="password" autocomplete="current-password" required></label>
+    <div id="lerr" class="hint" style="color:var(--accent);min-height:18px;margin-top:8px"></div>
+    <div class="foot" style="margin-top:6px"><button type="button" id="lCancel">取消</button><button class="primary">登录</button></div>
+  </form>
 </dialog>
 
 <datalist id="l-date"></datalist><datalist id="l-light"></datalist><datalist id="l-place"></datalist><datalist id="l-main"></datalist><datalist id="l-sub"></datalist>
@@ -1363,7 +1376,8 @@ label input,label select,label textarea{display:block;width:100%;margin-top:3px;
 }</script>
 <script>
 const KEY='xifen-v1';
-let S={title:'戲份盤點',roles:[],scenes:[],opts:{light:[],place:[],main:[],sub:[]}};
+let S={title:'戏份盘点',roles:[],scenes:[],opts:{light:[],place:[],main:[],sub:[]}};
+let ADMIN=false;
 let tab='scenes', editing=null, draft={};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1382,8 +1396,8 @@ async function load(){
   render();
 }
 function save(){
-  try{localStorage.setItem(KEY,JSON.stringify(S));$('#saved').textContent='已儲存於此瀏覽器'}
-  catch(e){$('#saved').textContent='無法儲存（請用匯出 JSON 備份）'}
+  try{localStorage.setItem(KEY,JSON.stringify(S));$('#saved').textContent='已储存於此浏览器'}
+  catch(e){$('#saved').textContent='无法储存(请用导出 JSON 备份)'}
 }
 function commit(){save();render()}
 
@@ -1413,9 +1427,14 @@ function fillFilters(){
     $('#l-'+f).innerHTML=(f==='date'?dates:options(f)).map(o=>`<option value="${esc(o)}">`).join('');
 }
 
+function applyAdmin(){
+  document.querySelectorAll('.adm').forEach(b=>b.hidden=!ADMIN);
+  $('#login').hidden=ADMIN;$('#logout').hidden=!ADMIN;
+}
 function render(){
-  document.title=S.title||'戲份盤點';
-  $('#title').firstChild.textContent=S.title||'戲份盤點';
+  applyAdmin();
+  document.title=S.title||'戏份盘点';
+  $('#title').firstChild.textContent=S.title||'戏份盘点';
   fillFilters();
   const rows=filtered();
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
@@ -1424,12 +1443,12 @@ function render(){
 }
 
 function renderScenes(rows){
-  if(!rows.length){$('#vScenes').innerHTML='<div class="empty">沒有符合的場次</div>';return}
+  if(!rows.length){$('#vScenes').innerHTML='<div class="empty">没有符合的场次</div>';return}
   const tp=rows.reduce((a,s)=>a+(num(s.pages)||0),0);
-  $('#vScenes').innerHTML=`<table><thead><tr><th>日期</th><th>集</th><th>場</th><th>景光</th><th>地點</th><th>主場景</th><th>次場景</th><th>內容概要</th><th class="num">頁</th><th>角色</th></tr></thead><tbody>`+
-  rows.map(s=>`<tr class="row" data-id="${s.id}" style="cursor:pointer"><td>${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
-  `</tbody><tfoot><tr><th colspan="8">合計 ${rows.length} 場</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table><p class="hint">點任一列即可編輯。</p>`;
-  document.querySelectorAll('tr.row').forEach(tr=>tr.onclick=()=>openScene(+tr.dataset.id));
+  $('#vScenes').innerHTML=`<table><thead><tr><th>日期</th><th>集</th><th>场</th><th>景光</th><th>地点</th><th>主场景</th><th>次场景</th><th>内容概要</th><th class="num">页</th><th>角色</th></tr></thead><tbody>`+
+  rows.map(s=>`<tr class="row" data-id="${s.id}" style="${ADMIN?'cursor:pointer':''}"><td>${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
+  `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table>${ADMIN?'<p class="hint">点任一列即可编辑。</p>':''}`;
+  if(ADMIN)document.querySelectorAll('tr.row').forEach(tr=>tr.onclick=()=>openScene(+tr.dataset.id));
 }
 
 function renderStats(rows){
@@ -1439,28 +1458,29 @@ function renderStats(rows){
     rows.forEach(s=>{if(s.cast[r]===1){p+=num(s.pages)||0;n++}else if(s.cast[r]===2)z++});
     return{r,p,n,z};
   }).sort((a,b)=>b.p-a.p||b.n-a.n);
-  const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部場次';
-  $('#vStats').innerHTML=`<div class="sum"><div><b>${rows.length}</b><span>場次</span></div><div><b>${fmt(total)}</b><span>總頁數</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>統計範圍（可用上方篩選）</span></div></div>
-  <div class="scroll" style="margin-top:14px"><table><thead><tr><th>#</th><th>角色</th><th class="num">計頁場數</th><th class="num">頁數</th><th class="num">占總頁數</th><th style="width:34%">戲分占比</th><th class="num">不計頁出場</th></tr></thead><tbody>`+
+  const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部场次';
+  $('#vStats').innerHTML=`<div class="sum"><div><b>${rows.length}</b><span>场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围(可用上方筛选)</span></div></div>
+  <div class="scroll" style="margin-top:14px"><table><thead><tr><th>#</th><th>角色</th><th class="num">计页场数</th><th class="num">页数</th><th class="num">占总页数</th><th style="width:34%">戏分占比</th><th class="num">不计页出场</th></tr></thead><tbody>`+
   list.map((x,i)=>{const pc=total?x.p/total*100:0;return`<tr><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${fmt(x.p)}</td><td class="num">${pc.toFixed(1)}%</td><td><div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div></td><td class="num">${x.z}</td></tr>`}).join('')+
-  `</tbody></table></div><p class="hint">占比＝該角色計入頁數 ÷ 所選場次總頁數。同一場有多位角色同時出現，所以各角色占比相加會超過 100%。</p>`;
+  `</tbody></table></div><p class="hint">占比=该角色计入页数 ÷ 所选场次总页数。同一场有多位角色同時出现,所以各角色占比相加会超过 100%。</p>`;
 }
 
 /* ---- scene dialog ---- */
 function openScene(id){
+  if(!ADMIN)return;
   editing=id;
   const s=id?S.scenes.find(x=>x.id===id):{date:'',ep:'',sc:'',light:'',place:'',main:'',sub:'',pages:'',summary:'',cast:{}};
   const f=$('#form');
   for(const k of ['date','ep','sc','light','place','main','sub','summary'])f[k].value=cut2(s[k]);
   f.pages.value=num(s.pages)!==null?s.pages:(s.pnote||'');
   draft={...s.cast};
-  $('#dTitle').textContent=id?'編輯場次':'新增場次';
+  $('#dTitle').textContent=id?'编辑场次':'新增场次';
   $('#dDel').style.display=id?'':'none';
   drawRoles();$('#dlg').showModal();
 }
 const cut2=v=>v==null?'':String(v);
 function drawRoles(){
-  $('#dRoles').innerHTML=S.roles.map(r=>`<button type="button" class="${draft[r]?'s'+draft[r]:''}" data-r="${esc(r)}">${esc(r)}</button>`).join('')||'<span class="hint">尚無角色，請到「選單／角色管理」新增。</span>';
+  $('#dRoles').innerHTML=S.roles.map(r=>`<button type="button" class="${draft[r]?'s'+draft[r]:''}" data-r="${esc(r)}">${esc(r)}</button>`).join('')||'<span class="hint">尚无角色,请到「选单/角色管理」新增。</span>';
   document.querySelectorAll('#dRoles button').forEach(b=>b.onclick=()=>{const r=b.dataset.r;const n=((draft[r]||0)+1)%3;n?draft[r]=n:delete draft[r];drawRoles()});
 }
 $('#form').onsubmit=e=>{
@@ -1474,30 +1494,30 @@ $('#form').onsubmit=e=>{
   $('#dlg').close();commit();
 };
 $('#dCancel').onclick=()=>$('#dlg').close();
-$('#dDel').onclick=()=>{if(confirm('確定刪除這一場？')){S.scenes=S.scenes.filter(x=>x.id!==editing);$('#dlg').close();commit()}};
+$('#dDel').onclick=()=>{if(confirm('确定删除这一场?')){S.scenes=S.scenes.filter(x=>x.id!==editing);$('#dlg').close();commit()}};
 $('#addScene').onclick=()=>openScene(0);
 
 /* ---- manage dialog ---- */
-const LAB={light:'景光',place:'景別（地點）',main:'主場景',sub:'次場景'};
+const LAB={light:'景光',place:'景别(地点)',main:'主场景',sub:'次场景'};
 function drawManage(){
-  let h=`<b>角色</b><div class="opt">`+S.roles.map((r,i)=>`<span class="chip">${esc(r)}<button class="rn" data-ren="${i}" title="改名">✎</button><button data-delr="${i}" title="刪除">✕</button></span>`).join('')+`</div>
-   <div class="add"><input id="newRole" placeholder="新增角色名稱"><button data-addr>新增</button></div>
-   <p class="hint">改名會同步更新所有場次；刪除角色會一併移除該角色在各場次的紀錄。</p>`;
+  let h=`<b>角色</b><div class="opt">`+S.roles.map((r,i)=>`<span class="chip">${esc(r)}<button class="rn" data-ren="${i}" title="改名">✎</button><button data-delr="${i}" title="删除">✕</button></span>`).join('')+`</div>
+   <div class="add"><input id="newRole" placeholder="新增角色名称"><button data-addr>新增</button></div>
+   <p class="hint">改名会同步更新所有场次;删除角色会一并移除该角色在各场次的纪录。</p>`;
   for(const f of ['light','place','main','sub'])
-    h+=`<hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><b>${LAB[f]}選項</b><div class="opt">`+
+    h+=`<hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><b>${LAB[f]}选项</b><div class="opt">`+
     (S.opts[f]||[]).map((o,i)=>`<span class="chip">${esc(o)}<button data-delo="${f}|${i}">✕</button></span>`).join('')+
-    `</div><div class="add"><input data-newo="${f}" placeholder="新增${LAB[f]}選項"><button data-addo="${f}">新增</button></div>
-    <div class="hint">已出現在場次中的其他值也會自動出現在選單。</div>`;
+    `</div><div class="add"><input data-newo="${f}" placeholder="新增${LAB[f]}选项"><button data-addo="${f}">新增</button></div>
+    <div class="hint">已出现在场次中的其他值也会自动出现在选单。</div>`;
   $('#mBody').innerHTML=h;
   const B=$('#mBody');
-  B.querySelector('[data-addr]').onclick=()=>{const v=$('#newRole').value.trim();if(!v)return;if(S.roles.includes(v))return alert('已有這個角色');S.roles.push(v);save();drawManage();render()};
+  B.querySelector('[data-addr]').onclick=()=>{const v=$('#newRole').value.trim();if(!v)return;if(S.roles.includes(v))return alert('已有这个角色');S.roles.push(v);save();drawManage();render()};
   $('#newRole').onkeydown=e=>{if(e.key==='Enter')B.querySelector('[data-addr]').click()};
   B.querySelectorAll('[data-ren]').forEach(b=>b.onclick=()=>{
-    const old=S.roles[+b.dataset.ren],n=(prompt('新名稱',old)||'').trim();
-    if(!n||n===old)return;if(S.roles.includes(n))return alert('已有這個角色');
+    const old=S.roles[+b.dataset.ren],n=(prompt('新名称',old)||'').trim();
+    if(!n||n===old)return;if(S.roles.includes(n))return alert('已有这个角色');
     S.roles[+b.dataset.ren]=n;S.scenes.forEach(s=>{if(old in s.cast){s.cast[n]=s.cast[old];delete s.cast[old]}});save();drawManage();render()});
   B.querySelectorAll('[data-delr]').forEach(b=>b.onclick=()=>{
-    const r=S.roles[+b.dataset.delr];if(!confirm(`刪除角色「${r}」？各場次中的紀錄也會移除。`))return;
+    const r=S.roles[+b.dataset.delr];if(!confirm(`删除角色「${r}」?各场次中的纪录也会移除。`))return;
     S.roles.splice(+b.dataset.delr,1);S.scenes.forEach(s=>delete s.cast[r]);save();drawManage();render()});
   B.querySelectorAll('[data-addo]').forEach(b=>b.onclick=()=>{
     const f=b.dataset.addo,i=B.querySelector(`[data-newo="${f}"]`),v=i.value.trim();if(!v)return;
@@ -1517,24 +1537,55 @@ function dl(name,text,type){const a=document.createElement('a');a.href=URL.creat
 $('#exp').onclick=()=>dl('data.json',JSON.stringify(S,null,1),'application/json');
 $('#csv').onclick=()=>{
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const head=['拍攝日期','集數','場號','景光','景別','主場景','次場景','內容概要','頁數',...S.roles];
+  const head=['拍摄日期','集数','场号','景光','景别','主场景','次场景','内容概要','页数',...S.roles];
   const lines=[head.map(q).join(',')];
   sorted().forEach(s=>lines.push([s.date,s.ep,s.sc,s.light,s.place,cut(s.main),cut(s.sub),cut(s.summary),num(s.pages)!==null?s.pages:s.pnote,...S.roles.map(r=>s.cast[r]===1?s.pages:s.cast[r]===2?'/':'')].map(q).join(',')));
   const tot=S.roles.map(r=>fmt(S.scenes.reduce((a,s)=>a+pageOf(s,r),0)));
-  lines.push(['合計','','','','','','','',fmt(S.scenes.reduce((a,s)=>a+(num(s.pages)||0),0)),...tot].map(q).join(','));
-  dl('戲份盤點.csv','﻿'+lines.join('\r\n'),'text/csv');
+  lines.push(['合计','','','','','','','',fmt(S.scenes.reduce((a,s)=>a+(num(s.pages)||0),0)),...tot].map(q).join(','));
+  dl('戏份盘点.csv','﻿'+lines.join('\r\n'),'text/csv');
 };
 $('#imp').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   try{const d=JSON.parse(await f.text());if(!Array.isArray(d.roles)||!Array.isArray(d.scenes))throw 0;
-    if(!confirm('匯入會取代目前此瀏覽器中的資料，確定嗎？'))return;
+    if(!confirm('导入会取代目前此浏览器中的资料,确定吗?'))return;
     S=Object.assign({opts:{light:[],place:[],main:[],sub:[]}},d);commit()}
-  catch(_){alert('檔案格式不正確')}
+  catch(_){alert('档案格式不正确')}
   e.target.value='';
 };
-$('#reset').onclick=()=>{if(confirm('清除此瀏覽器中的修改，還原為網站上的 data.json？'))
+$('#reset').onclick=()=>{if(confirm('清除此浏览器中的修改,还原为网站上的 data.json?'))
   {try{localStorage.removeItem(KEY)}catch(e){}$('#saved').textContent='';load()}};
+
+/* ---- admin login ---- */
+/* 注意:这是纯前端的登录,只是隐藏编辑功能;账号密码以哈希形式存放在网页里。 */
+const AUTH='2d64c3532ae8a4ae12bc97dbcb25dc01a314b712d3ec04ce15394bcf9f7d40d3';
+function sha256(s){
+  const K=[];let p=2;while(K.length<64){let ok=true;for(let i=2;i*i<=p;i++)if(p%i===0){ok=false;break}if(ok)K.push(Math.floor((Math.cbrt(p)%1)*4294967296));p++}
+  let H=[];p=2;while(H.length<8){let ok=true;for(let i=2;i*i<=p;i++)if(p%i===0){ok=false;break}if(ok)H.push(Math.floor((Math.sqrt(p)%1)*4294967296));p++}
+  const b=Array.from(new TextEncoder().encode(s)),l=b.length*8;b.push(0x80);while(b.length%64!==56)b.push(0);
+  for(let i=7;i>=0;i--)b.push(i>3?0:(l>>>(i*8))&255);
+  const R=(x,n)=>(x>>>n)|(x<<(32-n));
+  for(let o=0;o<b.length;o+=64){
+    const w=[];for(let i=0;i<16;i++)w[i]=(b[o+i*4]<<24)|(b[o+i*4+1]<<16)|(b[o+i*4+2]<<8)|b[o+i*4+3];
+    for(let i=16;i<64;i++){const s0=R(w[i-15],7)^R(w[i-15],18)^(w[i-15]>>>3),s1=R(w[i-2],17)^R(w[i-2],19)^(w[i-2]>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)|0}
+    let [a,c,d,e,f,g,h2,j]=H;
+    for(let i=0;i<64;i++){const S1=R(f,6)^R(f,11)^R(f,25),ch=(f&g)^(~f&h2),t1=(j+S1+ch+K[i]+w[i])|0,S0=R(a,2)^R(a,13)^R(a,22),mj=(a&c)^(a&d)^(c&d),t2=(S0+mj)|0;
+      j=h2;h2=g;g=f;f=(e+t1)|0;e=d;d=c;c=a;a=(t1+t2)|0}
+    H=[H[0]+a,H[1]+c,H[2]+d,H[3]+e,H[4]+f,H[5]+g,H[6]+h2,H[7]+j].map(x=>x|0);
+  }
+  return H.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
+}
+$('#login').onclick=()=>{$('#lform').reset();$('#lerr').textContent='';$('#ldlg').showModal()};
+$('#lCancel').onclick=()=>$('#ldlg').close();
+$('#lform').onsubmit=e=>{
+  e.preventDefault();const f=e.target;
+  if(sha256(f.u.value.trim()+'|'+f.p.value)===AUTH){
+    ADMIN=true;try{sessionStorage.setItem('xifen-admin','1')}catch(_){}
+    $('#ldlg').close();render();
+  }else $('#lerr').textContent='账号或密码不正确';
+};
+$('#logout').onclick=()=>{ADMIN=false;try{sessionStorage.removeItem('xifen-admin')}catch(_){}tab==='scenes'||0;render()};
+try{ADMIN=sessionStorage.getItem('xifen-admin')==='1'}catch(_){}
 
 load();
 </script>
