@@ -1823,7 +1823,7 @@ let sortBy='p';
 /* 圆饼图:前 6 位有名字的角色 + 其他,共 7 块;比例=该角色页数 ÷ 所有角色页数之和 */
 const PIE_COL=['#d9b56c','#4fb3a9','#6a8ff0','#a07bd8','#e8884a','#8bc56b'],PIE_OTHER='#7b7b86';
 function renderPie(rows){
-  const byN=PIEBY==='n',unit=byN?'场':'页';
+  const byN=false,unit='页'; // 圆饼图只按页数
   const per=S.roles.map(r=>({r,p:rows.reduce((a,s)=>a+(s.cast[r]===1?(byN?1:(num(s.pages)||0)):0),0)}));
   const sum=per.reduce((a,x)=>a+x.p,0);
   const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部场次';
@@ -1845,12 +1845,10 @@ function renderPie(rows){
   });
   const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
   $('#vStats').innerHTML=`<div class="pie"><h3>角色戏份占比<small>范围:${esc(scope)}</small></h3>
-    <div class="bar pieby"><span class="hint">依据:</span><button data-by="p" class="${byN?'':'on'}">按页数</button><button data-by="n" class="${byN?'on':''}">按场次</button></div>
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色占比圆饼图">${svg}</svg>
     <ul class="plegend">${legend}</ul>
     <p class="hint">比例 = 该角色的${byN?'场次数':'页数'} ÷ 所有角色${byN?'场次数':'页数'}之和。同一场有多位角色时每人各算一次,所以和表格里的占比不同。只列前 6 位有名字的角色,其余合并为「其他」。</p></div>`;
 }
-document.addEventListener('click',e=>{const b=e.target.closest('.pieby button');if(b){PIEBY=b.dataset.by;render()}});
 function renderStats(rows){
   const total=rows.reduce((a,s)=>a+(num(s.pages)||0),0),nsc=rows.length;
   const list=S.roles.map(r=>{
