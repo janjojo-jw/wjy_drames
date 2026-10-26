@@ -175,16 +175,24 @@ tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);t
 #vScenes tbody tr:last-child td{border-bottom-color:#7a7a86}
 tr.row,.sc-card{cursor:pointer}
 /* 场次详情小视窗 */
-#ddlg{width:min(560px,94vw)}
-#ddlg h2{margin:0 0 14px}
-.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px}
-.dgrid div{background:#101014;border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:0}
-.dgrid span{display:block;font-size:11.5px;color:var(--mute);letter-spacing:.06em}
-.dgrid b{display:block;font-weight:500;font-size:15px;margin-top:1px;overflow-wrap:anywhere}
-.dgrid .nv,.dtext .nv{color:#5d5b57;font-style:normal}
-.dsec{margin-top:14px}
-.dsec>span{display:block;font-size:12px;color:var(--mute);letter-spacing:.06em;margin-bottom:6px}
-.dtext{background:#101014;border:1px solid var(--line);border-radius:8px;padding:10px 12px;white-space:pre-wrap;line-height:1.6;overflow-wrap:anywhere}
+#ddlg{width:min(375px,94vw);padding:16px;border-radius:12px;border-color:#6d6880;
+ background:linear-gradient(160deg,#3d394b,#2d2b38);box-shadow:0 24px 60px -16px #000}
+#ddlg h2{margin:0 0 10px;font-size:16px;color:#fff3d1}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px}
+.dgrid div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:6px 9px;min-width:0}
+.dgrid span{display:block;font-size:10.5px;color:#b9b4c6;letter-spacing:.05em}
+.dgrid b{display:block;font-weight:500;font-size:13.5px;margin-top:1px;overflow-wrap:anywhere;color:#fff}
+.dgrid .nv,.dtext .nv{color:#8a8599;font-style:normal}
+.dsec{margin-top:10px}
+.dsec>span{display:block;font-size:11px;color:#b9b4c6;letter-spacing:.05em;margin-bottom:4px}
+.dtext{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:7px 10px;font-size:13.5px;white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere;color:#fff}
+#ddlg .roles{gap:5px}
+#ddlg .chip{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);color:#f2eefb;font-size:12px;margin:0}
+#ddlg .chip.pink{background:var(--pink);border-color:var(--pink);color:var(--gold)}
+#ddlg .hint{color:#b9b4c6}
+#ddlg .foot{margin-top:12px;gap:6px}
+#ddlg .foot button{padding:5px 14px;font-size:13.5px}
+#ddlg .foot button:not(.primary){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28)}
 /* 统计摘要:四个小框同一排,各有不同底色 */
 .sum{flex-wrap:nowrap;gap:8px}
 .sum div{flex:0 1 auto;min-width:0;padding:9px 14px;border-radius:9px}
