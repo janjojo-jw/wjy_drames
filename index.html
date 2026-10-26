@@ -2034,7 +2034,8 @@ function renderPlan(){
   box.insertAdjacentHTML('beforeend',`<h3 style="margin:14px 0 6px;font-size:16px">对戏占比<small style="margin-left:8px;color:var(--mute);font-weight:400">谁跟谁一起出场</small></h3>
   <div class="note" style="margin:0 0 10px"><p>看「<select id="planLead" style="font:inherit;background:#121217;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 6px">${roles.map(r=>`<option ${r===planLead?'selected':''}>${esc(r)}</option>`).join('')}</select>」的戏,有多少和别的角色同场。</p>
   <p>该角色共有 <span class="hl">${mn}</span> 场、<span class="hl">${fmt(mp)}</span> 页。占比 = 和某角色同场的场次(页数)÷ 她自己的总场次(页数)。一场里有好几个人时,每个人各算一次,所以占比加起来会超过 100%。</p></div>
-  <div class="mcards">${row('只有 TA 一人(没有其他角色)',sn,sp)}${co.map(x=>row('和 '+x.r+' 同场',x.n,x.p)).join('')}</div>`);
+  <div class="mcards">${row('只有 TA 一人(没有其他角色)',sn,sp)}${co.map(x=>row('和 '+x.r+' 同场',x.n,x.p)).join('')}</div>
+  <div class="scroll mtable"><table><thead><tr><th>#</th><th>同场的角色</th><th class="num">场次</th><th class="num">占她场次</th><th style="width:22%"></th><th class="num">页数</th><th class="num">占她页数</th><th style="width:22%"></th></tr></thead><tbody>${[{r:'只有 TA 一人(没有其他角色)',n:sn,p:sp},...co].map((x,i)=>{const ps=mn?x.n/mn*100:0,pp=mp?x.p/mp*100:0;return`<tr><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')}</tbody></table></div>`);
   $('#planLead').onchange=e=>{planLead=e.target.value;render()};
   document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{planSort=b.dataset.s;render()});
 }
