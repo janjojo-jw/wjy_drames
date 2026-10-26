@@ -159,14 +159,19 @@ body.mview main{max-width:600px;padding:0 12px 50px}
 body.mview .mtable{display:none}
 body.mview .mcards{display:block}
 body.mview .tabs{gap:14px}
+.srow{display:flex;gap:8px;align-items:flex-end;flex:1 1 280px}
+.srow>label:first-child{flex:1;min-width:0}
+.srow input#fQ{width:100%;box-sizing:border-box}
+.pchk{display:flex!important;flex-direction:row!important;align-items:center;gap:6px;white-space:nowrap;padding:8px 10px;border:1px solid var(--line);border-radius:6px;cursor:pointer;color:var(--ink);font-size:14px;background:#101014}
+.pchk input{width:auto;margin:0;accent-color:var(--accent)}
 /* 筛选区:手机版卡片、或手机屏幕上(不论哪种排版)都是 三个选单一排 + 搜寻独占一行 */
 body.mview .card > .bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 body.mview .card > .bar label select{padding:7px 6px;font-size:14px}
-body.mview .card > .bar label.full{grid-column:1/-1}
+body.mview .card > .bar label.full,body.mview .card > .bar .srow{grid-column:1/-1}
 @media(max-width:700px){
  .card > .bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
  .card > .bar label select{padding:7px 6px;font-size:14px}
- .card > .bar label.full{grid-column:1/-1}
+ .card > .bar label.full,.card > .bar .srow{grid-column:1/-1}
 }
 /* 祝阮/阮卿卿:亮金色字(底色略加深,金字才看得清) */
 :root{--gold:#fff3c4;--goldshadow:0 1px 2px rgba(120,0,60,.6),0 0 1px rgba(120,0,60,.6)}
@@ -272,7 +277,7 @@ body.mview .hintCard{display:block}
       <label>集数<select id="fEp"></select></label>
       <label>拍摄日期<select id="fDate"></select></label>
       <label>角色<select id="fRole"></select></label>
-      <label class="full">搜寻<input id="fQ" placeholder="场景、内容…"></label>
+      <div class="full srow"><label>搜寻<input id="fQ" placeholder="场景、内容…"></label><label class="pchk"><input type="checkbox" id="fPhoto">📷 只看有照片</label></div>
     </div>
     <div id="vScenes" class="scroll"></div>
     <div id="vStats" hidden></div>
@@ -1657,8 +1662,8 @@ function commit(){save();render()}
 const num=v=>typeof v==='number'?v:null;
 function pageOf(sc,r){return sc.cast[r]===1?(num(sc.pages)||0):0}
 function filtered(){
-  const ep=$('#fEp').value,dt=$('#fDate').value,ro=$('#fRole').value,q=$('#fQ').value.trim().toLowerCase();
-  return sorted().filter(s=>(!ep||String(s.ep)===ep)&&(!dt||s.date===dt)&&(!ro||s.cast[ro])&&
+  const ep=$('#fEp').value,dt=$('#fDate').value,ro=$('#fRole').value,q=$('#fQ').value.trim().toLowerCase(),ph=$('#fPhoto').checked;
+  return sorted().filter(s=>(!ph||s.photo)&&(!ep||String(s.ep)===ep)&&(!dt||s.date===dt)&&(!ro||s.cast[ro])&&
     (!q||[s.main,s.sub,s.summary,s.place,s.sc].join(' ').toLowerCase().includes(q)));
 }
 /* 排序:点表头的字;同一列点第一次=递增,再点=递减。默认按集数递增,每次打开都从这里开始 */
@@ -1951,7 +1956,7 @@ document.querySelectorAll('.vsw button').forEach(b=>b.onclick=()=>{
   applyView();
 });
 applyView();
-['fEp','fDate','fRole'].forEach(i=>$('#'+i).onchange=render);$('#fQ').oninput=render;
+['fEp','fDate','fRole'].forEach(i=>$('#'+i).onchange=render);$('#fQ').oninput=render;$('#fPhoto').onchange=render;
 /* ---- import / export ---- */
 function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $('#exp').onclick=()=>dl('data.json',JSON.stringify(S,null,1),'application/json');
