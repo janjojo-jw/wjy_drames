@@ -159,6 +159,19 @@ body.mview main{max-width:600px;padding:0 12px 50px}
 body.mview .mtable{display:none}
 body.mview .mcards{display:block}
 body.mview .tabs{gap:14px}
+.pie{padding:4px 0 6px}
+.pie h3{margin:6px 0 4px;font:600 18px "Songti SC","Noto Serif CJK SC",serif;color:#f3ecd9;letter-spacing:.1em}
+.pie h3 small{display:block;font:400 12px sans-serif;color:var(--mute);letter-spacing:.04em;margin-top:4px}
+.pie svg{display:block;width:100%;max-width:520px;height:auto;margin:6px auto}
+.pie .pl{fill:#fff;font:700 15px sans-serif;paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:3px;stroke-linejoin:round}
+.pie .pl.p2{font-size:13px;font-weight:600}
+.pie .pl.out{font-size:13px;fill:var(--ink);stroke:#17171c}
+.plegend{list-style:none;margin:8px auto 0;padding:0;max-width:520px}
+.plegend li{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #2f2f37}
+.plegend i{width:14px;height:14px;border-radius:4px;flex:none}
+.plegend b{font-weight:600;flex:1}
+.plegend span{color:var(--mute);font-size:13px}
+.plegend em{font-style:normal;min-width:52px;text-align:right;font-variant-numeric:tabular-nums}
 .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:99999;max-width:min(92vw,520px);padding:12px 18px;border-radius:12px;font:600 16px/1.4 sans-serif;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.2s;display:flex;align-items:center;gap:10px}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .toast.busy{background:#2b4f8f}
@@ -284,7 +297,7 @@ body.mview .hintCard{display:block}
 <main>
   <div class="tabrow">
     <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比结算</button></div>
-    <div class="vsw" role="group" aria-label="排版"><span class="hint">排版</span><button data-v="table" class="on">电脑版</button><button data-v="card">手机版</button></div>
+    <div class="vsw" role="group" aria-label="排版"><span class="hint">排版</span><button data-v="table" class="on">电脑版</button><button data-v="card">手机版</button><button data-v="pie">圆饼图</button></div>
   </div>
 
   <div class="card" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
@@ -1491,7 +1504,7 @@ body.mview .hintCard{display:block}
 const KEY='xifen-v1';
 let S={title:'戏份盘点',roles:[],scenes:[],opts:{light:[],place:[],main:[],sub:[]}};
 let ADMIN=false;
-let tab='scenes', editing=null, draft={};
+let tab='scenes', editing=null, draft={}, PIE=false, PREVTAB='scenes';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt=n=>(Math.round(n*100)/100).toString();
@@ -1771,7 +1784,8 @@ function render(){
   const rows=filtered();
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
-  if(tab==='scenes')renderScenes(rows);else renderStats(rows);
+  if(tab==='scenes')renderScenes(rows);else if(PIE)renderPie(rows);else renderStats(rows);
+  document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',PIE?b.dataset.v==='pie':b.dataset.v===VIEW));
 }
 
 function renderScenes(rows){
@@ -1802,6 +1816,34 @@ function stickyCols(){ // 量出前两栏的实际宽度,让第 2、3 栏贴在�
 window.addEventListener('resize',()=>{if(tab==='scenes')stickyCols()});
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(tab==='scenes')stickyCols()});
 let sortBy='p';
+/* 圆饼图:前 6 位有名字的角色 + 其他,共 7 块;比例=该角色页数 ÷ 所有角色页数之和 */
+const PIE_COL=['#d9b56c','#4fb3a9','#6a8ff0','#a07bd8','#e8884a','#8bc56b'],PIE_OTHER='#7b7b86';
+function renderPie(rows){
+  const per=S.roles.map(r=>({r,p:rows.reduce((a,s)=>a+(s.cast[r]===1?(num(s.pages)||0):0),0)}));
+  const sum=per.reduce((a,x)=>a+x.p,0);
+  const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部场次';
+  if(!sum){$('#vStats').innerHTML='<div class="hint" style="padding:30px 0;text-align:center">这个范围内没有页数资料,无法画圆饼图。</div>';return}
+  const named=per.filter(x=>x.p>0&&!/配角/.test(x.r)).sort((a,b)=>b.p-a.p);
+  const top=named.slice(0,6),rest=sum-top.reduce((a,x)=>a+x.p,0);
+  let ci=0;const sl=top.map(x=>({n:x.r,p:x.p,c:x.r===PINK?'#ff4fa3':PIE_COL[ci++%PIE_COL.length]}));
+  if(rest>0.0001)sl.push({n:'其他',p:rest,c:PIE_OTHER});
+  const W=560,H=380,cx=W/2,cy=H/2,R=130;let a0=-Math.PI/2,svg='';
+  const pt=(a,r)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+  sl.forEach(x=>{
+    const pc=x.p/sum,a1=a0+pc*2*Math.PI,mid=(a0+a1)/2,pct=(Math.round(pc*1000)/10)+'%';
+    if(sl.length===1)svg+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="${x.c}" stroke="#17171c" stroke-width="2"/>`;
+    else{const [x0,y0]=pt(a0,R),[x1,y1]=pt(a1,R);svg+=`<path d="M${cx},${cy} L${x0.toFixed(2)},${y0.toFixed(2)} A${R},${R} 0 ${pc>.5?1:0} 1 ${x1.toFixed(2)},${y1.toFixed(2)} Z" fill="${x.c}" stroke="#17171c" stroke-width="2"/>`}
+    if(pc>=.1){const [tx,ty]=pt(mid,R*.62);svg+=`<text class="pl" x="${tx.toFixed(1)}" y="${(ty-3).toFixed(1)}" text-anchor="middle">${esc(x.n)}</text><text class="pl p2" x="${tx.toFixed(1)}" y="${(ty+14).toFixed(1)}" text-anchor="middle">${pct}</text>`}
+    else{const [lx,ly]=pt(mid,R+8),[ex,ey]=pt(mid,R+26),right=Math.cos(mid)>=0,ax=ex+(right?14:-14);
+      svg+=`<polyline points="${lx.toFixed(1)},${ly.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)} ${ax.toFixed(1)},${ey.toFixed(1)}" fill="none" stroke="${x.c}" stroke-width="1.5"/><text class="pl out" x="${(ax+(right?4:-4)).toFixed(1)}" y="${(ey+4).toFixed(1)}" text-anchor="${right?'start':'end'}">${esc(x.n)} ${pct}</text>`}
+    a0=a1;
+  });
+  const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b>${esc(x.n)}</b><span>${fmt(x.p)} 页</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
+  $('#vStats').innerHTML=`<div class="pie"><h3>角色戏份占比<small>范围:${esc(scope)}</small></h3>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色页数占比圆饼图">${svg}</svg>
+    <ul class="plegend">${legend}</ul>
+    <p class="hint">比例 = 该角色的页数 ÷ 所有角色页数之和。同一场有多位角色时每人各算一次,所以和表格里的「页数占比」不同。只列前 6 位有名字的角色,其余合并为「其他」。</p></div>`;
+}
 function renderStats(rows){
   const total=rows.reduce((a,s)=>a+(num(s.pages)||0),0),nsc=rows.length;
   const list=S.roles.map(r=>{
@@ -2004,7 +2046,7 @@ $('#mCancel').onclick=()=>{
 };
 
 /* ---- tabs / filters ---- */
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;PIE=false;render()});
 
 /* ---- 排版切换:电脑版(表格)/ 手机版(卡片),默认电脑版,记住选择 ---- */
 let VIEW='table';
@@ -2014,6 +2056,8 @@ function applyView(){
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
 }
 document.querySelectorAll('.vsw button').forEach(b=>b.onclick=()=>{
+  if(b.dataset.v==='pie'){if(!PIE)PREVTAB=tab;PIE=true;tab='stats';render();return} // 圆饼图:电脑版/手机版共用同一页
+  if(PIE){PIE=false;tab=PREVTAB}
   VIEW=b.dataset.v;try{localStorage.setItem('xifen-view',VIEW)}catch(_){}
   applyView();
 });
