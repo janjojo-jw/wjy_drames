@@ -334,7 +334,7 @@ body.mview .hintCard{display:block}
   </div>
 
   <div class="card" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
-    <div class="bar" style="margin-bottom:12px">
+    <div class="bar" id="filterBar" style="margin-bottom:12px">
       <label>集数<select id="fEp"></select></label>
       <label>拍摄日期<select id="fDate"></select></label>
       <label>角色<select id="fRole"></select></label>
@@ -1822,7 +1822,8 @@ function render(){
   document.title=S.title||'戏份盘点';
   $('#title').firstChild.textContent=S.title||'戏份盘点';
   fillFilters();
-  const rows=filtered();
+  const rows=tab==='stats'?[...S.scenes]:filtered(); // 统计页不使用筛选,永远统计全部场次
+  $('#filterBar').hidden=tab==='stats';
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else if(PIE)renderPie(rows);else renderStats(rows);
@@ -1864,7 +1865,7 @@ function renderPie(rows){
   const byN=false,unit='页'; // 圆饼图只按页数
   const per=S.roles.map(r=>({r,p:rows.reduce((a,s)=>a+(s.cast[r]===1?(byN?1:(num(s.pages)||0)):0),0)}));
   const sum=per.reduce((a,x)=>a+x.p,0);
-  const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部场次';
+  const scope='全部场次';
   if(!sum){$('#vStats').innerHTML='<div class="pie"><button class="pieback" type="button">← 返回长条图</button><div class="hint" style="padding:30px 0;text-align:center">这个范围内没有页数资料,无法画圆饼图。</div></div>';return}
   const named=per.filter(x=>x.p>0&&!/配角/.test(x.r)).sort((a,b)=>b.p-a.p);
   const top=named.slice(0,6),rest=sum-top.reduce((a,x)=>a+x.p,0);
@@ -1882,7 +1883,7 @@ function renderPie(rows){
     a0=a1;
   });
   const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b ${x.n==='其他'?'':`class="rolelink" data-role="${esc(x.n)}"`}>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
-  $('#vStats').innerHTML=`<div class="pie"><button class="pieback" type="button">← 返回长条图</button><h3>角色戏份占比(按页数)<small>统计范围:${esc(scope==='全部场次'?'不筛选(包含所有场次)':scope)}</small></h3>
+  $('#vStats').innerHTML=`<div class="pie"><button class="pieback" type="button">← 返回长条图</button><h3>角色戏份占比(按页数)<small>统计范围:包含所有场次</small></h3>
     <div class="note"><b>圆饼图的算法</b>
       <p>每一块 = 该角色的页数 ÷ 所有角色页数的加总(${fmt(sum)} 页),各块加起来刚好 100%。</p>
       <p>一场戏有多位角色时,每位角色都各算一次整场页数,所以这个加总(${fmt(sum)} 页)会比实际总页数(${fmt(rows.reduce((a,s)=>a+(num(s.pages)||0),0))} 页)大。</p>
@@ -1938,13 +1939,13 @@ function renderStats(rows){
     rows.forEach(s=>{if(s.cast[r]===1){p+=num(s.pages)||0;n++}});
     return{r,p,n};
   }).sort((a,b)=>sortBy==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
-  const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部场次';
+  const scope='全部场次';
   const bar=(pc,pink)=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
   $('#vStats').innerHTML=`<div class="note"><b>长条图的算法</b>
     <p>场次占比 = 该角色有戏的场次数 ÷ 所选范围的总场次数(${nsc} 场)</p>
     <p>页数占比 = 该角色的页数 ÷ 所选范围的总页数(${fmt(total)} 页)</p>
     <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>
-  <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div title="可用上方的筛选调整统计范围"><b>${esc(scope)}</b><span>统计范围</span></div></div>
+  <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围</span></div></div>
   <div class="bar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button></div>
   <div class="mcards" style="margin-top:10px">`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b class="rolelink" data-role="${esc(x.r)}">${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
