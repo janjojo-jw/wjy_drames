@@ -283,7 +283,6 @@ body.mview .hintCard{display:block}
     <h2 id="dTitle" style="margin-top:0">场次</h2>
     <div class="grid">
       <label>拍摄日期<input name="d1" type="date" min="2026-01-01" max="2027-12-31"></label>
-      <label>结束日期(跨天才填)<input name="d2" type="date" min="2026-01-01" max="2027-12-31"></label>
       <label>集数<select name="ep" required><option value="">请选择</option></select></label>
       <label>场号<input name="sc" required placeholder="如 4C、26A"></label>
       <label>景光<input name="light" list="l-light"></label>
@@ -1747,7 +1746,7 @@ function openScene(id){
   const f=$('#form');
   for(const k of ['sc','light','place','main','sub','summary'])f[k].value=cut2(s[k]);
   fillEps(s.ep);
-  const dd=dateToInput(s.date);f.d1.value=dd[0]||'';f.d2.value=dd[1]||'';f.d1.dataset.raw=s.date||'';f.d1.dataset.o1=f.d1.value;f.d1.dataset.o2=f.d2.value;
+  const dd=dateToInput(s.date);f.d1.value=dd[0]||'';f.d1.dataset.raw=s.date||'';f.d1.dataset.o1=f.d1.value;
   f.pages.value=num(s.pages)!==null?s.pages:(s.pnote||'');
   draft={...s.cast};
   draftPhoto=s.photo||'';drawPhoto();
@@ -1773,10 +1772,9 @@ $('#form').onsubmit=e=>{
   e.preventDefault();
   const f=e.target,v=n=>f[n].value.trim();
   const pv=v('pages'),pn=pv===''?null:Number(pv);
-  const sep=(f.d1.dataset.raw||'').includes('/')&&f.d1.value===f.d1.dataset.o1&&f.d2.value===f.d1.dataset.o2?'/':'-';
-  let d1=inputToDate(f.d1.value),d2=inputToDate(f.d2.value);
-  if(!d1&&d2){d1=d2;d2=''}
-  const dateStr=(f.d1.value===f.d1.dataset.o1&&f.d2.value===f.d1.dataset.o2)?f.d1.dataset.raw:(d2&&d2!==d1?d1+sep+d2:d1);
+  const sep=(f.d1.dataset.raw||'').includes('/')&&f.d1.value===f.d1.dataset.o1?'/':'-';
+  let d1=inputToDate(f.d1.value),d2='';
+  const dateStr=(f.d1.value===f.d1.dataset.o1)?f.d1.dataset.raw:(d2&&d2!==d1?d1+sep+d2:d1);
   const rec={date:dateStr,ep:+v('ep'),sc:v('sc'),light:v('light'),place:v('place'),main:v('main'),sub:v('sub'),summary:v('summary'),
     pages:pn!==null&&!isNaN(pn)?pn:null,pnote:pn!==null&&isNaN(pn)?pv:'',cast:{...draft}};
   if(draftPhoto)rec.photo=draftPhoto;
