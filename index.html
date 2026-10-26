@@ -71,6 +71,7 @@ label input,label select,label textarea{display:block;width:100%;margin-top:4px;
 .roles button.pink.s2{border-style:dashed}
 tr.pinkrow td b{color:var(--pink)}
 tr.pinkrow .meter i{background:linear-gradient(90deg,#d83686,#ff7cc0)}
+.sortb{padding:3px 12px;font-size:13px}.sortb.on{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;font-weight:600}
 .empty{color:var(--mute);padding:28px;text-align:center}
 ::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#33333b;border-radius:4px}
 /* --- 提亮:标题 / 选中状态 --- */
@@ -1365,18 +1366,22 @@ function renderScenes(rows){
   if(ADMIN)document.querySelectorAll('tr.row').forEach(tr=>tr.onclick=()=>openScene(+tr.dataset.id));
 }
 
+let sortBy='p';
 function renderStats(rows){
-  const total=rows.reduce((a,s)=>a+(num(s.pages)||0),0);
+  const total=rows.reduce((a,s)=>a+(num(s.pages)||0),0),nsc=rows.length;
   const list=S.roles.map(r=>{
-    let p=0,n=0,z=0;
-    rows.forEach(s=>{if(s.cast[r]===1){p+=num(s.pages)||0;n++}else if(s.cast[r]===2)z++});
-    return{r,p,n,z};
-  }).sort((a,b)=>b.p-a.p||b.n-a.n);
+    let p=0,n=0;
+    rows.forEach(s=>{if(s.cast[r]===1){p+=num(s.pages)||0;n++}});
+    return{r,p,n};
+  }).sort((a,b)=>sortBy==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
   const scope=[$('#fEp').value&&`第${$('#fEp').value}集`,$('#fDate').value,$('#fRole').value&&`含${$('#fRole').value}`].filter(Boolean).join('、')||'全部场次';
-  $('#vStats').innerHTML=`<div class="sum"><div><b>${rows.length}</b><span>场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围(可用上方筛选)</span></div></div>
-  <div class="scroll" style="margin-top:14px"><table><thead><tr><th>#</th><th>角色</th><th class="num">计页场数</th><th class="num">页数</th><th class="num">占总页数</th><th style="width:40%">戏分占比</th></tr></thead><tbody>`+
-  list.map((x,i)=>{const pc=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${fmt(x.p)}</td><td class="num">${pc.toFixed(1)}%</td><td><div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div></td></tr>`}).join('')+
-  `</tbody></table></div><p class="hint">占比=该角色计入页数 ÷ 所选场次总页数。同一场有多位角色同時出现,所以各角色占比相加会超过 100%。</p>`;
+  const bar=(pc,pink)=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
+  $('#vStats').innerHTML=`<div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围(可用上方筛选)</span></div></div>
+  <div class="bar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button></div>
+  <div class="scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>角色</th><th class="num">场次</th><th class="num">场次占比</th><th style="width:22%"></th><th class="num">页数</th><th class="num">页数占比</th><th style="width:22%"></th></tr></thead><tbody>`+
+  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+
+  `</tbody></table></div><p class="hint">场次占比=该角色有戏的场数 ÷ 所选场次总数;页数占比=该角色的页数 ÷ 所选场次总页数。同一场有多位角色同时出现,所以各角色占比相加会超过 100%。</p>`;
+  document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{sortBy=b.dataset.s;render()});
 }
 
 /* ---- scene dialog ---- */
