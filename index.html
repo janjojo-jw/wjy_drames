@@ -175,23 +175,25 @@ tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);t
 #vScenes tbody tr:last-child td{border-bottom-color:#7a7a86}
 tr.row,.sc-card{cursor:pointer}
 /* 场次详情小视窗 */
-#ddlg{width:min(375px,94vw);padding:16px;border-radius:12px;border-color:#6d6880;
+#ddlg{width:min(300px,94vw);padding:11px 12px;border-radius:10px;border-color:#6d6880;
  background:linear-gradient(160deg,#3d394b,#2d2b38);box-shadow:0 24px 60px -16px #000}
-#ddlg h2{margin:0 0 10px;font-size:16px;color:#fff3d1}
-.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px}
-.dgrid div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:6px 9px;min-width:0}
-.dgrid span{display:block;font-size:10.5px;color:#b9b4c6;letter-spacing:.05em}
-.dgrid b{display:block;font-weight:500;font-size:13.5px;margin-top:1px;overflow-wrap:anywhere;color:#fff}
+#ddlg h2{margin:0 0 7px;font-size:14px;color:#fff3d1}
+/* 信息格子:短的挤在同一行,长的(主/次场景)各占半行,总共约 3 行 */
+.dgrid{display:flex;flex-wrap:wrap;gap:4px}
+.dgrid div{flex:1 1 auto;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:3px 7px;min-width:0}
+.dgrid div.wide{flex:1 1 44%}
+.dgrid span{display:block;font-size:9.5px;line-height:1.3;color:#b9b4c6;letter-spacing:.03em;white-space:nowrap}
+.dgrid b{display:block;font-weight:500;font-size:12px;line-height:1.3;overflow-wrap:anywhere;color:#fff}
 .dgrid .nv,.dtext .nv{color:#8a8599;font-style:normal}
-.dsec{margin-top:10px}
-.dsec>span{display:block;font-size:11px;color:#b9b4c6;letter-spacing:.05em;margin-bottom:4px}
-.dtext{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:7px 10px;font-size:13.5px;white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere;color:#fff}
-#ddlg .roles{gap:5px}
-#ddlg .chip{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);color:#f2eefb;font-size:12px;margin:0}
+.dsec{margin-top:7px}
+.dsec>span{display:block;font-size:9.5px;color:#b9b4c6;letter-spacing:.03em;margin-bottom:3px}
+.dtext{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:4px 8px;font-size:12px;white-space:pre-wrap;line-height:1.45;overflow-wrap:anywhere;color:#fff}
+#ddlg .roles{gap:4px}
+#ddlg .chip{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);color:#f2eefb;font-size:10.5px;line-height:1.5;padding:0 6px;margin:0}
 #ddlg .chip.pink{background:var(--pink);border-color:var(--pink);color:var(--gold)}
-#ddlg .hint{color:#b9b4c6}
-#ddlg .foot{margin-top:12px;gap:6px}
-#ddlg .foot button{padding:5px 14px;font-size:13.5px}
+#ddlg .hint{color:#b9b4c6;font-size:11px}
+#ddlg .foot{margin-top:8px;gap:5px}
+#ddlg .foot button{padding:3px 11px;font-size:12px}
 #ddlg .foot button:not(.primary){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28)}
 /* 统计摘要:四个小框同一排,各有不同底色 */
 .sum{flex-wrap:nowrap;gap:8px}
@@ -1588,8 +1590,8 @@ function openDetail(id){
   const v=x=>{const t=cut2(x).trim();return t?esc(t):'<i class="nv">—</i>'};
   const pg=num(s.pages)!==null?`${fmt(s.pages)} 页`:(s.pnote?esc(s.pnote):'');
   $('#ddTitle').textContent=`第${s.ep}集 · ${s.sc}场`;
-  $('#ddGrid').innerHTML=[['拍摄日期',s.date],['集数',s.ep?`第 ${s.ep} 集`:''],['场号',s.sc],['景光',s.light],['景别(地点)',s.place],['主场景',s.main],['次场景',s.sub]]
-    .map(([k,x])=>`<div><span>${k}</span><b>${v(x)}</b></div>`).join('')+`<div><span>页数</span><b>${pg||'<i class="nv">—</i>'}</b></div>`;
+  $('#ddGrid').innerHTML=[['拍摄日期',v(s.date)],['集数',s.ep?`第${s.ep}集`:v('')],['场号',v(s.sc)],['页数',pg||'<i class="nv">—</i>'],['景光',v(s.light)],['景别(地点)',v(s.place)],['主场景',v(s.main),1],['次场景',v(s.sub),1]]
+    .map(([k,h,w])=>`<div class="${w?'wide':''}"><span>${k}</span><b>${h}</b></div>`).join('');
   $('#ddSum').innerHTML=v(s.summary);
   const cast=S.roles.filter(r=>s.cast[r]);
   $('#ddCastLab').textContent=`有戏份的角色(${cast.length})`;
