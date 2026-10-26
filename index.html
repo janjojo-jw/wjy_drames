@@ -186,7 +186,7 @@ body.mview .hintCard{display:block}
 /* 信息格子:短的挤在同一行,长的(主/次场景)各占半行,总共约 3 行 */
 .dgrid{display:flex;flex-wrap:wrap;gap:4px}
 .dgrid div{flex:1 1 auto;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:3px 7px;min-width:0}
-.dgrid div.wide{flex:1 1 44%}
+.dgrid div.wide{flex:1 1 28%}
 .dgrid span{display:block;font-size:9.5px;line-height:1.3;color:#b9b4c6;letter-spacing:.03em;white-space:nowrap}
 .dgrid b{display:block;font-weight:500;font-size:12px;line-height:1.3;overflow-wrap:anywhere;color:#fff}
 .dgrid .nv,.dtext .nv{color:#8a8599;font-style:normal}
@@ -1598,7 +1598,7 @@ function openDetail(id){
   const v=x=>{const t=cut2(x).trim();return t?esc(t):'<i class="nv">—</i>'};
   const pg=num(s.pages)!==null?`${fmt(s.pages)} 页`:(s.pnote?esc(s.pnote):'');
   $('#ddTitle').textContent=`第${s.ep}集 · ${s.sc}场`;
-  $('#ddGrid').innerHTML=[['拍摄日期',v(s.date)],['集数',s.ep?`第${s.ep}集`:v('')],['场号',v(s.sc)],['页数',pg||'<i class="nv">—</i>'],['景光',v(s.light)],['景别(地点)',v(s.place)],['主场景',v(s.main),1],['次场景',v(s.sub),1]]
+  $('#ddGrid').innerHTML=[['拍摄日期',v(s.date)],['集数',s.ep?`第${s.ep}集`:v('')],['场号',v(s.sc)],['页数',pg||'<i class="nv">—</i>'],['景光',v(s.light)],['景别(地点)',v(s.place),1],['主场景',v(s.main),1],['次场景',v(s.sub),1]]
     .map(([k,h,w])=>`<div class="${w?'wide':''}"><span>${k}</span><b>${h}</b></div>`).join('');
   $('#ddSum').innerHTML=v(s.summary);
   const cast=S.roles.filter(r=>s.cast[r]);
