@@ -161,7 +161,7 @@ body.mview .mcards{display:block}
 body.mview .tabs{gap:14px}
 body.mview .card > .bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 body.mview .card > .bar label select{padding:7px 6px;font-size:14px}
-body.mview .card > .bar label.full{grid-column:span 2}
+body.mview .card > .bar label.full{grid-column:1/-1}
 /* 祝阮/阮卿卿:亮金色字(底色略加深,金字才看得清) */
 :root{--gold:#fff3c4;--goldshadow:0 1px 2px rgba(120,0,60,.6),0 0 1px rgba(120,0,60,.6)}
 .chip.pink{background:var(--pink);border-color:var(--pink);color:var(--gold);text-shadow:var(--goldshadow)}
@@ -174,6 +174,10 @@ tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);t
 #vScenes tbody td{border-bottom:1px solid #5c5c68}
 #vScenes tbody tr:last-child td{border-bottom-color:#7a7a86}
 tr.row{cursor:pointer}
+th.sortable{cursor:pointer;user-select:none;-webkit-user-select:none;transition:color .15s}
+th.sortable:hover{color:var(--ink)}
+th.sortable.sorted{color:var(--accent)}
+th.sortable i{display:inline-block;width:1.1em;font-style:normal;font-size:10px;text-align:center;color:var(--accent)}
 body.mview .sc-card{cursor:default}
 body.mview.adminOn .sc-card{cursor:pointer}
 .hintCard{display:none}
@@ -250,7 +254,6 @@ body.mview .hintCard{display:block}
       <label>集数<select id="fEp"></select></label>
       <label>拍摄日期<select id="fDate"></select></label>
       <label>角色<select id="fRole"></select></label>
-      <label>排序<select id="fSort"><option value="ep">按集数</option><option value="date">按拍摄日期</option></select></label>
       <label class="full">搜寻<input id="fQ" placeholder="场景、内容…"></label>
     </div>
     <div id="vScenes" class="scroll"></div>
@@ -1467,12 +1470,28 @@ function filtered(){
   return sorted().filter(s=>(!ep||String(s.ep)===ep)&&(!dt||s.date===dt)&&(!ro||s.cast[ro])&&
     (!q||[s.main,s.sub,s.summary,s.place,s.sc].join(' ').toLowerCase().includes(q)));
 }
-let SORT='ep'; // 默认按集数;每次打开都从集数开始
+/* 排序:点表头的字;同一列点第一次=递增,再点=递减。默认按集数递增,每次打开都从这里开始 */
+let SORT={key:'ep',dir:1};
+const COLS=[['date','日期'],['ep','集'],['sc','场'],['light','景光'],['place','地点'],['main','主场景'],['sub','次场景'],['summary','内容概要'],['pages','页','num'],['cast','角色']];
 function sorted(){
   const k=s=>parseInt(s.sc)||0;
-  const dk=s=>{const m=String(s.date||'').match(/(\d{1,2})\.(\d{1,2})/);return m?(+m[1])*100+(+m[2]):9999}; // 取日期里第一个 月.日
   const byEp=(a,b)=>a.ep-b.ep||k(a)-k(b)||String(a.sc).localeCompare(String(b.sc),'zh',{numeric:true});
-  return [...S.scenes].sort(SORT==='date'?(a,b)=>dk(a)-dk(b)||byEp(a,b):byEp);
+  const dk=s=>{const m=String(s.date||'').match(/(\d{1,2})\.(\d{1,2})/);return m?(+m[1])*100+(+m[2]):null}; // 跨天取第一个 月.日
+  const txt=f=>s=>{const t=cut(s[f]).trim();return t||null};
+  const val={ // 取每一场在该列的排序值;null=空白,永远排在最后
+    date:dk, ep:s=>s.ep||null, sc:s=>k(s)||null, light:txt('light'), place:txt('place'), main:txt('main'), sub:txt('sub'), summary:txt('summary'),
+    pages:s=>num(s.pages), cast:s=>S.roles.filter(r=>s.cast[r]).length||null
+  }[SORT.key];
+  const cmp=(x,y)=>typeof x==='string'||typeof y==='string'?String(x).localeCompare(String(y),'zh',{numeric:true}):x-y;
+  return [...S.scenes].sort((a,b)=>{
+    const x=val(a),y=val(b);
+    if(x===null&&y!==null)return 1;
+    if(y===null&&x!==null)return -1;
+    return (x===null?0:cmp(x,y)*SORT.dir)||byEp(a,b);
+  });
+}
+function sortHead(){
+  return COLS.map(([key,lab,cls])=>`<th class="sortable${cls?' '+cls:''}${SORT.key===key?' sorted':''}" data-k="${key}" title="点一下排序,再点一下反向">${lab}<i>${SORT.key===key?(SORT.dir>0?'▲':'▼'):''}</i></th>`).join('');
 }
 function uniq(a){return [...new Set(a.filter(Boolean))]}
 function options(f){return uniq([...(S.opts[f]||[]),...S.scenes.map(s=>cut(s[f]))])}
@@ -1501,7 +1520,6 @@ function render(){
   fillFilters();
   const rows=filtered();
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
-  $('#fSort').parentElement.hidden=tab!=='scenes'; // 排序只用于场次表
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else renderStats(rows);
 }
@@ -1514,9 +1532,11 @@ function renderScenes(rows){
   const cards=rows.map(s=>{
     const meta=[s.light,s.place,s.main,s.sub].filter(Boolean).map(esc).join(' · '),cast=chipsOf(s);
     return`<div class="sc-card" data-id="${s.id}"><div class="h"><b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
-  $('#vScenes').innerHTML=`<div class="mcards">${cards}<div class="tot">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div><div class="mtable"><table><thead><tr><th>日期</th><th>集</th><th>场</th><th>景光</th><th>地点</th><th>主场景</th><th>次场景</th><th>内容概要</th><th class="num">页</th><th>角色</th></tr></thead><tbody>`+
+  $('#vScenes').innerHTML=`<div class="mcards">${cards}<div class="tot">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div><div class="mtable"><table><thead><tr>${sortHead()}</tr></thead><tbody>`+
   rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
   `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table></div><p class="hint hintTable">点任一场可查看完整资讯${ADMIN?',并可在窗口里编辑':''}。</p>${ADMIN?'<p class="hint hintCard">点任一张卡片即可编辑。</p>':''}`;
+  document.querySelectorAll('th.sortable').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;SORT=SORT.key===k?{key:k,dir:-SORT.dir}:{key:k,dir:1};render()});
   document.querySelectorAll('tr.row').forEach(tr=>tr.onclick=()=>openDetail(+tr.dataset.id));
   // 手机版卡片已显示全部资讯,不弹详情窗;只有管理员点卡片才进入编辑
   document.querySelectorAll('.sc-card').forEach(c=>{if(ADMIN)c.onclick=()=>openScene(+c.dataset.id)});
@@ -1688,8 +1708,6 @@ document.querySelectorAll('.vsw button').forEach(b=>b.onclick=()=>{
 });
 applyView();
 ['fEp','fDate','fRole'].forEach(i=>$('#'+i).onchange=render);$('#fQ').oninput=render;
-$('#fSort').onchange=()=>{SORT=$('#fSort').value;render()};
-
 /* ---- import / export ---- */
 function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $('#exp').onclick=()=>dl('data.json',JSON.stringify(S,null,1),'application/json');
