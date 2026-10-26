@@ -2,8 +2,16 @@
 <html lang="zh-Hans">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>戏份盘点</title>
+<meta name="theme-color" content="#0e0e11">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="戏份盘点">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 :root{color-scheme:dark;--bg:#0e0e11;--bg2:#15151a;--card:#17171c;--ink:#ece8df;--mute:#8d8a85;--line:#2a2a31;--accent:#d9b56c;--accent2:#d9b56c;--chip:#202027;--bar:linear-gradient(90deg,#8a6a2f,#e0bf7a);--glow:rgba(201,163,92,.14);--pink:#ff4fa3}
 *{box-sizing:border-box}
@@ -94,6 +102,10 @@ button.primary:hover{background:#fff1c8;color:#2a210a}
 .roles button.pink.s1{background:var(--pink);border-color:#ff9ccc;color:#3b0a66;box-shadow:0 0 12px rgba(255,79,163,.55)}
 dialog{border-color:#3a3a43}
 @media(max-width:600px){header{padding-top:24px}h1{font-size:23px}.card{padding:14px}}
+/* --- 以 app 方式开启时避开刘海 / 状态栏 / 底部横条 --- */
+header{padding-top:calc(34px + env(safe-area-inset-top));padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+main{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+@media(max-width:600px){header{padding-top:calc(24px + env(safe-area-inset-top))}}
 </style>
 </head>
 <body>
@@ -1523,6 +1535,10 @@ $('#logout').onclick=()=>{ADMIN=false;try{sessionStorage.removeItem('xifen-admin
 try{ADMIN=sessionStorage.getItem('xifen-admin')==='1'}catch(_){}
 
 load();
+
+if('serviceWorker' in navigator&&location.protocol!=='file:'){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
 </script>
 </body>
 </html>
