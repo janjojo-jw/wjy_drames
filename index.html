@@ -186,7 +186,7 @@ body.mview .tabs{gap:14px}
 b.rolelink{border-bottom:1px dotted var(--accent);padding-bottom:1px}
 b.rolelink::after{content:" ›";color:var(--accent);font-weight:400}
 /* 其他角色(非祝阮/阮卿卿)的标签:深蓝灰底 #282e52 */
-.chip.rolelink:not(.pink),#ddlg .chip.rolelink:not(.pink){background:#282e52;border-color:#4a5388;color:#e9ecff}
+.chip.rc:not(.pink),#ddlg .chip.rc:not(.pink){background:#282e52;border-color:#4a5388;color:#e9ecff}
 .chip.rolelink:hover{border-color:var(--accent);color:#fff3d1}
 .rolehint{margin:0 0 8px;font-size:12.5px;color:#cbbf9e}
 .rolehint b{color:var(--accent)}
@@ -359,7 +359,6 @@ body.mview .hintCard{display:block}
       <label>角色<select id="fRole"></select></label>
       <div class="full srow"><label>搜寻<input id="fQ" placeholder="场景、内容…"></label><label class="pchk"><input type="checkbox" id="fPhoto">📷 只看有照片</label></div>
     </div>
-    <p class="hint rolehint" id="roleHint">💡 点一行看这场的详情;<b>点角色标签</b>可以看她所有的场次</p>
     <div id="vScenes" class="scroll"></div>
     <div id="vStats" hidden></div>
   </div>
@@ -1843,7 +1842,7 @@ function render(){
   $('#title').firstChild.textContent=S.title||'戏份盘点';
   fillFilters();
   const rows=tab==='stats'?[...S.scenes]:filtered(); // 统计页不使用筛选,永远统计全部场次
-  $('#filterBar').hidden=tab==='stats';$('#roleHint').hidden=tab!=='scenes';$('#roleHint').innerHTML=VIEW==='card'?'💡 <b>点角色标签</b>可以看她所有的场次':'💡 点一行看这场的详情;<b>点角色标签</b>可以看她所有的场次';
+  $('#filterBar').hidden=tab==='stats';
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else if(PIE)renderPie(rows);else if(EPV)$('#vStats').innerHTML=epChart(rows);else renderStats(rows);
@@ -1855,12 +1854,12 @@ function renderScenes(rows){
   if(!rows.length){$('#vScenes').innerHTML='<div class="empty">没有符合的场次</div>';return}
   const tp=rows.reduce((a,s)=>a+(num(s.pages)||0),0);
   const pgOf=s=>num(s.pages)!==null?`${fmt(s.pages)}<small>页</small>`:esc(s.pnote||'');
-  const chipsOf=s=>S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rolelink ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}" data-role="${esc(r)}" title="点一下,看她所有的场次">${esc(r)}</span>`).join('');
+  const chipsOf=s=>S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rc ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('');
   const cards=rows.map(s=>{
     const meta=[s.light,s.place,s.main,s.sub].filter(Boolean).map(esc).join(' · '),cast=chipsOf(s);
     return`<div class="sc-card" data-id="${s.id}"><div class="h">${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}<b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${s.photo?`<img class="sc-photo" src="${phSrc(s.photo)}" alt="现场照片" loading="lazy">`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
   $('#vScenes').innerHTML=`<div class="mcards">${cards}<div class="tot">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div><div class="mtable"><table><thead><tr>${sortHead()}</tr></thead><tbody>`+
-  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}${esc(s.date).replace('/','/<br>')}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rolelink ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}" data-role="${esc(r)}" title="点一下,看她所有的场次">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
+  rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${s.photo?'<span class="cam" title="有现场照片">📷</span>':''}${esc(s.date).replace('/','/<br>')}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip rc ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
   `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table></div><p class="hint hintTable">点任一场可查看完整资讯${ADMIN?',并可在窗口里编辑':''}。</p>${ADMIN?'<p class="hint hintCard">点任一张卡片即可编辑。</p>':''}`;
   document.querySelectorAll('th.sortable').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;SORT=SORT.key===k?{key:k,dir:-SORT.dir}:{key:k,dir:1};render()});
@@ -1904,6 +1903,7 @@ function renderPie(rows){
   });
   const legend=sl.map(x=>`<li><i style="background:${x.c}"></i><b ${x.n==='其他'?'':`class="rolelink" data-role="${esc(x.n)}" title="点一下,看她所有的场次"`}>${esc(x.n)}</b><span>${fmt(x.p)} ${unit}</span><em>${(Math.round(x.p/sum*1000)/10)}%</em></li>`).join('');
   $('#vStats').innerHTML=`<div class="pie"><button class="pieback" type="button">← 返回长条图</button><h3>角色戏份占比(按页数)<small>统计范围:包含所有场次</small></h3>
+    <p class="rolehint" style="margin:6px 0 0">💡 <b>点下方的角色名</b>可以看她所有的场次</p>
     <div class="note"><b>圆饼图的算法</b>
       <p>每一块 = 该角色的页数 ÷ 所有角色页数的加总(${fmt(sum)} 页),各块加起来刚好 100%。</p>
       <p>一场戏有多位角色时,每位角色都各算一次整场页数,所以这个加总(${fmt(sum)} 页)会比实际总页数(${fmt(rows.reduce((a,s)=>a+(num(s.pages)||0),0))} 页)大。</p>
@@ -1961,7 +1961,8 @@ function renderStats(rows){
   }).sort((a,b)=>sortBy==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
   const scope='全部场次';
   const bar=(pc,pink)=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
-  $('#vStats').innerHTML=`<div class="note"><b>长条图的算法</b>
+  $('#vStats').innerHTML=`<p class="rolehint" style="margin:0 0 10px">💡 <b>点角色名</b>可以看她所有的场次</p>
+  <div class="note"><b>长条图的算法</b>
     <p>场次占比 = 该角色有戏的场次数 ÷ 所选范围的总场次数(${nsc} 场)</p>
     <p>页数占比 = 该角色的页数 ÷ 所选范围的总页数(${fmt(total)} 页)</p>
     <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>
@@ -2085,7 +2086,7 @@ function openDetail(id){
   $('#ddSum').innerHTML=v(s.summary);
   const cast=S.roles.filter(r=>s.cast[r]);
   $('#ddCastLab').textContent=`有戏份的角色(${cast.length})`;
-  $('#ddCast').innerHTML=cast.length?cast.map(r=>`<span class="chip rolelink ${r===PINK?'pink':''}" data-role="${esc(r)}" title="点一下,看她所有的场次">${esc(r)}</span>`).join(''):'<span class="hint">没有角色戏份</span>';
+  $('#ddCast').innerHTML=cast.length?cast.map(r=>`<span class="chip rc ${r===PINK?'pink':''}">${esc(r)}</span>`).join(''):'<span class="hint">没有角色戏份</span>';
   $('#ddEdit').hidden=!ADMIN;
   $('#ddlg').showModal();
 }
