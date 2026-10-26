@@ -161,7 +161,7 @@ body.mview .mcards{display:block}
 body.mview .tabs{gap:14px}
 body.mview .card > .bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 body.mview .card > .bar label select{padding:7px 6px;font-size:14px}
-body.mview .card > .bar label.full{grid-column:1/-1}
+body.mview .card > .bar label.full{grid-column:span 2}
 /* 祝阮/阮卿卿:亮金色字(底色略加深,金字才看得清) */
 :root{--gold:#fff3c4;--goldshadow:0 1px 2px rgba(120,0,60,.6),0 0 1px rgba(120,0,60,.6)}
 .chip.pink{background:var(--pink);border-color:var(--pink);color:var(--gold);text-shadow:var(--goldshadow)}
@@ -243,6 +243,7 @@ tr.row,.sc-card{cursor:pointer}
       <label>集数<select id="fEp"></select></label>
       <label>拍摄日期<select id="fDate"></select></label>
       <label>角色<select id="fRole"></select></label>
+      <label>排序<select id="fSort"><option value="ep">按集数</option><option value="date">按拍摄日期</option></select></label>
       <label class="full">搜寻<input id="fQ" placeholder="场景、内容…"></label>
     </div>
     <div id="vScenes" class="scroll"></div>
@@ -1459,9 +1460,12 @@ function filtered(){
   return sorted().filter(s=>(!ep||String(s.ep)===ep)&&(!dt||s.date===dt)&&(!ro||s.cast[ro])&&
     (!q||[s.main,s.sub,s.summary,s.place,s.sc].join(' ').toLowerCase().includes(q)));
 }
+let SORT='ep'; // 默认按集数;每次打开都从集数开始
 function sorted(){
   const k=s=>parseInt(s.sc)||0;
-  return [...S.scenes].sort((a,b)=>a.ep-b.ep||k(a)-k(b)||String(a.sc).localeCompare(String(b.sc),'zh',{numeric:true}));
+  const dk=s=>{const m=String(s.date||'').match(/(\d{1,2})\.(\d{1,2})/);return m?(+m[1])*100+(+m[2]):9999}; // 取日期里第一个 月.日
+  const byEp=(a,b)=>a.ep-b.ep||k(a)-k(b)||String(a.sc).localeCompare(String(b.sc),'zh',{numeric:true});
+  return [...S.scenes].sort(SORT==='date'?(a,b)=>dk(a)-dk(b)||byEp(a,b):byEp);
 }
 function uniq(a){return [...new Set(a.filter(Boolean))]}
 function options(f){return uniq([...(S.opts[f]||[]),...S.scenes.map(s=>cut(s[f]))])}
@@ -1489,6 +1493,7 @@ function render(){
   fillFilters();
   const rows=filtered();
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
+  $('#fSort').parentElement.hidden=tab!=='scenes'; // 排序只用于场次表
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else renderStats(rows);
 }
@@ -1648,6 +1653,7 @@ document.querySelectorAll('.vsw button').forEach(b=>b.onclick=()=>{
 });
 applyView();
 ['fEp','fDate','fRole'].forEach(i=>$('#'+i).onchange=render);$('#fQ').oninput=render;
+$('#fSort').onchange=()=>{SORT=$('#fSort').value;render()};
 
 /* ---- import / export ---- */
 function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
