@@ -351,7 +351,7 @@ body.mview .hintCard{display:block}
 </div>
 <main>
   <div class="tabrow">
-    <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比结算</button></div>
+    <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比结算</button><button data-t="plan">大计划</button></div>
     <div class="vsw" role="group" aria-label="排版"><span class="hint">排版</span><button data-v="table" class="on">电脑版</button><button data-v="card">手机版</button></div>
     <button type="button" class="piebtn" id="pieBtn" hidden>圆饼图</button>
   </div>
@@ -1846,11 +1846,11 @@ function render(){
   document.title=S.title||'戏份盘点';
   $('#title').firstChild.textContent=S.title||'戏份盘点';
   fillFilters();
-  const rows=tab==='stats'?[...S.scenes]:filtered(); // 统计页不使用筛选,永远统计全部场次
-  $('#filterBar').hidden=tab==='stats';
-  $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
+  const rows=tab==='stats'||tab==='plan'?[...S.scenes]:filtered(); // 统计页不使用筛选,永远统计全部场次
+  $('#filterBar').hidden=tab==='stats'||tab==='plan';
+  $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats'&&tab!=='plan';
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
-  if(tab==='scenes')renderScenes(rows);else if(PIE)renderPie(rows);else if(EPV)$('#vStats').innerHTML=epChart(rows);else renderStats(rows);
+  if(tab==='scenes')renderScenes(rows);else if(tab==='plan')renderPlan();else if(PIE)renderPie(rows);else if(EPV)$('#vStats').innerHTML=epChart(rows);else renderStats(rows);
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
   $('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「戏份占比结算」页出现
 }
@@ -1983,6 +1983,35 @@ function renderStats(rows){
   `</tbody></table></div>`;
   document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{sortBy=b.dataset.s;render()});
   document.querySelectorAll('.epbtn').forEach(b=>b.onclick=()=>{EPV=true;PIE=false;render()});
+}
+
+
+/* ---- 大计划:拍摄日程表(PDF) + 数据库场次 合并统计(独立页面,不影响其他统计) ---- */
+let PLAN=null,PLANERR=false,planSort='p';
+fetch('plan.json',{cache:'no-cache'}).then(r=>r.json()).then(j=>{PLAN=j;if(tab==='plan')render()}).catch(()=>{PLANERR=true;if(tab==='plan')render()});
+function renderPlan(){
+  const box=$('#vStats');
+  if(!PLAN){box.innerHTML=`<div class="empty">${PLANERR?'大计划资料读取失败,请重新整理页面':'读取大计划资料中…'}</div>`;return}
+  const m=new Map();
+  PLAN.scenes.forEach(s=>m.set(s.ep+'|'+s.sc,{p:num(s.pages),cast:new Set(s.cast),src:'plan'}));
+  let ov=0;
+  S.scenes.forEach(s=>{const k=String(s.ep)+'|'+String(s.sc);if(m.has(k))ov++;m.set(k,{p:num(s.pages),cast:new Set(S.roles.filter(r=>s.cast[r]===1)),src:'db'})}); // 同一集同一场两边都有时,以数据库为准,不重复计算
+  const all=[...m.values()],nsc=all.length,total=all.reduce((a,x)=>a+(x.p||0),0);
+  const roles=[...S.roles];PLAN.scenes.forEach(s=>s.cast.forEach(r=>{if(!roles.includes(r))roles.push(r)}));
+  const list=roles.map(r=>{let p=0,n=0;all.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,p,n}}).sort((a,b)=>planSort==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
+  const bar=pc=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
+  box.innerHTML=`<div class="note"><b>大计划统计的算法</b>
+    <p>把「拍摄日程表」(PDF,${PLAN.scenes.length} 场)和网站数据库里的场次(${S.scenes.length} 场)合在一起统计,同一集同一场两边都有时只算一次(共 ${ov} 场重复,以数据库为准),合计 <b>${nsc}</b> 场、<b>${fmt(total)}</b> 页。</p>
+    <p>场次占比 = 该角色有戏的场次数 ÷ 总场次数;页数占比 = 该角色所在场次的页数 ÷ 总页数。一场戏有多位角色时每人各算一次,所以占比加起来会超过 100%。</p>
+    <p>⚠ 拍摄日程表只标出 5 位主要角色(祝阮/阮卿卿、陆封、夏玉尔、沈心阳、芈大丽),其他角色的数字只来自数据库,会偏低。</p>
+    <p>这一页是独立统计,不影响「戏份占比结算」和其他页面。</p></div>
+  <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${PLAN.scenes.length}</b><span>日程表场次</span></div><div><b>${S.scenes.length}</b><span>数据库场次</span></div></div>
+  <div class="bar sortbar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${planSort==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${planSort==='n'?'on':''}" data-s="n">按场次</button></div>
+  <div class="mcards" style="margin-top:10px">`+
+  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b>${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
+  `</div><div class="scroll mtable" style="margin-top:10px"><table><thead><tr><th>#</th><th>角色</th><th class="num">场次</th><th class="num">场次占比</th><th style="width:22%"></th><th class="num">页数</th><th class="num">页数占比</th><th style="width:22%"></th></tr></thead><tbody>`+
+  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+`</tbody></table></div>`;
+  document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{planSort=b.dataset.s;render()});
 }
 
 /* ---- scene dialog ---- */
