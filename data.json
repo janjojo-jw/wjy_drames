@@ -1,4 +1,10 @@
 {
+ "opts": {
+  "light": [],
+  "place": [],
+  "main": [],
+  "sub": []
+ },
  "title": "刀笔娘子戏份盘点",
  "roles": [
   "祝阮/阮卿卿",
@@ -1110,5 +1116,6 @@
    "pnote": "",
    "cast": {}
   }
- ]
+ ],
+ "sec": "i130XMVZ2kv6lkw4Zr6h6/r4RtrbFW35dNeWopf4VgqPW5BqivrRON5XK9ZBCOqpDOOA7BTaYUlHfksEAQBpr5nR/1ffU1LdpDKB+6ulBmOoLdUTmzPzeKqSVwT1PtsprqFyi/BOExkyqvfvvN2c4Mb04dCAY0WjFGJMOcK3cUUh++H9W05gv+Q="
 }
