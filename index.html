@@ -159,9 +159,15 @@ body.mview main{max-width:600px;padding:0 12px 50px}
 body.mview .mtable{display:none}
 body.mview .mcards{display:block}
 body.mview .tabs{gap:14px}
+/* 筛选区:手机版卡片、或手机屏幕上(不论哪种排版)都是 三个选单一排 + 搜寻独占一行 */
 body.mview .card > .bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 body.mview .card > .bar label select{padding:7px 6px;font-size:14px}
 body.mview .card > .bar label.full{grid-column:1/-1}
+@media(max-width:700px){
+ .card > .bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .card > .bar label select{padding:7px 6px;font-size:14px}
+ .card > .bar label.full{grid-column:1/-1}
+}
 /* 祝阮/阮卿卿:亮金色字(底色略加深,金字才看得清) */
 :root{--gold:#fff3c4;--goldshadow:0 1px 2px rgba(120,0,60,.6),0 0 1px rgba(120,0,60,.6)}
 .chip.pink{background:var(--pink);border-color:var(--pink);color:var(--gold);text-shadow:var(--goldshadow)}
