@@ -173,7 +173,12 @@ tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);t
 /* 场次表:行与行之间的分隔线加深 */
 #vScenes tbody td{border-bottom:1px solid #5c5c68}
 #vScenes tbody tr:last-child td{border-bottom-color:#7a7a86}
-tr.row,.sc-card{cursor:pointer}
+tr.row{cursor:pointer}
+body.mview .sc-card{cursor:default}
+body.mview.adminOn .sc-card{cursor:pointer}
+.hintCard{display:none}
+body.mview .hintTable{display:none}
+body.mview .hintCard{display:block}
 /* 场次详情小视窗 */
 #ddlg{width:min(300px,94vw);padding:11px 12px;border-radius:10px;border-color:#6d6880;
  background:linear-gradient(160deg,#3d394b,#2d2b38);box-shadow:0 24px 60px -16px #000}
@@ -1487,6 +1492,7 @@ function fillFilters(){
 function applyAdmin(){
   document.querySelectorAll('.adm').forEach(b=>b.hidden=!ADMIN);
   $('#login').hidden=ADMIN;$('#logout').hidden=!ADMIN;
+  document.body.classList.toggle('adminOn',ADMIN);
 }
 function render(){
   applyAdmin();
@@ -1510,8 +1516,10 @@ function renderScenes(rows){
     return`<div class="sc-card" data-id="${s.id}"><div class="h"><b>${esc(s.date)}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span><em>${pgOf(s)}</em></div>${meta?`<div class="m">${meta}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}${cast?`<div class="c">${cast}</div>`:''}</div>`}).join('');
   $('#vScenes').innerHTML=`<div class="mcards">${cards}<div class="tot">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div><div class="mtable"><table><thead><tr><th>日期</th><th>集</th><th>场</th><th>景光</th><th>地点</th><th>主场景</th><th>次场景</th><th>内容概要</th><th class="num">页</th><th>角色</th></tr></thead><tbody>`+
   rows.map(s=>`<tr class="row" data-id="${s.id}"><td>${esc(s.date)}</td><td>${s.ep}</td><td>${esc(s.sc)}</td><td>${esc(s.light)}</td><td>${esc(s.place)}</td><td class="wrap">${esc(cut(s.main))}</td><td class="wrap">${esc(cut(s.sub))}</td><td class="wrap">${esc(cut(s.summary))}</td><td class="num">${num(s.pages)!==null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${S.roles.filter(r=>s.cast[r]).map(r=>`<span class="chip ${s.cast[r]===2?'z':''} ${r===PINK?'pink':''}">${esc(r)}</span>`).join('')}</td></tr>`).join('')+
-  `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table></div><p class="hint">点任一场可查看完整资讯${ADMIN?',并可在窗口里编辑':''}。</p>`;
-  document.querySelectorAll('tr.row,.sc-card').forEach(tr=>tr.onclick=()=>openDetail(+tr.dataset.id));
+  `</tbody><tfoot><tr><th colspan="8">合计 ${rows.length} 场</th><th class="num">${fmt(tp)}</th><th></th></tr></tfoot></table></div><p class="hint hintTable">点任一场可查看完整资讯${ADMIN?',并可在窗口里编辑':''}。</p>${ADMIN?'<p class="hint hintCard">点任一张卡片即可编辑。</p>':''}`;
+  document.querySelectorAll('tr.row').forEach(tr=>tr.onclick=()=>openDetail(+tr.dataset.id));
+  // 手机版卡片已显示全部资讯,不弹详情窗;只有管理员点卡片才进入编辑
+  document.querySelectorAll('.sc-card').forEach(c=>{if(ADMIN)c.onclick=()=>openScene(+c.dataset.id)});
 }
 
 let sortBy='p';
