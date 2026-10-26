@@ -1838,7 +1838,7 @@ $('#form').onsubmit=e=>{
   e.preventDefault();
   const f=e.target,v=n=>f[n].value.trim();
   const pv=v('pages'),pn=pv===''?null:Number(pv);
-  const sep=(f.d1.dataset.raw||'').includes('/')&&f.d1.value===f.d1.dataset.o1?'/':'-';
+  const sep=(f.d1.dataset.raw||'').includes('/')&&f.d1.value===f.d1.dataset.o1?'/':'/';
   let d1=inputToDate(f.d1.value),d2='';
   const dateStr=(f.d1.value===f.d1.dataset.o1)?f.d1.dataset.raw:(d2&&d2!==d1?d1+sep+d2:d1);
   const rec={date:dateStr,ep:+v('ep'),sc:v('sc'),light:v('light'),place:v('place'),main:v('main'),sub:v('sub'),summary:v('summary'),
