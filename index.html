@@ -1474,21 +1474,85 @@ const fmt=n=>(Math.round(n*100)/100).toString();
 const PINK='祝阮/阮卿卿';
 const cut=s=>String(s||'').replace(/\n/g,' ');
 
-async function load(){
-  let d=null;
-  try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-  if(!d){
-    try{const r=await fetch('data.json',{cache:'no-cache'});if(r.ok)d=await r.json()}catch(e){}
-  }
-  if(!d)d=JSON.parse($('#seed').textContent);
+/* ---- 数据来源 ----
+   SERVER=true:网站有 Cloudflare 数据库(/api/data),所有人看到同一份,管理员改了立刻同步给大家。
+   SERVER=false:没有数据库(例如本机直接打开),退回「只存在这个浏览器」的旧做法,仍可用。 */
+let SERVER=false,REV=0,TOK='';
+try{TOK=sessionStorage.getItem('xifen-tok')||''}catch(_){}
+function adopt(d){
   S=Object.assign({opts:{}},d);
   S.scenes.forEach(s=>{for(const r in s.cast)if(s.cast[r]!==1)delete s.cast[r]});
   S.opts=Object.assign({light:[],place:[],main:[],sub:[]},S.opts);
+}
+async function fetchServer(){
+  try{
+    const r=await fetch('/api/data',{cache:'no-store'});
+    if(!r.ok)return null;
+    const j=await r.json();
+    return j&&typeof j.rev==='number'?j:null;
+  }catch(e){return null}
+}
+async function load(){
+  let d=null;
+  const sv=await fetchServer();
+  if(sv){SERVER=true;REV=sv.rev;d=sv.data}
+  if(!d){ // 没有服务器数据(或还没人存过):沿用 本地修改 → data.json → 内建数据
+    try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+    if(!d){
+      try{const r=await fetch('data.json',{cache:'no-cache'});if(r.ok)d=await r.json()}catch(e){}
+    }
+    if(!d)d=JSON.parse($('#seed').textContent);
+  }
+  adopt(d);
+  if(SERVER&&!TOK)ADMIN=false; // 服务器模式下,没有通过服务器验证就不是管理员
+  $('#saved').textContent='';
   render();
 }
+/* 回到页面时自动拉取别人的更新(没有开着窗口、也不在保存时才换) */
+async function refreshFromServer(){
+  if(!SERVER||pushing||document.querySelector('dialog[open]'))return;
+  const sv=await fetchServer();
+  if(sv&&sv.data&&sv.rev!==REV){REV=sv.rev;adopt(sv.data);render()}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshFromServer()});
+setInterval(()=>{if(document.visibilityState==='visible')refreshFromServer()},60000);
+
+const authHdr=()=>({authorization:'Bearer '+TOK});
+let pushing=false,pushQ=Promise.resolve();
+async function uploadPhotoData(dataUrl){ // 把 data:image/jpeg;base64,... 传到服务器,换回网址
+  const blob=await (await fetch(dataUrl)).blob();
+  const r=await fetch('/api/photo',{method:'POST',headers:{...authHdr(),'content-type':'image/jpeg'},body:blob});
+  if(!r.ok)throw new Error('photo '+r.status);
+  return (await r.json()).url;
+}
+function pushServer(){
+  pushQ=pushQ.then(async()=>{
+    pushing=true;$('#saved').textContent='同步中…';
+    try{
+      for(const s of S.scenes)if(s.photo&&s.photo.startsWith('data:'))s.photo=await uploadPhotoData(s.photo); // 旧的本地照片一并搬上去
+      const r=await fetch('/api/data',{method:'PUT',headers:{...authHdr(),'content-type':'application/json'},body:JSON.stringify({baseRev:REV,data:S})});
+      if(r.ok){REV=(await r.json()).rev;$('#saved').textContent='已同步,所有人都看得到'}
+      else if(r.status===409){
+        $('#saved').textContent='';pushing=false;
+        alert('别人刚刚更新过数据,你这次的修改没有保存。\n页面会重新载入最新内容,请再改一次。');
+        await load();
+      }
+      else if(r.status===401){
+        $('#saved').textContent='';doLogout();
+        alert('管理员验证失效,请重新登录后再试。');
+      }
+      else if(r.status===413)$('#saved').textContent='数据太大,没有同步(请减少照片)';
+      else $('#saved').textContent='同步失败,请稍后再试';
+    }catch(e){$('#saved').textContent='同步失败(网络),请稍后再试'}
+    pushing=false;
+  });
+  return pushQ;
+}
 function save(){
-  try{localStorage.setItem(KEY,JSON.stringify(S));$('#saved').textContent='已储存於此浏览器'}
-  catch(e){$('#saved').textContent='无法储存(请用导出 JSON 备份)'}
+  let ok=true;
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){ok=false} // 本地备份
+  if(SERVER){if(ADMIN&&TOK)pushServer();return}
+  $('#saved').textContent=ok?'已储存於此浏览器':'无法储存(请用导出 JSON 备份)';
 }
 function commit(){save();render()}
 
@@ -1539,6 +1603,7 @@ function fillFilters(){
 
 function applyAdmin(){
   document.querySelectorAll('.adm').forEach(b=>b.hidden=!ADMIN);
+  if(SERVER)$('#reset').hidden=true; // 有数据库时没有「还原」:数据以网站上的为准
   $('#login').hidden=ADMIN;$('#logout').hidden=!ADMIN;
   document.body.classList.toggle('adminOn',ADMIN);
 }
@@ -1646,7 +1711,7 @@ function drawPhoto(){
   const has=!!draftPhoto;
   $('#pPrev').hidden=!has;if(has)$('#pPrev').src=draftPhoto;else $('#pPrev').removeAttribute('src');
   $('#pClear').hidden=!has;$('#pPick').textContent=has?'更换图片':'上传图片';
-  $('#pHint').textContent=has?`已压缩,约 ${Math.round(draftPhoto.length*0.75/1024)} KB`:'上传后会自动压缩,不会占太多空间。';
+  $('#pHint').textContent=has?(draftPhoto.startsWith('data:')?`已压缩,约 ${Math.round(draftPhoto.length*0.75/1024)} KB`:'已上传'):'上传后会自动压缩,不会占太多空间。';
 }
 function compressImage(file){
   return new Promise((res,rej)=>{
@@ -1672,7 +1737,11 @@ $('#pFile').onchange=async e=>{
   const f=e.target.files[0];e.target.value='';
   if(!f)return;
   $('#pHint').textContent='处理中…';
-  try{draftPhoto=await compressImage(f)}catch(_){alert('这张图片无法读取,请换一张(支持 JPG、PNG 等常见格式)。')}
+  try{
+    const data=await compressImage(f);
+    if(SERVER){$('#pHint').textContent='上传中…';draftPhoto=await uploadPhotoData(data)} // 有数据库:传到服务器,存网址
+    else draftPhoto=data;
+  }catch(_){alert('这张图片无法读取或上传,请换一张再试(支持 JPG、PNG 等常见格式)。')}
   drawPhoto();
 };
 $('#pClear').onclick=()=>{draftPhoto='';drawPhoto()};
@@ -1760,8 +1829,11 @@ $('#mClose').onclick=()=>{manageSnap=null;$('#mdlg').close()};
 $('#mCancel').onclick=()=>{
   if(manageSnap){
     S=JSON.parse(manageSnap.data);
-    try{manageSnap.raw===null?localStorage.removeItem(KEY):localStorage.setItem(KEY,manageSnap.raw)}catch(_){}
-    $('#saved').textContent=manageSnap.saved;
+    if(SERVER){save()} // 窗口里的每个动作都已同步出去,取消就把原来的内容再同步回去
+    else{
+      try{manageSnap.raw===null?localStorage.removeItem(KEY):localStorage.setItem(KEY,manageSnap.raw)}catch(_){}
+      $('#saved').textContent=manageSnap.saved;
+    }
     manageSnap=null;render();
   }
   $('#mdlg').close();
@@ -1828,14 +1900,29 @@ function sha256(s){
 }
 $('#login').onclick=()=>{$('#lform').reset();$('#lerr').textContent='';$('#ldlg').showModal()};
 $('#lCancel').onclick=()=>$('#ldlg').close();
-$('#lform').onsubmit=e=>{
-  e.preventDefault();const f=e.target;
-  if(sha256(f.u.value.trim()+'|'+f.p.value)===AUTH){
+const makeTok=(u,p)=>btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify({u,p}))));
+$('#lform').onsubmit=async e=>{
+  e.preventDefault();const f=e.target,u=f.u.value.trim(),p=f.p.value;
+  if(SERVER){ // 有数据库:账号密码交给服务器验证(网页里不存放密码)
+    $('#lerr').textContent='验证中…';
+    try{
+      const r=await fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({u,p})});
+      if(r.ok){
+        TOK=makeTok(u,p);ADMIN=true;
+        try{sessionStorage.setItem('xifen-admin','1');sessionStorage.setItem('xifen-tok',TOK)}catch(_){}
+        $('#ldlg').close();render();
+      }else if(r.status===401)$('#lerr').textContent='账号或密码不正确';
+      else $('#lerr').textContent='服务器还没有设定管理员账号密码(请到 Cloudflare 后台设定)';
+    }catch(_){$('#lerr').textContent='连不上服务器,请稍后再试'}
+    return;
+  }
+  if(sha256(u+'|'+p)===AUTH){ // 没有数据库时的旧做法(只在这个浏览器里有效)
     ADMIN=true;try{sessionStorage.setItem('xifen-admin','1')}catch(_){}
     $('#ldlg').close();render();
   }else $('#lerr').textContent='账号或密码不正确';
 };
-$('#logout').onclick=()=>{ADMIN=false;try{sessionStorage.removeItem('xifen-admin')}catch(_){}tab==='scenes'||0;render()};
+function doLogout(){ADMIN=false;TOK='';try{sessionStorage.removeItem('xifen-admin');sessionStorage.removeItem('xifen-tok')}catch(_){}render()}
+$('#logout').onclick=doLogout;
 try{ADMIN=sessionStorage.getItem('xifen-admin')==='1'}catch(_){}
 
 load();
