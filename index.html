@@ -1615,8 +1615,16 @@ function pushGH(){
       }
       for(const x of S.scenes)if(x.photo&&String(x.photo).startsWith('data:'))x.photo=await uploadPhotoGH(x.photo);
       const out=JSON.parse(JSON.stringify(S));
-      const r=await fetch(GH_API,{method:'PUT',headers:{accept:'application/vnd.github+json',authorization:'Bearer '+GHTOK,'content-type':'application/json'},
+      const putData=()=>fetch(GH_API,{method:'PUT',headers:{accept:'application/vnd.github+json',authorization:'Bearer '+GHTOK,'content-type':'application/json'},
         body:JSON.stringify({message:'网站更新数据 '+new Date().toISOString().slice(0,16).replace('T',' '),content:b64e(JSON.stringify(out,null,1)+'\n'),sha:GHSHA,branch:'main'})});
+      let r=await putData();
+      // 刚传完照片时 GitHub 的分支可能还在更新,会暂时回 409:确认没有别人改过数据,就稍等再试
+      for(let i=0;i<4&&(r.status===409||r.status===422);i++){
+        await new Promise(z=>setTimeout(z,1500*(i+1)));
+        const again=await fetchGH(true);
+        if(!again||again.sha!==GHSHA)break;
+        r=await putData();
+      }
       if(r.ok){GHSHA=(await r.json()).content.sha;$('#saved').textContent='已同步到 GitHub,所有人打开都是最新的'}
       else if(r.status===409||r.status===422){
         $('#saved').textContent='';pushing=false;
