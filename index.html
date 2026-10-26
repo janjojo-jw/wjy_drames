@@ -178,7 +178,7 @@ body.mview .tabs{gap:14px}
 .sortbar{flex-wrap:nowrap;gap:6px}
 .sortbar .hint{white-space:nowrap}
 .sortbar button{white-space:nowrap;flex:none}
-@media(max-width:480px){.epbtn{margin-left:2px;padding:5px 11px;font-size:13px}.sortb{padding:3px 10px}}
+@media(max-width:480px){.epbtn{margin-left:0;padding:5px 9px;font-size:13px}.sortb{padding:3px 9px}.sortbar .hint{display:none}.sortbar{gap:5px}}
 @media(max-width:350px){.sortbar .hint{display:none}.epbtn{padding:5px 8px;font-size:12px}}
 .epbtn:hover{filter:brightness(1.06);color:#2a210a}
 @keyframes epglow{0%{box-shadow:0 0 0 0 rgba(251,239,198,.65),0 3px 10px rgba(217,181,108,.35)}70%,100%{box-shadow:0 0 0 10px rgba(251,239,198,0),0 3px 10px rgba(217,181,108,.35)}}
@@ -1578,7 +1578,7 @@ body.mview .hintCard{display:block}
 const KEY='xifen-v1';
 let S={title:'戏份盘点',roles:[],scenes:[],opts:{light:[],place:[],main:[],sub:[]}};
 let ADMIN=false;
-let tab='scenes', editing=null, draft={}, PIE=false, EPV=false, PREVTAB='scenes', PIEBY='p';
+let tab='scenes', editing=null, draft={}, PIE=false, EPV=false, PREVTAB='scenes', PIEBY='p', CV=false, CLEAD='祝阮/阮卿卿';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt=n=>(Math.round(n*100)/100).toString();
@@ -1860,7 +1860,7 @@ function render(){
   $('#filterBar').hidden=tab==='stats'||tab==='plan';
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats'&&tab!=='plan';
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
-  if(tab==='scenes')renderScenes(rows);else if(tab==='plan')renderPlan();else if(PIE)renderPie(rows);else if(EPV)$('#vStats').innerHTML=epChart(rows);else renderStats(rows);
+  if(tab==='scenes')renderScenes(rows);else if(tab==='plan')renderPlan();else if(CV)renderCoStats(rows);else if(PIE)renderPie(rows);else if(EPV)$('#vStats').innerHTML=epChart(rows);else renderStats(rows);
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
   $('#coBtn').hidden=tab!=='plan';$('#coBtn').classList.toggle('on',COV);$('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「戏份占比结算」页出现
 }
@@ -1968,7 +1968,7 @@ function epChart(rows){
     <div class="epleg">${leg}</div>${segs}</div>`;
 }
 $('#coBtn').onclick=()=>{COV=!COV;render()}; // 对戏占比自成一页
-document.addEventListener('click',e=>{if(e.target.closest('.coback')){COV=false;render()}});
+document.addEventListener('click',e=>{if(e.target.closest('.coback')){COV=false;CV=false;render()}});
 $('#pieBtn').onclick=()=>{PIE=!PIE;EPV=false;render()}; // 圆饼图自成一页,跟排版无关
 document.addEventListener('click',e=>{if(e.target.closest('.pieback')){PIE=false;EPV=false;tab='stats';render()}});
 function renderStats(rows){
@@ -1985,7 +1985,7 @@ function renderStats(rows){
     <p>页数占比 = 该角色的页数 ÷ 所选范围的总页数(${fmt(total)} 页)</p>
     <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>
   <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围</span></div></div>
-  <div class="bar sortbar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button><button class="epbtn" type="button">📊 每集戏份分布 ›</button></div>
+  <div class="bar sortbar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button><button class="epbtn" type="button">📊 每集分布</button><button class="epbtn cobtn" type="button">🤝 对戏占比</button></div>
   <p class="rolehint" style="margin:10px 0 0">💡 <b>点角色名</b>可以看她所有的场次</p>
   <div class="mcards" style="margin-top:10px">`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b class="rolelink" data-role="${esc(x.r)}" title="点一下,看她所有的场次">${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
@@ -1994,13 +1994,33 @@ function renderStats(rows){
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b class="rolelink" data-role="${esc(x.r)}" title="点一下,看她所有的场次">${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+
   `</tbody></table></div>`;
   document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{sortBy=b.dataset.s;render()});
-  document.querySelectorAll('.epbtn').forEach(b=>b.onclick=()=>{EPV=true;PIE=false;render()});
+  document.querySelectorAll('.epbtn:not(.cobtn)').forEach(b=>b.onclick=()=>{EPV=true;PIE=false;render()});
+  document.querySelectorAll('.cobtn').forEach(b=>b.onclick=()=>{CV=true;EPV=false;PIE=false;render()});
 }
 
 
 /* ---- 大计划:拍摄日程表(PDF) + 数据库场次 合并统计(独立页面,不影响其他统计) ---- */
 let PLAN=null,PLANERR=false,planSort='p',planLead='祝阮/阮卿卿',COV=false;
 fetch('plan.json',{cache:'no-cache'}).then(r=>r.json()).then(j=>{PLAN=j;if(tab==='plan')render()}).catch(()=>{PLANERR=true;if(tab==='plan')render()});
+function coHTML(all,roles,lead,selId){
+  const bar=pc=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
+  if(!roles.includes(lead))lead=PINK;
+  const mine=all.filter(x=>x.cast.has(lead)),mn=mine.length,mp=mine.reduce((a,x)=>a+(x.p||0),0);
+  const co=roles.filter(r=>r!==lead).map(r=>{let n=0,p=0;mine.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,n,p}}).filter(x=>x.n).sort((a,b)=>b.p-a.p||b.n-a.n);
+  const solo=mine.filter(x=>x.cast.size===1),sn=solo.length,sp=solo.reduce((a,x)=>a+(x.p||0),0);
+  const row=(label,n,p)=>{const ps=mn?n/mn*100:0,pp=mp?p/mp*100:0;return`<div class="st-card"><div class="h"><b>${esc(label)}</b></div><div class="r"><span>场次</span><strong>${n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`};
+  return `<h3 style="margin:14px 0 6px;font-size:16px">对戏占比<small style="margin-left:8px;color:var(--mute);font-weight:400">谁跟谁一起出场</small></h3>
+  <div class="note" style="margin:0 0 10px"><p>看「<select id="${selId}" style="font:inherit;background:#121217;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 6px">${roles.map(r=>`<option ${r===lead?'selected':''}>${esc(r)}</option>`).join('')}</select>」的戏,有多少和别的角色同场。</p>
+  <p>该角色共有 <span class="hl">${mn}</span> 场、<span class="hl">${fmt(mp)}</span> 页。占比 = 和某角色同场的场次(页数)÷ 她自己的总场次(页数)。一场里有好几个人时,每个人各算一次,所以占比加起来会超过 100%。</p></div>
+  <div class="mcards">${row('只有 TA 一人(没有其他角色)',sn,sp)}${co.map(x=>row('和 '+x.r+' 同场',x.n,x.p)).join('')}</div>
+  <div class="scroll mtable"><table><thead><tr><th>#</th><th>同场的角色</th><th class="num">场次</th><th class="num">占她场次</th><th style="width:22%"></th><th class="num">页数</th><th class="num">占她页数</th><th style="width:22%"></th></tr></thead><tbody>${[{r:'只有 TA 一人(没有其他角色)',n:sn,p:sp},...co].map((x,i)=>{const ps=mn?x.n/mn*100:0,pp=mp?x.p/mp*100:0;return`<tr><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')}</tbody></table></div>`;
+}
+function renderCoStats(rows){
+  const all=rows.map(s=>({p:num(s.pages),cast:new Set(S.roles.filter(r=>s.cast[r]===1))}));
+  if(!S.roles.includes(CLEAD))CLEAD=PINK;
+  $('#vStats').innerHTML='<button class="coback" type="button">← 返回长条图</button>'+coHTML(all,S.roles,CLEAD,'coLead');
+  $('#coLead').onchange=e=>{CLEAD=e.target.value;render()};
+}
 function renderPlan(){
   const box=$('#vStats');
   if(!PLAN){box.innerHTML=`<div class="empty">${PLANERR?'大计划资料读取失败,请重新整理页面':'读取大计划资料中…'}</div>`;return}
@@ -2025,18 +2045,8 @@ function renderPlan(){
   `</div><div class="scroll mtable" style="margin-top:10px"><table><thead><tr><th>#</th><th>角色</th><th class="num">场次</th><th class="num">场次占比</th><th style="width:22%"></th><th class="num">页数</th><th class="num">页数占比</th><th style="width:22%"></th></tr></thead><tbody>`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+`</tbody></table></div>`;
   if(!roles.includes(planLead))planLead=PINK;
-  const mine=all.filter(x=>x.cast.has(planLead)),mn=mine.length,mp=mine.reduce((a,x)=>a+(x.p||0),0);
-  const co=roles.filter(r=>r!==planLead).map(r=>{let n=0,p=0;mine.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,n,p}}).filter(x=>x.n).sort((a,b)=>b.p-a.p||b.n-a.n);
-  const solo=mine.filter(x=>x.cast.size===1),sn=solo.length,sp=solo.reduce((a,x)=>a+(x.p||0),0);
-  const row=(label,n,p)=>{const ps=mn?n/mn*100:0,pp=mp?p/mp*100:0;return`<div class="st-card"><div class="h"><b>${esc(label)}</b></div><div class="r"><span>场次</span><strong>${n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`};
-  if(COV)box.innerHTML='<button class="coback" type="button">← 返回大计划统计</button>';
+  if(COV){box.innerHTML='<button class="coback" type="button">← 返回大计划统计</button>'+coHTML(all,roles,planLead,'planLead');$('#planLead').onchange=e=>{planLead=e.target.value;render()}}
   else{document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{planSort=b.dataset.s;render()});return}
-  box.insertAdjacentHTML('beforeend',`<h3 style="margin:14px 0 6px;font-size:16px">对戏占比<small style="margin-left:8px;color:var(--mute);font-weight:400">谁跟谁一起出场</small></h3>
-  <div class="note" style="margin:0 0 10px"><p>看「<select id="planLead" style="font:inherit;background:#121217;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 6px">${roles.map(r=>`<option ${r===planLead?'selected':''}>${esc(r)}</option>`).join('')}</select>」的戏,有多少和别的角色同场。</p>
-  <p>该角色共有 <span class="hl">${mn}</span> 场、<span class="hl">${fmt(mp)}</span> 页。占比 = 和某角色同场的场次(页数)÷ 她自己的总场次(页数)。一场里有好几个人时,每个人各算一次,所以占比加起来会超过 100%。</p></div>
-  <div class="mcards">${row('只有 TA 一人(没有其他角色)',sn,sp)}${co.map(x=>row('和 '+x.r+' 同场',x.n,x.p)).join('')}</div>
-  <div class="scroll mtable"><table><thead><tr><th>#</th><th>同场的角色</th><th class="num">场次</th><th class="num">占她场次</th><th style="width:22%"></th><th class="num">页数</th><th class="num">占她页数</th><th style="width:22%"></th></tr></thead><tbody>${[{r:'只有 TA 一人(没有其他角色)',n:sn,p:sp},...co].map((x,i)=>{const ps=mn?x.n/mn*100:0,pp=mp?x.p/mp*100:0;return`<tr><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')}</tbody></table></div>`);
-  $('#planLead').onchange=e=>{planLead=e.target.value;render()};
   document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{planSort=b.dataset.s;render()});
 }
 
@@ -2225,7 +2235,7 @@ $('#mCancel').onclick=()=>{
 };
 
 /* ---- tabs / filters ---- */
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;PIE=false;EPV=false;COV=false;render()});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;PIE=false;EPV=false;COV=false;CV=false;render()});
 
 /* ---- 排版切换:电脑版(表格)/ 手机版(卡片),默认电脑版,记住选择 ---- */
 let VIEW='table';
@@ -2235,7 +2245,7 @@ function applyView(){
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
 }
 document.querySelectorAll('.vsw button').forEach(b=>b.onclick=()=>{
-  PIE=false;EPV=false; // 电脑版/手机版永远是长条图
+  PIE=false;EPV=false;CV=false; // 电脑版/手机版永远是长条图
   VIEW=b.dataset.v;try{localStorage.setItem('xifen-view',VIEW)}catch(_){}
   applyView();render();
 });
