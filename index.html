@@ -1556,13 +1556,14 @@ async function uploadPhotoGH(dataUrl){ // 照片存进仓库 photos/ 资料夹,d
   }
   throw new Error('上传照片失败('+last+')');
 }
-async function fetchGH(auth){
+async function fetchGH(auth,fresh){ // fresh=true:保存时用,绝不读缓存;否则用「条件请求」,没变化时 GitHub 回 304,不占读取次数
   if(auth===undefined)auth=true; // 有令牌就带上(读取次数限制宽很多)
   try{
     const h={accept:'application/vnd.github+json'};
     if(auth&&GHTOK)h.authorization='Bearer '+GHTOK;
-    let r=await fetch(GH_API+'?ref=main&t='+Date.now(),{headers:h,cache:'no-store'});
-    if(r.status===401&&h.authorization){delete h.authorization;r=await fetch(GH_API+'?ref=main&t='+Date.now(),{headers:h,cache:'no-store'})} // 令牌失效也要能读
+    const go=()=>fetch(GH_API+'?ref=main'+(fresh?'&t='+Date.now():''),{headers:h,cache:fresh?'no-store':'no-cache'});
+    let r=await go();
+    if(r.status===401&&h.authorization){delete h.authorization;r=await go()} // 令牌失效也要能读
     if(!r.ok)return null;
     const j=await r.json();
     return {sha:j.sha,data:JSON.parse(b64d(j.content))};
@@ -1626,7 +1627,7 @@ async function refreshFromServer(){
   if(sv&&sv.data&&sv.rev!==REV){REV=sv.rev;adopt(sv.data);render()}
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshFromServer()});
-setInterval(()=>{if(document.visibilityState==='visible')refreshFromServer()},60000);
+setInterval(()=>{if(document.visibilityState==='visible')refreshFromServer()},20000);
 
 const authHdr=()=>({authorization:'Bearer '+TOK});
 let pushing=false,pushQ=Promise.resolve();
@@ -1680,7 +1681,7 @@ function pushGH(){
     const sleep=ms=>new Promise(z=>setTimeout(z,ms));
     try{
       if(!GHSHA||!GHBASE){ // 打开页面时没读到 GitHub 的版本(例如读取被限制):先补读
-        const c=await fetchGH(true);
+        const c=await fetchGH(true,true);
         if(!c){$('#saved').textContent='同步失败:读不到 GitHub 上的最新数据,请稍后再试';pushing=false;return}
         S=mergeData(c.data,S,c.data);setBase(c.sha,c.data);
       }
@@ -1693,7 +1694,7 @@ function pushGH(){
         if(r.ok){setBase((await r.json()).content.sha,out);done=true;break}
         if(r.status===409||r.status===422){ // 版本对不上:可能是别人刚改过,也可能只是 GitHub 还在更新
           await sleep(1200*(i+1));
-          const cur=await fetchGH(true);
+          const cur=await fetchGH(true,true);
           if(!cur||cur.sha===GHSHA||SHAS.has(cur.sha))continue; // 暂时的/读到旧版:稍后再试
           S=mergeData(GHBASE,S,cur.data);setBase(cur.sha,cur.data);merged=true;render();
           continue;
