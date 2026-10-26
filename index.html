@@ -1488,6 +1488,24 @@ let GHSHA='',GHTOK='';
 try{GHTOK=localStorage.getItem('xifen-gh')||''}catch(_){}
 const b64d=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g,'')),c=>c.charCodeAt(0)));
 const b64e=t=>{let b='';new TextEncoder().encode(t).forEach(c=>b+=String.fromCharCode(c));return btoa(b)};
+/* 令牌用「账号|密码」加密后存在 data.json 的 sec 栏位:其他管理员只输账号密码,就能解开并保存。 */
+const u8=b=>Uint8Array.from(atob(b),c=>c.charCodeAt(0));
+const b64u=a=>{let b='';a.forEach(c=>b+=String.fromCharCode(c));return btoa(b)};
+async function secKey(pw,salt){
+  const m=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:600000,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function secSeal(tok,pw){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},await secKey(pw,salt),new TextEncoder().encode(tok)));
+  return b64u([...salt,...iv,...ct]);
+}
+async function secOpen(blob,pw){
+  try{
+    const a=u8(blob),salt=a.slice(0,16),iv=a.slice(16,28),ct=a.slice(28);
+    return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},await secKey(pw,salt),ct));
+  }catch(e){return null}
+}
 async function fetchGH(auth){
   try{
     const h={accept:'application/vnd.github+json'};
@@ -1602,7 +1620,7 @@ function pushGH(){
         $('#saved').textContent='';
         try{localStorage.removeItem('xifen-gh')}catch(_){}
         GHTOK='';doLogout();
-        alert('GitHub 令牌无效、已过期或没有写入权限,请重新登录并填入新的令牌。');
+        alert('GitHub 令牌无效、已过期或没有写入权限。请仓库主人用新的令牌重新登录一次。');
       }
       else $('#saved').textContent='同步失败('+r.status+'),请稍后再试';
     }catch(e){$('#saved').textContent='同步失败(网络),请稍后再试'}
@@ -1961,7 +1979,7 @@ function sha256(s){
   }
   return H.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
 }
-$('#login').onclick=()=>{$('#lform').reset();$('#lerr').textContent='';$('#tokRow').hidden=!(GHMODE&&!GHTOK);$('#ldlg').showModal()};
+$('#login').onclick=()=>{$('#lform').reset();$('#lerr').textContent='';$('#tokRow').hidden=!(GHMODE&&!GHTOK&&!S.sec);$('#ldlg').showModal()};
 $('#lCancel').onclick=()=>$('#ldlg').close();
 const makeTok=(u,p)=>btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify({u,p}))));
 $('#lform').onsubmit=async e=>{
@@ -1981,15 +1999,18 @@ $('#lform').onsubmit=async e=>{
   }
   if(GHMODE){ // GitHub 模式:账号密码通过后,还要有能写入仓库的令牌
     if(sha256(u+'|'+p)!==AUTH){$('#lerr').textContent='账号或密码不正确';return}
-    const t=(f.t.value||'').trim()||GHTOK;
-    if(!t){$('#tokRow').hidden=false;$('#lerr').textContent='请填入 GitHub 令牌';return}
+    const typed=(f.t.value||'').trim();
     $('#lerr').textContent='验证中…';
+    let t=typed||GHTOK;
+    if(!t&&S.sec)t=await secOpen(S.sec,u+'|'+p)||''; // 其他管理员:用账号密码解开已存的令牌
+    if(!t){$('#tokRow').hidden=false;$('#lerr').textContent=S.sec?'无法取得令牌,请找仓库主人重新设定':'请填入 GitHub 令牌(仓库主人第一次登录时设定)';return}
     try{
       const r=await fetch('https://api.github.com/repos/'+GH_REPO,{headers:{accept:'application/vnd.github+json',authorization:'Bearer '+t}});
       const j=r.ok?await r.json():null;
       if(!j||!j.permissions||!j.permissions.push){$('#tokRow').hidden=false;$('#lerr').textContent='这个令牌不能写入仓库,请检查权限(Contents: Read and write)';return}
       GHTOK=t;try{localStorage.setItem('xifen-gh',t)}catch(_){}
       ADMIN=true;try{sessionStorage.setItem('xifen-admin','1')}catch(_){}
+      if(typed){S.sec=await secSeal(t,u+'|'+p);save()} // 主人输入令牌时,加密存起来给其他管理员用
       $('#ldlg').close();render();
     }catch(_){$('#lerr').textContent='连不上 GitHub,请稍后再试'}
     return;
