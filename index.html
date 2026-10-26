@@ -177,6 +177,7 @@ body.mview .card > .bar label.full{grid-column:1/-1}
 .roles button.pink.s1{background:var(--pink);border-color:#ff9ccc;text-shadow:var(--goldshadow)}
 tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);text-shadow:var(--goldshadow)}
 /* 现场照片 */
+body.gh #photoBox{display:none}
 .pbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
 #pPrev{display:block;margin-top:8px;max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--line);object-fit:contain;background:#0b0b0e}
 #ddPhoto{margin:0 0 8px}
@@ -292,7 +293,7 @@ body.mview .hintCard{display:block}
       <label>页数<input name="pages" placeholder="0.5;闪回填 /"></label>
     </div>
     <label style="margin-top:10px">内容概要<textarea name="summary" rows="2"></textarea></label>
-    <div style="margin-top:12px">
+    <div style="margin-top:12px" id="photoBox">
       <label>现场照片(选填,拍摄时的场景)</label>
       <div class="pbar">
         <input type="file" id="pFile" accept="image/*" hidden>
@@ -342,6 +343,7 @@ body.mview .hintCard{display:block}
     <h2 style="margin-top:0">管理员登录</h2>
     <label>账号<input name="u" autocomplete="username" required></label>
     <label style="margin-top:10px">密码<input name="p" type="password" autocomplete="current-password" required></label>
+    <label style="margin-top:10px" id="tokRow" hidden>GitHub 令牌(每台设备第一次登录时填一次)<input name="t" type="password" autocomplete="off" placeholder="github_pat_…"></label>
     <div id="lerr" class="hint" style="color:var(--accent);min-height:18px;margin-top:8px"></div>
     <div class="foot" style="margin-top:6px"><button type="button" id="lCancel">取消</button><button class="primary">登录</button></div>
   </form>
@@ -1478,6 +1480,24 @@ const cut=s=>String(s||'').replace(/\n/g,' ');
    SERVER=true:网站有 Cloudflare 数据库(/api/data),所有人看到同一份,管理员改了立刻同步给大家。
    SERVER=false:没有数据库(例如本机直接打开),退回「只存在这个浏览器」的旧做法,仍可用。 */
 let SERVER=false,REV=0,TOK='';
+/* GitHub 模式:网站放在 GitHub Pages(静态)时,数据就是仓库里的 data.json。
+   所有人打开时直接从 GitHub 读最新的 data.json;管理员保存时把它提交回仓库,所以大家看到的永远是同一份。 */
+const GH_REPO='jwjw-888/wjy_dramas',GH_FILE='data.json',GH_API='https://api.github.com/repos/'+GH_REPO+'/contents/'+GH_FILE;
+const GHMODE=/^https?:$/.test(location.protocol)&&/\.github\.io$/.test(location.hostname);
+let GHSHA='',GHTOK='';
+try{GHTOK=localStorage.getItem('xifen-gh')||''}catch(_){}
+const b64d=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+const b64e=t=>{let b='';new TextEncoder().encode(t).forEach(c=>b+=String.fromCharCode(c));return btoa(b)};
+async function fetchGH(auth){
+  try{
+    const h={accept:'application/vnd.github+json'};
+    if(auth&&GHTOK)h.authorization='Bearer '+GHTOK;
+    const r=await fetch(GH_API+'?ref=main&t='+Date.now(),{headers:h,cache:'no-store'});
+    if(!r.ok)return null;
+    const j=await r.json();
+    return {sha:j.sha,data:JSON.parse(b64d(j.content))};
+  }catch(e){return null}
+}
 try{TOK=sessionStorage.getItem('xifen-tok')||''}catch(_){}
 function adopt(d){
   S=Object.assign({opts:{}},d);
@@ -1494,10 +1514,11 @@ async function fetchServer(){
 }
 async function load(){
   let d=null;
-  const sv=await fetchServer();
+  const sv=GHMODE?null:await fetchServer();
   if(sv){SERVER=true;REV=sv.rev;d=sv.data}
+  if(GHMODE){const g=await fetchGH(false);if(g){GHSHA=g.sha;d=g.data}}
   if(!d){ // 没有服务器数据(或还没人存过):沿用 本地修改 → data.json → 内建数据
-    try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+    if(!GHMODE)try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){}
     if(!d){
       try{const r=await fetch('data.json',{cache:'no-cache'});if(r.ok)d=await r.json()}catch(e){}
     }
@@ -1505,11 +1526,19 @@ async function load(){
   }
   adopt(d);
   if(SERVER&&!TOK)ADMIN=false; // 服务器模式下,没有通过服务器验证就不是管理员
+  if(GHMODE&&!GHTOK)ADMIN=false;
+  if(GHMODE)document.body.classList.add('gh');
   $('#saved').textContent='';
   render();
 }
 /* 回到页面时自动拉取别人的更新(没有开着窗口、也不在保存时才换) */
 async function refreshFromServer(){
+  if(GHMODE){
+    if(pushing||document.querySelector('dialog[open]'))return;
+    const g=await fetchGH(false);
+    if(g&&g.sha!==GHSHA){GHSHA=g.sha;adopt(g.data);render()}
+    return;
+  }
   if(!SERVER||pushing||document.querySelector('dialog[open]'))return;
   const sv=await fetchServer();
   if(sv&&sv.data&&sv.rev!==REV){REV=sv.rev;adopt(sv.data);render()}
@@ -1548,7 +1577,41 @@ function pushServer(){
   });
   return pushQ;
 }
+function pushGH(){
+  pushQ=pushQ.then(async()=>{
+    pushing=true;$('#saved').textContent='同步中…';
+    try{
+      const cur=await fetchGH(true);
+      if(!cur){$('#saved').textContent='同步失败(连不上 GitHub),请稍后再试';pushing=false;return}
+      if(cur.sha!==GHSHA){ // 别的管理员在你之前保存过
+        $('#saved').textContent='';pushing=false;
+        alert('别的管理员刚刚更新过数据,你这次的修改没有保存。\n页面会重新载入最新内容,请再改一次。');
+        await load();return;
+      }
+      const out=JSON.parse(JSON.stringify(S));
+      out.scenes.forEach(x=>{if(x.photo&&String(x.photo).startsWith('data:'))delete x.photo});
+      const r=await fetch(GH_API,{method:'PUT',headers:{accept:'application/vnd.github+json',authorization:'Bearer '+GHTOK,'content-type':'application/json'},
+        body:JSON.stringify({message:'网站更新数据 '+new Date().toISOString().slice(0,16).replace('T',' '),content:b64e(JSON.stringify(out,null,1)+'\n'),sha:GHSHA,branch:'main'})});
+      if(r.ok){GHSHA=(await r.json()).content.sha;$('#saved').textContent='已同步到 GitHub,所有人打开都是最新的'}
+      else if(r.status===409||r.status===422){
+        $('#saved').textContent='';pushing=false;
+        alert('别的管理员刚刚更新过数据,你这次的修改没有保存。\n页面会重新载入最新内容,请再改一次。');
+        await load();return;
+      }
+      else if(r.status===401||r.status===403||r.status===404){
+        $('#saved').textContent='';
+        try{localStorage.removeItem('xifen-gh')}catch(_){}
+        GHTOK='';doLogout();
+        alert('GitHub 令牌无效、已过期或没有写入权限,请重新登录并填入新的令牌。');
+      }
+      else $('#saved').textContent='同步失败('+r.status+'),请稍后再试';
+    }catch(e){$('#saved').textContent='同步失败(网络),请稍后再试'}
+    pushing=false;
+  });
+  return pushQ;
+}
 function save(){
+  if(GHMODE){if(ADMIN&&GHTOK)pushGH();return}
   let ok=true;
   try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){ok=false} // 本地备份
   if(SERVER){if(ADMIN&&TOK)pushServer();return}
@@ -1603,7 +1666,7 @@ function fillFilters(){
 
 function applyAdmin(){
   document.querySelectorAll('.adm').forEach(b=>b.hidden=!ADMIN);
-  if(SERVER)$('#reset').hidden=true; // 有数据库时没有「还原」:数据以网站上的为准
+  if(SERVER||GHMODE)$('#reset').hidden=true; // 有数据库时没有「还原」:数据以网站上的为准
   $('#login').hidden=ADMIN;$('#logout').hidden=!ADMIN;
   document.body.classList.toggle('adminOn',ADMIN);
 }
@@ -1898,7 +1961,7 @@ function sha256(s){
   }
   return H.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
 }
-$('#login').onclick=()=>{$('#lform').reset();$('#lerr').textContent='';$('#ldlg').showModal()};
+$('#login').onclick=()=>{$('#lform').reset();$('#lerr').textContent='';$('#tokRow').hidden=!(GHMODE&&!GHTOK);$('#ldlg').showModal()};
 $('#lCancel').onclick=()=>$('#ldlg').close();
 const makeTok=(u,p)=>btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify({u,p}))));
 $('#lform').onsubmit=async e=>{
@@ -1914,6 +1977,21 @@ $('#lform').onsubmit=async e=>{
       }else if(r.status===401)$('#lerr').textContent='账号或密码不正确';
       else $('#lerr').textContent='服务器还没有设定管理员账号密码(请到 Cloudflare 后台设定)';
     }catch(_){$('#lerr').textContent='连不上服务器,请稍后再试'}
+    return;
+  }
+  if(GHMODE){ // GitHub 模式:账号密码通过后,还要有能写入仓库的令牌
+    if(sha256(u+'|'+p)!==AUTH){$('#lerr').textContent='账号或密码不正确';return}
+    const t=(f.t.value||'').trim()||GHTOK;
+    if(!t){$('#tokRow').hidden=false;$('#lerr').textContent='请填入 GitHub 令牌';return}
+    $('#lerr').textContent='验证中…';
+    try{
+      const r=await fetch('https://api.github.com/repos/'+GH_REPO,{headers:{accept:'application/vnd.github+json',authorization:'Bearer '+t}});
+      const j=r.ok?await r.json():null;
+      if(!j||!j.permissions||!j.permissions.push){$('#tokRow').hidden=false;$('#lerr').textContent='这个令牌不能写入仓库,请检查权限(Contents: Read and write)';return}
+      GHTOK=t;try{localStorage.setItem('xifen-gh',t)}catch(_){}
+      ADMIN=true;try{sessionStorage.setItem('xifen-admin','1')}catch(_){}
+      $('#ldlg').close();render();
+    }catch(_){$('#lerr').textContent='连不上 GitHub,请稍后再试'}
     return;
   }
   if(sha256(u+'|'+p)===AUTH){ // 没有数据库时的旧做法(只在这个浏览器里有效)
