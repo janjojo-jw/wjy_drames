@@ -1613,7 +1613,7 @@ function drawManage(){
   for(const f of ['light','place','main','sub'])
     h+=`<hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><b>${LAB[f]}选项</b><div class="opt">`+
     (S.opts[f]||[]).map((o,i)=>`<span class="chip">${esc(o)}<button data-delo="${f}|${i}">✕</button></span>`).join('')+
-    `</div><div class="add"><input data-newo="${f}" placeholder="新增${LAB[f]}选项"><button data-addo="${f}">新增</button></div>
+    `</div><div class="add"><input data-newo="${f}" placeholder="新增${LAB[f]}选项"><button data-addo="${f}">新增</button><button data-cancelo="${f}">取消</button></div>
     <div class="hint">已出现在场次中的其他值也会自动出现在选单。</div>`;
   $('#mBody').innerHTML=h;
   const B=$('#mBody');
@@ -1631,7 +1631,11 @@ function drawManage(){
   B.querySelectorAll('[data-addo]').forEach(b=>b.onclick=()=>{
     const f=b.dataset.addo,i=B.querySelector(`[data-newo="${f}"]`),v=i.value.trim();if(!v)return;
     if(!S.opts[f].includes(v))S.opts[f].push(v);save();drawManage();render()});
-  B.querySelectorAll('[data-newo]').forEach(i=>i.onkeydown=e=>{if(e.key==='Enter')B.querySelector(`[data-addo="${i.dataset.newo}"]`).click()});
+  B.querySelectorAll('[data-newo]').forEach(i=>i.onkeydown=e=>{
+    if(e.key==='Enter')B.querySelector(`[data-addo="${i.dataset.newo}"]`).click();
+    else if(e.key==='Escape'&&i.value){e.preventDefault();e.stopPropagation();i.value='';i.blur()}});
+  B.querySelectorAll('[data-cancelo]').forEach(b=>b.onclick=()=>{
+    const i=B.querySelector(`[data-newo="${b.dataset.cancelo}"]`);i.value='';i.blur()});
   B.querySelectorAll('[data-delo]').forEach(b=>b.onclick=()=>{const[f,i]=b.dataset.delo.split('|');S.opts[f].splice(+i,1);save();drawManage();render()});
 }
 $('#manage').onclick=()=>{drawManage();$('#mdlg').showModal()};
