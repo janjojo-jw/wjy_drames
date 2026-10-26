@@ -64,12 +64,12 @@ label input,label select,label textarea{display:block;width:100%;margin-top:4px;
 .add input{flex:1}
 .foot{margin-top:18px;display:flex;justify-content:flex-end;gap:8px}
 .adm[hidden],[hidden]{display:none!important}
-.chip.pink{background:var(--pink);border-color:var(--pink);color:#fff;font-weight:600;box-shadow:0 0 10px rgba(255,79,163,.45)}
-.chip.pink.z{background:none;color:var(--pink);box-shadow:none;border-style:dashed;opacity:1}
+.chip.pink{background:var(--pink);border-color:var(--pink);color:#3b0a66;font-weight:600;box-shadow:0 0 10px rgba(255,79,163,.45)}
+.chip.pink.z{background:none;color:#3b0a66;box-shadow:none;border-style:dashed;opacity:1}
 .roles button.pink{border-color:var(--pink);color:var(--pink)}
 .roles button.pink.s1{background:var(--pink);border-color:var(--pink);color:#fff}
 .roles button.pink.s2{border-style:dashed}
-tr.pinkrow td b{color:var(--pink)}
+tr.pinkrow td b{color:#3b0a66;background:var(--pink);padding:2px 10px;border-radius:4px;box-shadow:0 0 10px rgba(255,79,163,.4)}
 tr.pinkrow .meter i{background:linear-gradient(90deg,#d83686,#ff7cc0)}
 .sortb{padding:3px 12px;font-size:13px}.sortb.on{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;font-weight:600}
 .empty{color:var(--mute);padding:28px;text-align:center}
@@ -91,7 +91,7 @@ button.primary:hover{background:#fff1c8;color:#2a210a}
 .roles button.s1{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;box-shadow:0 0 12px rgba(251,239,198,.4)}
 .roles button.s2{border-color:#fbefc6;color:#fbefc6}
 .roles button:hover{border-color:#fbefc6}
-.roles button.pink.s1{background:var(--pink);border-color:#ff9ccc;color:#fff;box-shadow:0 0 12px rgba(255,79,163,.55)}
+.roles button.pink.s1{background:var(--pink);border-color:#ff9ccc;color:#3b0a66;box-shadow:0 0 12px rgba(255,79,163,.55)}
 dialog{border-color:#3a3a43}
 @media(max-width:600px){header{padding-top:24px}h1{font-size:23px}.card{padding:14px}}
 </style>
@@ -130,8 +130,9 @@ dialog{border-color:#3a3a43}
   <form method="dialog" id="form">
     <h2 id="dTitle" style="margin-top:0">场次</h2>
     <div class="grid">
-      <label>拍摄日期<input name="date" list="l-date" placeholder="10.21 或 10.21-10.22"></label>
-      <label>集数<input name="ep" type="number" min="1" required></label>
+      <label>拍摄日期<input name="d1" type="date" min="2026-01-01" max="2027-12-31"></label>
+      <label>结束日期(跨天才填)<input name="d2" type="date" min="2026-01-01" max="2027-12-31"></label>
+      <label>集数<select name="ep" required><option value="">请选择</option></select></label>
       <label>场号<input name="sc" required placeholder="如 4C、26A"></label>
       <label>景光<input name="light" list="l-light"></label>
       <label>景别(地点)<input name="place" list="l-place"></label>
@@ -1390,7 +1391,9 @@ function openScene(id){
   editing=id;
   const s=id?S.scenes.find(x=>x.id===id):{date:'',ep:'',sc:'',light:'',place:'',main:'',sub:'',pages:'',summary:'',cast:{}};
   const f=$('#form');
-  for(const k of ['date','ep','sc','light','place','main','sub','summary'])f[k].value=cut2(s[k]);
+  for(const k of ['sc','light','place','main','sub','summary'])f[k].value=cut2(s[k]);
+  fillEps(s.ep);
+  const dd=dateToInput(s.date);f.d1.value=dd[0]||'';f.d2.value=dd[1]||'';f.d1.dataset.raw=s.date||'';f.d1.dataset.o1=f.d1.value;f.d1.dataset.o2=f.d2.value;
   f.pages.value=num(s.pages)!==null?s.pages:(s.pnote||'');
   draft={...s.cast};
   $('#dTitle').textContent=id?'编辑场次':'新增场次';
@@ -1398,6 +1401,15 @@ function openScene(id){
   drawRoles();$('#dlg').showModal();
 }
 const cut2=v=>v==null?'':String(v);
+const YEAR=new Date().getFullYear();
+const pad=n=>String(n).padStart(2,'0');
+function dateToInput(s){const m=String(s||'').match(/(\d{1,2})\.(\d{1,2})/g)||[];return m.map(x=>{const[a,b]=x.split('.');return`${YEAR}-${pad(a)}-${pad(b)}`})}
+function inputToDate(v){if(!v)return'';const[,m,d]=v.split('-');return`${+m}.${pad(d)}`}
+function fillEps(cur){
+  const sel=$('#form').ep;let o='<option value="">请选择</option>';
+  const n=Math.max(40,+cur||0);for(let i=1;i<=n;i++)o+=`<option value="${i}">第 ${i} 集</option>`;
+  sel.innerHTML=o;sel.value=cur||'';
+}
 function drawRoles(){
   $('#dRoles').innerHTML=S.roles.map(r=>`<button type="button" class="${draft[r]?'s'+draft[r]:''} ${r===PINK?'pink':''}" data-r="${esc(r)}">${esc(r)}</button>`).join('')||'<span class="hint">尚无角色,请到「选单/角色管理」新增。</span>';
   document.querySelectorAll('#dRoles button').forEach(b=>b.onclick=()=>{const r=b.dataset.r;if(draft[r])delete draft[r];else draft[r]=1;drawRoles()});
@@ -1406,7 +1418,11 @@ $('#form').onsubmit=e=>{
   e.preventDefault();
   const f=e.target,v=n=>f[n].value.trim();
   const pv=v('pages'),pn=pv===''?null:Number(pv);
-  const rec={date:v('date'),ep:+v('ep'),sc:v('sc'),light:v('light'),place:v('place'),main:v('main'),sub:v('sub'),summary:v('summary'),
+  const sep=(f.d1.dataset.raw||'').includes('/')&&f.d1.value===f.d1.dataset.o1&&f.d2.value===f.d1.dataset.o2?'/':'-';
+  let d1=inputToDate(f.d1.value),d2=inputToDate(f.d2.value);
+  if(!d1&&d2){d1=d2;d2=''}
+  const dateStr=(f.d1.value===f.d1.dataset.o1&&f.d2.value===f.d1.dataset.o2)?f.d1.dataset.raw:(d2&&d2!==d1?d1+sep+d2:d1);
+  const rec={date:dateStr,ep:+v('ep'),sc:v('sc'),light:v('light'),place:v('place'),main:v('main'),sub:v('sub'),summary:v('summary'),
     pages:pn!==null&&!isNaN(pn)?pn:null,pnote:pn!==null&&isNaN(pn)?pv:'',cast:{...draft}};
   if(editing)Object.assign(S.scenes.find(x=>x.id===editing),rec);
   else S.scenes.push({id:Math.max(0,...S.scenes.map(x=>x.id))+1,...rec});
