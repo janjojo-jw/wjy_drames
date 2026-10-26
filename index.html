@@ -1489,7 +1489,7 @@ let SERVER=false,REV=0,TOK='';
    所有人打开时直接从 GitHub 读最新的 data.json;管理员保存时把它提交回仓库,所以大家看到的永远是同一份。 */
 const GH_REPO='jwjw-888/wjy_dramas',GH_FILE='data.json',GH_API='https://api.github.com/repos/'+GH_REPO+'/contents/'+GH_FILE;
 const GHMODE=/^https?:$/.test(location.protocol)&&/\.github\.io$/.test(location.hostname);
-let GHSHA='',GHTOK='';
+let GHSHA='',GHTOK='',GHBASE=null;const SHAS=new Set();
 try{GHTOK=localStorage.getItem('xifen-gh')||''}catch(_){}
 const b64d=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g,'')),c=>c.charCodeAt(0)));
 const b64e=t=>{let b='';new TextEncoder().encode(t).forEach(c=>b+=String.fromCharCode(c));return btoa(b)};
@@ -1548,7 +1548,7 @@ async function load(){
   let d=null;
   const sv=GHMODE?null:await fetchServer();
   if(sv){SERVER=true;REV=sv.rev;d=sv.data}
-  if(GHMODE){const g=await fetchGH(false);if(g){GHSHA=g.sha;d=g.data}}
+  if(GHMODE){const g=await fetchGH(false);if(g){setBase(g.sha,g.data);d=g.data}}
   if(!d){ // 没有服务器数据(或还没人存过):沿用 本地修改 → data.json → 内建数据
     if(!GHMODE)try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){}
     if(!d){
@@ -1568,7 +1568,7 @@ async function refreshFromServer(){
   if(GHMODE){
     if(pushing||document.querySelector('dialog[open]'))return;
     const g=await fetchGH(false);
-    if(g&&g.sha!==GHSHA){GHSHA=g.sha;adopt(g.data);render()}
+    if(g&&g.sha!==GHSHA&&!SHAS.has(g.sha)){setBase(g.sha,g.data);adopt(g.data);render()}
     return;
   }
   if(!SERVER||pushing||document.querySelector('dialog[open]'))return;
@@ -1609,42 +1609,50 @@ function pushServer(){
   });
   return pushQ;
 }
+function mergeData(base,mine,theirs){ // 三方合并:我改过的以我为准,其余用别人最新的
+  const J=x=>JSON.stringify(x),out=JSON.parse(J(theirs));
+  for(const k of Object.keys(mine))if(k!=='scenes'&&J(mine[k])!==J(base[k]))out[k]=mine[k];
+  const bm=new Map(base.scenes.map(x=>[x.id,x])),mm=new Map(mine.scenes.map(x=>[x.id,x]));
+  let sc=theirs.scenes.filter(x=>{ // 我删掉的场次(基准里有、我这里没有)就删
+    return !(bm.has(x.id)&&!mm.has(x.id)&&J(bm.get(x.id))===J(x)) });
+  const idx=new Map(sc.map((x,n)=>[x.id,n]));
+  for(const x of mine.scenes){
+    const b=bm.get(x.id);
+    if(b&&J(b)===J(x))continue; // 我没改过:保留别人的版本
+    if(idx.has(x.id))sc[idx.get(x.id)]=x;else sc.push(x); // 我改过或新增:用我的
+  }
+  out.scenes=sc;return out;
+}
+function setBase(sha,data){GHSHA=sha;GHBASE=JSON.parse(JSON.stringify(data));SHAS.add(sha)}
 function pushGH(){
   pushQ=pushQ.then(async()=>{
     pushing=true;$('#saved').textContent='同步中…';
+    const sleep=ms=>new Promise(z=>setTimeout(z,ms));
     try{
-      const cur=await fetchGH(true);
-      if(!cur){$('#saved').textContent='同步失败(连不上 GitHub),请稍后再试';pushing=false;return}
-      if(cur.sha!==GHSHA){ // 别的管理员在你之前保存过
-        $('#saved').textContent='';pushing=false;
-        alert('别的管理员刚刚更新过数据,你这次的修改没有保存。\n页面会重新载入最新内容,请再改一次。');
-        await load();return;
-      }
       for(const x of S.scenes)if(x.photo&&String(x.photo).startsWith('data:'))x.photo=await uploadPhotoGH(x.photo);
-      const out=JSON.parse(JSON.stringify(S));
-      const putData=()=>fetch(GH_API,{method:'PUT',headers:{accept:'application/vnd.github+json',authorization:'Bearer '+GHTOK,'content-type':'application/json'},
-        body:JSON.stringify({message:'网站更新数据 '+new Date().toISOString().slice(0,16).replace('T',' '),content:b64e(JSON.stringify(out,null,1)+'\n'),sha:GHSHA,branch:'main'})});
-      let r=await putData();
-      // 刚传完照片时 GitHub 的分支可能还在更新,会暂时回 409:确认没有别人改过数据,就稍等再试
-      for(let i=0;i<4&&(r.status===409||r.status===422);i++){
-        await new Promise(z=>setTimeout(z,1500*(i+1)));
-        const again=await fetchGH(true);
-        if(!again||again.sha!==GHSHA)break;
-        r=await putData();
+      let done=false,merged=false;
+      for(let i=0;i<7&&!done;i++){
+        const out=JSON.parse(JSON.stringify(S));
+        const r=await fetch(GH_API,{method:'PUT',headers:{accept:'application/vnd.github+json',authorization:'Bearer '+GHTOK,'content-type':'application/json'},
+          body:JSON.stringify({message:'网站更新数据 '+new Date().toISOString().slice(0,16).replace('T',' '),content:b64e(JSON.stringify(out,null,1)+'\n'),sha:GHSHA,branch:'main'})});
+        if(r.ok){setBase((await r.json()).content.sha,out);done=true;break}
+        if(r.status===409||r.status===422){ // 版本对不上:可能是别人刚改过,也可能只是 GitHub 还在更新
+          await sleep(1200*(i+1));
+          const cur=await fetchGH(true);
+          if(!cur||cur.sha===GHSHA||SHAS.has(cur.sha))continue; // 暂时的/读到旧版:稍后再试
+          S=mergeData(GHBASE,S,cur.data);setBase(cur.sha,cur.data);merged=true;render();
+          continue;
+        }
+        if(r.status===401||r.status===403||r.status===404){
+          $('#saved').textContent='';
+          try{localStorage.removeItem('xifen-gh')}catch(_){}
+          GHTOK='';doLogout();
+          alert('GitHub 令牌无效、已过期或没有写入权限。请仓库主人用新的令牌重新登录一次。');
+          pushing=false;return;
+        }
+        $('#saved').textContent='同步失败('+r.status+'),请稍后再试';pushing=false;return;
       }
-      if(r.ok){GHSHA=(await r.json()).content.sha;$('#saved').textContent='已同步到 GitHub,所有人打开都是最新的'}
-      else if(r.status===409||r.status===422){
-        $('#saved').textContent='';pushing=false;
-        alert('别的管理员刚刚更新过数据,你这次的修改没有保存。\n页面会重新载入最新内容,请再改一次。');
-        await load();return;
-      }
-      else if(r.status===401||r.status===403||r.status===404){
-        $('#saved').textContent='';
-        try{localStorage.removeItem('xifen-gh')}catch(_){}
-        GHTOK='';doLogout();
-        alert('GitHub 令牌无效、已过期或没有写入权限。请仓库主人用新的令牌重新登录一次。');
-      }
-      else $('#saved').textContent='同步失败('+r.status+'),请稍后再试';
+      $('#saved').textContent=done?(merged?'已同步(已合并别的管理员的更新)':'已同步到 GitHub,所有人打开都是最新的'):'同步失败,请稍后再试';
     }catch(e){$('#saved').textContent='同步失败(网络),请稍后再试'}
     pushing=false;
   });
