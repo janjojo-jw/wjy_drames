@@ -163,13 +163,13 @@ body.mview .card > .bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr
 body.mview .card > .bar label select{padding:7px 6px;font-size:14px}
 body.mview .card > .bar label.full{grid-column:1/-1}
 /* 祝阮/阮卿卿:亮金色字(底色略加深,金字才看得清) */
-:root{--gold:#ffd447;--pinkdeep:linear-gradient(135deg,#a8105f,#d02a7e)}
-.chip.pink{background:var(--pinkdeep);border-color:#ff7cc0;color:var(--gold);text-shadow:0 0 8px rgba(255,212,71,.35)}
-.chip.pink.z{background:none;border-color:#ff7cc0;color:var(--gold);text-shadow:none}
+:root{--gold:#fff3c4;--goldshadow:0 1px 2px rgba(120,0,60,.6),0 0 1px rgba(120,0,60,.6)}
+.chip.pink{background:var(--pink);border-color:var(--pink);color:var(--gold);text-shadow:var(--goldshadow)}
+.chip.pink.z{background:none;border-color:var(--pink);color:var(--gold);text-shadow:none}
 .roles button.pink{color:var(--gold)}
 .roles button.pink.s1,.roles button.pink.s2{color:var(--gold)}
-.roles button.pink.s1{background:var(--pinkdeep);border-color:#ff9ccc}
-tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pinkdeep);text-shadow:0 0 8px rgba(255,212,71,.35)}
+.roles button.pink.s1{background:var(--pink);border-color:#ff9ccc;text-shadow:var(--goldshadow)}
+tr.pinkrow td b,.st-card.pinkrow .h b{color:var(--gold);background:var(--pink);text-shadow:var(--goldshadow)}
 /* 统计摘要:四个小框同一排,各有不同底色 */
 .sum{flex-wrap:nowrap;gap:8px}
 .sum div{flex:0 1 auto;min-width:0;padding:9px 14px;border-radius:9px}
