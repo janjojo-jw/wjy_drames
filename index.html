@@ -171,6 +171,8 @@ body.mview .tabs{gap:14px}
 .note p{margin:3px 0;color:#cfcac0}
 .piebtn{margin-top:16px;margin-bottom:6px;padding:3px 14px;font-size:13px;border-radius:999px;color:var(--mute)}
 .piebtn.on{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;font-weight:600}
+.epbtn{margin-left:10px;padding:3px 14px;font-size:13px;border-radius:999px;border-color:var(--accent);color:var(--accent)}
+.epbtn:hover{background:rgba(217,181,108,.14)}
 .rolelink{cursor:pointer}
 b.rolelink{border-bottom:1px dotted var(--accent);padding-bottom:1px}
 b.rolelink::after{content:" ›";color:var(--accent);font-weight:400}
@@ -1550,7 +1552,7 @@ body.mview .hintCard{display:block}
 const KEY='xifen-v1';
 let S={title:'戏份盘点',roles:[],scenes:[],opts:{light:[],place:[],main:[],sub:[]}};
 let ADMIN=false;
-let tab='scenes', editing=null, draft={}, PIE=false, PREVTAB='scenes', PIEBY='p';
+let tab='scenes', editing=null, draft={}, PIE=false, EPV=false, PREVTAB='scenes', PIEBY='p';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt=n=>(Math.round(n*100)/100).toString();
@@ -1832,7 +1834,7 @@ function render(){
   $('#filterBar').hidden=tab==='stats';$('#roleHint').hidden=tab!=='scenes';$('#roleHint').innerHTML=VIEW==='card'?'💡 <b>点角色标签</b>可以看她所有的场次':'💡 点一行看这场的详情;<b>点角色标签</b>可以看她所有的场次';
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
-  if(tab==='scenes')renderScenes(rows);else if(PIE)renderPie(rows);else renderStats(rows);
+  if(tab==='scenes')renderScenes(rows);else if(PIE)renderPie(rows);else if(EPV)$('#vStats').innerHTML=epChart(rows);else renderStats(rows);
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
   $('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「戏份占比结算」页出现
 }
@@ -1921,7 +1923,7 @@ document.addEventListener('click',e=>{ // 抢在表格「点整行」之前处�
 /* 每集戏份分布:每集一条横条,按角色页数占比分段(颜色和圆饼图一致) */
 function epChart(rows){
   const eps=uniq(rows.map(s=>s.ep)).sort((a,b)=>a-b);
-  if(!eps.length)return'';
+  if(!eps.length)return'<div class="epc"><button class="pieback" type="button">← 返回长条图</button><p class="hint">还没有场次资料。</p></div>';
   const tot={};rows.forEach(s=>S.roles.forEach(r=>{if(s.cast[r]===1)tot[r]=(tot[r]||0)+(num(s.pages)||0)}));
   const top=Object.keys(tot).filter(r=>tot[r]>0&&!/配角/.test(r)).sort((a,b)=>tot[b]-tot[a]).slice(0,6);
   let ci=0;const col={};top.forEach(r=>col[r]=r===PINK?'#ff4fa3':PIE_COL[ci++%PIE_COL.length]);
@@ -1934,11 +1936,11 @@ function epChart(rows){
     return`<div class="eprow"><div class="eplab"><b>第${esc(ep)}集</b><small>${fmt(pages)} 页 · ${rs.length} 场</small></div><div class="epbar">${sum?parts.map(x=>{const pc=x.p/sum*100;return`<div style="flex:${x.p} 1 0;background:${x.c}" title="${esc(x.n)} ${fmt(x.p)} 页 · ${pc.toFixed(1)}%">${pc>=12?Math.round(pc)+'%':''}</div>`}).join(''):'<span style="color:#6f6c68;font-size:11px;padding:0 10px;line-height:26px">这一集还没有页数资料</span>'}</div></div>`;
   }).join('');
   const leg=top.map(r=>`<span><i style="background:${col[r]}"></i>${esc(r)}</span>`).join('')+`<span><i style="background:${PIE_OTHER}"></i>其他</span>`;
-  return`<div class="epc"><h3>每集戏份分布</h3><div class="epleg">${leg}</div>${segs}
-    <div class="note"><b>这张图怎么看</b><p>每一条是一集;条里各色块是各角色在这一集的页数占比(该角色页数 ÷ 这一集所有角色页数加总),颜色和圆饼图相同。</p><p>色块越宽,代表那个角色在这一集的戏越重;鼠标移上去(手机长按)可以看到页数。左边的页数和场次数是这一集的实际总量。</p></div></div>`;
+  return`<div class="epc"><button class="pieback" type="button">← 返回长条图</button><h3>每集戏份分布(按页数)</h3><div class="note"><b>这张图怎么看</b><p>每一条是一集;条里各色块是各角色在这一集的页数占比(该角色页数 ÷ 这一集所有角色页数加总),颜色和圆饼图相同。</p><p>色块越宽,代表那个角色在这一集的戏越重;鼠标移上去(手机长按)可以看到页数。左边的页数和场次数是这一集的实际总量。</p></div>
+    <div class="epleg">${leg}</div>${segs}</div>`;
 }
-$('#pieBtn').onclick=()=>{PIE=!PIE;render()}; // 圆饼图自成一页,跟排版无关
-document.addEventListener('click',e=>{if(e.target.closest('.pieback')){PIE=false;tab='stats';render()}});
+$('#pieBtn').onclick=()=>{PIE=!PIE;EPV=false;render()}; // 圆饼图自成一页,跟排版无关
+document.addEventListener('click',e=>{if(e.target.closest('.pieback')){PIE=false;EPV=false;tab='stats';render()}});
 function renderStats(rows){
   const total=rows.reduce((a,s)=>a+(num(s.pages)||0),0),nsc=rows.length;
   const list=S.roles.map(r=>{
@@ -1953,15 +1955,16 @@ function renderStats(rows){
     <p>页数占比 = 该角色的页数 ÷ 所选范围的总页数(${fmt(total)} 页)</p>
     <p>一场戏有多位角色时,每位角色都各算一次,所以各角色的占比加起来会超过 100%。它表示「这个角色占了整部戏多少篇幅」。</p></div>
   <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${S.roles.length}</b><span>角色</span></div><div><b>${esc(scope)}</b><span>统计范围</span></div></div>
-  <div class="bar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button></div>
+  <div class="bar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${sortBy==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${sortBy==='n'?'on':''}" data-s="n">按场次</button><button class="epbtn" type="button">每集戏份分布 ›</button></div>
   <p class="rolehint" style="margin:8px 0 0">💡 <b>点角色名</b>可以看她所有的场次</p>
   <div class="mcards" style="margin-top:10px">`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b class="rolelink" data-role="${esc(x.r)}" title="点一下,看她所有的场次">${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
   `</div>
   <div class="scroll mtable" style="margin-top:10px"><table><thead><tr><th>#</th><th>角色</th><th class="num">场次</th><th class="num">场次占比</th><th style="width:22%"></th><th class="num">页数</th><th class="num">页数占比</th><th style="width:22%"></th></tr></thead><tbody>`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b class="rolelink" data-role="${esc(x.r)}" title="点一下,看她所有的场次">${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+
-  `</tbody></table></div>`+epChart(rows);
+  `</tbody></table></div>`;
   document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{sortBy=b.dataset.s;render()});
+  document.querySelectorAll('.epbtn').forEach(b=>b.onclick=()=>{EPV=true;PIE=false;render()});
 }
 
 /* ---- scene dialog ---- */
@@ -2146,7 +2149,7 @@ $('#mCancel').onclick=()=>{
 };
 
 /* ---- tabs / filters ---- */
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;PIE=false;render()});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;PIE=false;EPV=false;render()});
 
 /* ---- 排版切换:电脑版(表格)/ 手机版(卡片),默认电脑版,记住选择 ---- */
 let VIEW='table';
@@ -2156,7 +2159,7 @@ function applyView(){
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
 }
 document.querySelectorAll('.vsw button').forEach(b=>b.onclick=()=>{
-  PIE=false; // 电脑版/手机版永远是长条图
+  PIE=false;EPV=false; // 电脑版/手机版永远是长条图
   VIEW=b.dataset.v;try{localStorage.setItem('xifen-view',VIEW)}catch(_){}
   applyView();render();
 });
