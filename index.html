@@ -169,6 +169,8 @@ body.mview .tabs{gap:14px}
 #vStats>.note{max-width:none;margin-left:0}
 .note b{display:block;color:var(--accent);margin-bottom:2px;letter-spacing:.06em}
 .note p{margin:3px 0;color:#cfcac0}
+.piebtn{margin-top:16px;margin-bottom:6px;padding:3px 14px;font-size:13px;border-radius:999px;color:var(--mute)}
+.piebtn.on{background:linear-gradient(180deg,#fbefc6,#ecd196);border-color:#fbefc6;color:#2a210a;font-weight:600}
 .rolelink{cursor:pointer}
 .rolelink:hover{text-decoration:underline;text-underline-offset:3px}
 #rdlg{width:min(560px,94vw);max-height:86vh;padding:14px 16px;border-radius:12px;border:1px solid #6d6880;background:linear-gradient(160deg,#3d394b,#2d2b38);color:#f2eefb;box-shadow:0 24px 60px -16px #000}
@@ -327,7 +329,8 @@ body.mview .hintCard{display:block}
 <main>
   <div class="tabrow">
     <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比结算</button></div>
-    <div class="vsw" role="group" aria-label="排版"><span class="hint">排版</span><button data-v="table" class="on">电脑版</button><button data-v="card">手机版</button><button data-v="pie">圆饼图</button></div>
+    <div class="vsw" role="group" aria-label="排版"><span class="hint">排版</span><button data-v="table" class="on">电脑版</button><button data-v="card">手机版</button></div>
+    <button type="button" class="piebtn" id="pieBtn" hidden>圆饼图</button>
   </div>
 
   <div class="card" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
@@ -1823,8 +1826,8 @@ function render(){
   $('#vScenes').hidden=tab!=='scenes';$('#vStats').hidden=tab!=='stats';
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else if(PIE)renderPie(rows);else renderStats(rows);
-  document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',PIE?b.dataset.v==='pie':b.dataset.v===VIEW));
-  $('.vsw button[data-v=pie]').hidden=tab!=='stats'; // 圆饼图按钮只在「戏份占比结算」页出现
+  document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
+  $('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「戏份占比结算」页出现
 }
 
 function renderScenes(rows){
@@ -1925,6 +1928,7 @@ function epChart(rows){
   return`<div class="epc"><h3>每集戏份分布</h3><div class="epleg">${leg}</div>${segs}
     <div class="note"><b>这张图怎么看</b><p>每一条是一集;条里各色块是各角色在这一集的页数占比(该角色页数 ÷ 这一集所有角色页数加总),颜色和圆饼图相同。</p><p>色块越宽,代表那个角色在这一集的戏越重;鼠标移上去(手机长按)可以看到页数。左边的页数和场次数是这一集的实际总量。</p></div></div>`;
 }
+$('#pieBtn').onclick=()=>{PIE=!PIE;render()}; // 圆饼图自成一页,跟排版无关
 document.addEventListener('click',e=>{if(e.target.closest('.pieback')){PIE=false;tab='stats';render()}});
 function renderStats(rows){
   const total=rows.reduce((a,s)=>a+(num(s.pages)||0),0),nsc=rows.length;
@@ -2141,10 +2145,9 @@ function applyView(){
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
 }
 document.querySelectorAll('.vsw button').forEach(b=>b.onclick=()=>{
-  if(b.dataset.v==='pie'){if(!PIE)PREVTAB=tab;PIE=true;tab='stats';render();return} // 圆饼图:电脑版/手机版共用同一页
-  if(PIE){PIE=false;tab=PREVTAB}
+  PIE=false; // 电脑版/手机版永远是长条图
   VIEW=b.dataset.v;try{localStorage.setItem('xifen-view',VIEW)}catch(_){}
-  applyView();
+  applyView();render();
 });
 applyView();
 ['fEp','fDate','fRole'].forEach(i=>$('#'+i).onchange=render);$('#fQ').oninput=render;$('#fPhoto').onchange=render;
