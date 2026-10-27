@@ -2114,14 +2114,14 @@ function renderPlan(){
   const m=new Map();
   PLAN.scenes.forEach(s=>m.set(s.ep+'|'+s.sc,{p:num(s.pages),cast:new Set(s.cast),src:'plan'}));
   let ov=0,ovp=0;
-  S.scenes.forEach(s=>{const k=String(s.ep)+'|'+String(s.sc);const o=m.get(k),cs=new Set(S.roles.filter(r=>s.cast[r]===1));if(o){ov++;ovp+=o.p||0;o.cast.forEach(r=>cs.add(r))}m.set(k,{p:num(s.pages)!==null?num(s.pages):(o?o.p:null),cast:cs,src:'db'})}); // 同一集同一场两边都有时只算一次:页数以数据库为准(没有才用日程表),角色取两边的联集
+  S.scenes.forEach(s=>{const k=String(s.ep)+'|'+String(s.sc);const o=m.get(k),cs=new Set(S.roles.filter(r=>s.cast[r]===1));if(o){ov++;ovp+=o.p||0}m.set(k,{p:num(s.pages)!==null?num(s.pages):(o?o.p:null),cast:cs,src:'db'})}); // 同一集同一场两边都有时只算一次:页数和角色都以数据库(每天的场次表)为准
   const all=[...m.values()],nsc=all.length,total=all.reduce((a,x)=>a+(x.p||0),0);
   const roles=[...S.roles];PLAN.scenes.forEach(s=>s.cast.forEach(r=>{if(!roles.includes(r))roles.push(r)}));
   const list=roles.map(r=>{let p=0,n=0;all.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,p,n}}).sort((a,b)=>planSort==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
   const bar=pc=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
   box.innerHTML=`<div class="bar sortbar topbtns"><button class="epbtn" id="plCo" type="button">🤝 角色对戏占比</button><button class="epbtn" id="plSch" type="button">📅 大计划日程</button></div>
   <div class="note"><b>大计划统计的算法</b>
-    <p>把「拍摄日程表」(PDF,${PLAN.scenes.length} 场)和网站数据库里的场次(${S.scenes.length} 场)合在一起统计,同一集同一场两边都有时只算一次(已拍过的重复场次共 ${ov} 场、${fmt(ovp)} 页,已从日程表里扣除;页数以数据库为准,角色标记取两边的联集),合计 <span class="hl">${nsc}</span> 场、<span class="hl">${fmt(total)}</span> 页。</p>
+    <p>把「拍摄日程表」(PDF,${PLAN.scenes.length} 场)和网站数据库里的场次(${S.scenes.length} 场)合在一起统计,同一集同一场两边都有时只算一次(已拍过的重复场次共 ${ov} 场、${fmt(ovp)} 页,已从日程表里扣除;已拍的场次页数和角色都以每天的场次表(数据库)为准),合计 <span class="hl">${nsc}</span> 场、<span class="hl">${fmt(total)}</span> 页。</p>
     <p>场次占比 = 该角色有戏的场次数 ÷ 总场次数;页数占比 = 该角色所在场次的页数 ÷ 总页数。一场戏有多位角色时每人各算一次,所以占比加起来会超过 100%。</p>
     <p>⚠ 拍摄日程表只标出 5 位主要角色(祝阮/阮卿卿、陆封、夏玉尔、沈心阳、芈大丽),其他角色的数字只来自数据库,会偏低。</p>
     <p>这一页是独立统计,不影响「戏份占比」和其他页面。</p></div>
