@@ -2114,7 +2114,7 @@ function renderPlan(){
 
 
 /* ---- 大计划日程:把 PDF 拍摄日程做成跟「场次表」一样的版面(电脑版表格 / 手机版卡片) ---- */
-let SCHF={ep:'',day:'',role:'',q:''},SCHSORT={key:'date',dir:1};
+let SCHF={ep:'',day:'',role:'',q:''},SCHSORT={key:'date',dir:1,auto:true};
 const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场',''],['light','气氛',''],['io','内外',''],['season','季节',''],['summary','内容概要',''],['cast','角色','nos'],['pages','页数','num'],['loc','实拍景地',''],['region','地区',''],['main','主场景',''],['sub','次场景',''],['hint','现场提示','']];
 function renderSched(box){
   const P=PLAN,eps=[...new Set(P.scenes.map(s=>+s.ep))].sort((a,b)=>a-b);
@@ -2140,7 +2140,8 @@ function schList(){
   const hay=s=>{const d=days[s.day];return toSimp([s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,shot.has(s.ep+'|'+s.sc)?'已拍':''].join(' '))};
   let rows=P.scenes.map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t))));
   const scNo=v=>{const m=String(v).match(/\d+/);return m?+m[0]:0};
-  const k=SCHSORT.key,dir=SCHSORT.dir;
+  const eff=(SCHSORT.auto&&SCHF.ep)?{key:'sc',dir:1}:SCHSORT; // 选了某一集:预设按场号递增,才看得出剧情发展顺序
+  const k=eff.key,dir=eff.dir;
   const val=x=>k==='date'?x.i:k==='ep'?+x.s.ep:k==='pages'?(x.s.pages==null?null:x.s.pages):k==='hint'?[x.s.hint,x.s.act].filter(Boolean).join(' '):(x.s[k]||'');
   rows.sort((a,b)=>{const va=val(a),vb=val(b);let c;
     if(va===null||vb===null){if(va===vb)c=0;else return va===null?1:-1}
@@ -2163,7 +2164,7 @@ function schList(){
   $('#schList').innerHTML=rows.length?`<div class="pl-cards"><div class="pl-list">${rows.map(card).join('')}</div><div class="tot" style="color:var(--accent);font-size:13px;padding:10px 4px">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div>
   <div class="scroll mtable pl-tblwrap"><table class="pl-tbl"><thead><tr>${head}</tr></thead><tbody>${rows.map(trow).join('')}</tbody><tfoot><tr><th colspan="9" style="text-align:left">合计 ${rows.length} 场</th><th colspan="5" class="num" style="text-align:left">${fmt(tp)} 页</th></tr></tfoot></table></div>
   <p class="hint">点表头可以排序,再点一次反向。</p>`:'<div class="empty">没有符合的场次</div>';
-  document.querySelectorAll('#schList th.sortable').forEach(th=>th.onclick=()=>{const kk=th.dataset.sk;SCHSORT=SCHSORT.key===kk?{key:kk,dir:-SCHSORT.dir}:{key:kk,dir:1};schList()});
+  document.querySelectorAll('#schList th.sortable').forEach(th=>th.onclick=()=>{const kk=th.dataset.sk;SCHSORT=k===kk?{key:kk,dir:-dir}:{key:kk,dir:1};schList()});
 }
 /* ---- scene dialog ---- */
 function openScene(id){
