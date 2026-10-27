@@ -2167,6 +2167,10 @@ function renderSched(box){
 function schList(){
   const P=PLAN,days=P.days;
   const shot=new Set(S.scenes.map(s=>String(s.ep)+'|'+String(s.sc)));
+  { // 拍摄时场号拆分/改字母(15集4场→4A/4B、8集21A→21B):日程表对应的那一场也标已拍
+    const nb=x=>{const q=/^(\d+)[A-Z]?$/.exec(String(x));return q?q[1]:null},dbk=new Set(shot);
+    S.scenes.forEach(d=>{const n=nb(d.sc);if(n===null)return;P.scenes.forEach(ps=>{const pk=ps.ep+'|'+ps.sc;if(!dbk.has(pk)&&String(ps.ep)===String(d.ep)&&nb(ps.sc)===n)shot.add(pk)})});
+  }
   const q=toSimp(SCHF.q.trim()).split(/\s+/).filter(Boolean);
   const hay=s=>{const d=days[s.day];return toSimp([s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,shot.has(s.ep+'|'+s.sc)?'已拍':''].join(' '))};
   let rows=P.scenes.map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t))));
