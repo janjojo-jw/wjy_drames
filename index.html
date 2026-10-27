@@ -400,13 +400,6 @@ body.mview .schf .srow{grid-column:1/-1}
 @media(max-width:700px){.schf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.schf label select{padding:7px 6px;font-size:14px}.schf .srow{grid-column:1/-1}}
 .pl-tbl th.sortable{cursor:pointer;user-select:none}.pl-tbl th.sorted{color:var(--accent)}.pl-tbl th i{font-style:normal;font-size:10px;margin-left:3px}
 .pl-tbl tfoot th{position:static;color:var(--accent);font-size:13px;border-top:1px solid #3a3a43;border-bottom:0}
-
-.pl-tbl .c3,.pl-tbl .c4{position:sticky;background:#17171c;z-index:2}
-.pl-tbl th.c3,.pl-tbl th.c4{background:#1b1b21;z-index:3}
-.pl-tbl .c2{box-shadow:none;border-right:0}
-.pl-tbl .c3{left:114px;min-width:92px;width:92px}
-.pl-tbl .c4{left:206px;min-width:190px;width:190px;max-width:190px;box-shadow:6px 0 8px -6px rgba(0,0,0,.7);border-right:1px solid #3a3a43}
-.pl-tbl .c1{min-width:70px;width:70px}.pl-tbl .c2{min-width:44px;width:44px}
 </style>
 </head>
 <body>
@@ -2122,7 +2115,7 @@ function renderPlan(){
 
 /* ---- 大计划日程:把 PDF 拍摄日程做成跟「场次表」一样的版面(电脑版表格 / 手机版卡片) ---- */
 let SCHF={ep:'',day:'',role:'',q:''},SCHSORT={key:'date',dir:1,auto:true};
-const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场','c3'],['cast','角色','c4'],['light','气氛',''],['io','内外',''],['season','季节',''],['summary','内容概要',''],['pages','页数','num'],['loc','实拍景地',''],['region','地区',''],['main','主场景',''],['sub','次场景',''],['hint','现场提示','']];
+const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场',''],['light','气氛',''],['io','内外',''],['season','季节',''],['summary','内容概要',''],['cast','角色','nos'],['pages','页数','num'],['loc','实拍景地',''],['region','地区',''],['main','主场景',''],['sub','次场景',''],['hint','现场提示','']];
 function renderSched(box){
   const P=PLAN,eps=[...new Set(P.scenes.map(s=>+s.ep))].sort((a,b)=>a-b);
   box.innerHTML=`<button class="coback" type="button">← 返回大计划统计</button>
@@ -2166,8 +2159,8 @@ function schList(){
     ${meta?`<div class="m">${meta}</div>`:''}${(s.hint||s.act)?`<div class="hn">⚠ ${esc([s.hint,s.act].filter(Boolean).join(' · '))}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}
     ${s.cast.length?`<div class="c">${chips(s)}</div>`:''}</div>`};
   const trow=x=>{const s=x.s,d=days[s.day],isShot=shot.has(s.ep+'|'+s.sc),night=/夜/.test(s.light||'');
-    return`<tr class="${isShot?'shotrow':''}"><td class="c1">${d.m}/${d.d}<br><small>DAY${d.n}</small></td><td class="c2">${esc(s.ep)}</td><td class="c3">${esc(s.sc)}${isShot?'<i class="pl-shot">已拍</i>':''}</td><td class="wrap c4">${chips(s)}</td><td class="${night?'ntc':''}">${esc(s.light||'')}</td><td>${esc(s.io||'')}</td><td>${esc(s.season||'')}</td><td class="wrap sm">${esc(cut(s.summary||''))}</td><td class="num">${s.pages!=null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${esc(s.loc||'')}</td><td>${esc(s.region||'')}</td><td class="wrap">${esc(s.main||'')}</td><td class="wrap">${esc(s.sub||'')}</td><td class="wrap hn">${esc([s.hint,s.act].filter(Boolean).join(' · '))}</td></tr>`};
-  const head=SCOLS.map(([key,lab,cls])=>key==='cast'?`<th class="c4">${lab}</th>`:`<th class="sortable${cls?' '+cls:''}${k===key?' sorted':''}" data-sk="${key}" title="点一下排序,再点一下反向">${lab}<i>${k===key?(dir>0?'▲':'▼'):''}</i></th>`).join('');
+    return`<tr class="${isShot?'shotrow':''}"><td class="c1">${d.m}/${d.d}<br><small>DAY${d.n}</small></td><td class="c2">${esc(s.ep)}</td><td>${esc(s.sc)}${isShot?'<i class="pl-shot">已拍</i>':''}</td><td class="${night?'ntc':''}">${esc(s.light||'')}</td><td>${esc(s.io||'')}</td><td>${esc(s.season||'')}</td><td class="wrap sm">${esc(cut(s.summary||''))}</td><td class="wrap">${chips(s)}</td><td class="num">${s.pages!=null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${esc(s.loc||'')}</td><td>${esc(s.region||'')}</td><td class="wrap">${esc(s.main||'')}</td><td class="wrap">${esc(s.sub||'')}</td><td class="wrap hn">${esc([s.hint,s.act].filter(Boolean).join(' · '))}</td></tr>`};
+  const head=SCOLS.map(([key,lab,cls])=>key==='cast'?`<th>${lab}</th>`:`<th class="sortable${cls?' '+cls:''}${k===key?' sorted':''}" data-sk="${key}" title="点一下排序,再点一下反向">${lab}<i>${k===key?(dir>0?'▲':'▼'):''}</i></th>`).join('');
   $('#schList').innerHTML=rows.length?`<div class="pl-cards"><div class="pl-list">${rows.map(card).join('')}</div><div class="tot" style="color:var(--accent);font-size:13px;padding:10px 4px">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div>
   <div class="scroll mtable pl-tblwrap"><table class="pl-tbl"><thead><tr>${head}</tr></thead><tbody>${rows.map(trow).join('')}</tbody><tfoot><tr><th colspan="9" style="text-align:left">合计 ${rows.length} 场</th><th colspan="5" class="num" style="text-align:left">${fmt(tp)} 页</th></tr></tfoot></table></div>
   <p class="hint">点表头可以排序,再点一次反向。</p>`:'<div class="empty">没有符合的场次</div>';
