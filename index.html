@@ -421,7 +421,7 @@ body.mview .schf .srow{grid-column:1/-1}
 </div>
 <main>
   <div class="tabrow">
-    <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">角色戏份占比</button><button data-t="plan">大计划戏份占比</button></div>
+    <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比</button><button data-t="plan">大计划戏份占比</button></div>
     <div class="vsw" role="group" aria-label="排版"><span class="hint">排版</span><button data-v="table" class="on">电脑版</button><button data-v="card">手机版</button></div>
     <button type="button" class="piebtn" id="pieBtn" hidden>圆饼图</button>
   </div>
@@ -1922,7 +1922,7 @@ function render(){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else if(tab==='plan')renderPlan();else if(CV)renderCoStats(rows);else if(PIE)renderPie(rows);else if(EPV)$('#vStats').innerHTML=epChart(rows);else renderStats(rows);
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
-  $('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「角色戏份占比」页出现
+  $('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「戏份占比」页出现
 }
 
 function renderScenes(rows){
@@ -1982,7 +1982,7 @@ function renderPie(rows){
     <div class="note"><b>圆饼图的算法</b>
       <p>每一块 = 该角色的页数 ÷ 所有角色页数的加总(${fmt(sum)} 页),各块加起来刚好 100%。</p>
       <p>一场戏有多位角色时,每位角色都各算一次整场页数,所以这个加总(${fmt(sum)} 页)会比实际总页数(${fmt(rows.reduce((a,s)=>a+(num(s.pages)||0),0))} 页)大。</p>
-      <p>因此这里的百分比和「角色戏份占比」长条图的页数占比不同:圆饼图表示「在所有角色的戏份总量里占几成」,长条图表示「占了整部戏多少篇幅」。</p>
+      <p>因此这里的百分比和「戏份占比」长条图的页数占比不同:圆饼图表示「在所有角色的戏份总量里占几成」,长条图表示「占了整部戏多少篇幅」。</p>
       <p>只列前 6 位有名字的角色,其余合并为「其他」。</p></div>
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="角色占比圆饼图">${svg}</svg>
     <ul class="plegend">${legend}</ul>
@@ -2039,7 +2039,7 @@ function renderStats(rows){
   }).sort((a,b)=>sortBy==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
   const scope='全部场次';
   const bar=(pc,pink)=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
-  $('#vStats').innerHTML=`<div class="bar sortbar topbtns"><button class="epbtn" type="button">📊 每集戏份分布</button><button class="epbtn cobtn" type="button">🤝 对戏占比</button></div>
+  $('#vStats').innerHTML=`<div class="bar sortbar topbtns"><button class="epbtn" type="button">📊 每集戏份分布</button><button class="epbtn cobtn" type="button">🤝 角色对戏占比</button></div>
   <div class="note"><b>长条图的算法</b>
     <p>场次占比 = 该角色有戏的场次数 ÷ 所选范围的总场次数(${nsc} 场)</p>
     <p>页数占比 = 该角色的页数 ÷ 所选范围的总页数(${fmt(total)} 页)</p>
@@ -2069,7 +2069,7 @@ function coHTML(all,roles,lead,selId){
   const co=roles.filter(r=>r!==lead).map(r=>{let n=0,p=0;mine.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,n,p}}).filter(x=>x.n).sort((a,b)=>b.p-a.p||b.n-a.n);
   const solo=mine.filter(x=>x.cast.size===1),sn=solo.length,sp=solo.reduce((a,x)=>a+(x.p||0),0);
   const row=(label,n,p)=>{const ps=mn?n/mn*100:0,pp=mp?p/mp*100:0;return`<div class="st-card"><div class="h"><b>${esc(label)}</b></div><div class="r"><span>场次</span><strong>${n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`};
-  return `<h3 style="margin:14px 0 6px;font-size:16px">对戏占比<small style="margin-left:8px;color:var(--mute);font-weight:400">谁跟谁一起出场</small></h3>
+  return `<h3 style="margin:14px 0 6px;font-size:16px">角色对戏占比<small style="margin-left:8px;color:var(--mute);font-weight:400">谁跟谁一起出场</small></h3>
   <div class="note" style="margin:0 0 10px"><p class="coq"><select id="${selId}" class="rolesel">${(()=>{const top=['祝阮/阮卿卿','陆封','夏玉尔','芈大丽','沈心阳'].filter(r=>roles.includes(r));return[...top,...roles.filter(r=>!top.includes(r))]})().map(r=>`<option ${r===lead?'selected':''}>${esc(r)}</option>`).join('')}</select><span>的戏,有多少和别的角色同场。</span></p>
   <p>该角色共有 <span class="hl">${mn}</span> 场、<span class="hl">${fmt(mp)}</span> 页。占比 = 和某角色同场的场次(页数)÷ 她自己的总场次(页数)。一场里有好几个人时,每个人各算一次,所以占比加起来会超过 100%。</p></div>
   <div class="mcards copage">${row('只有 TA 一人(没有其他角色)',sn,sp)}${co.map(x=>row('和 '+x.r+' 同场',x.n,x.p)).join('')}</div>`;
@@ -2092,12 +2092,12 @@ function renderPlan(){
   const roles=[...S.roles];PLAN.scenes.forEach(s=>s.cast.forEach(r=>{if(!roles.includes(r))roles.push(r)}));
   const list=roles.map(r=>{let p=0,n=0;all.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,p,n}}).sort((a,b)=>planSort==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
   const bar=pc=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
-  box.innerHTML=`<div class="bar sortbar topbtns"><button class="epbtn" id="plCo" type="button">🤝 对戏占比</button><button class="epbtn" id="plSch" type="button">📅 大计划日程</button></div>
+  box.innerHTML=`<div class="bar sortbar topbtns"><button class="epbtn" id="plCo" type="button">🤝 角色对戏占比</button><button class="epbtn" id="plSch" type="button">📅 大计划日程</button></div>
   <div class="note"><b>大计划统计的算法</b>
     <p>把「拍摄日程表」(PDF,${PLAN.scenes.length} 场)和网站数据库里的场次(${S.scenes.length} 场)合在一起统计,同一集同一场两边都有时只算一次(已拍过的重复场次共 ${ov} 场、${fmt(ovp)} 页,已从日程表里扣除;页数以数据库为准,角色标记取两边的联集),合计 <span class="hl">${nsc}</span> 场、<span class="hl">${fmt(total)}</span> 页。</p>
     <p>场次占比 = 该角色有戏的场次数 ÷ 总场次数;页数占比 = 该角色所在场次的页数 ÷ 总页数。一场戏有多位角色时每人各算一次,所以占比加起来会超过 100%。</p>
     <p>⚠ 拍摄日程表只标出 5 位主要角色(祝阮/阮卿卿、陆封、夏玉尔、沈心阳、芈大丽),其他角色的数字只来自数据库,会偏低。</p>
-    <p>这一页是独立统计,不影响「角色戏份占比」和其他页面。</p></div>
+    <p>这一页是独立统计,不影响「戏份占比」和其他页面。</p></div>
   <div class="sum"><div><b>${nsc}</b><span>总场次</span></div><div><b>${fmt(total)}</b><span>总页数</span></div><div><b>${PLAN.scenes.length}</b><span>日程表</span></div><div><b>${S.scenes.length}</b><span>数据库</span></div></div>
   <p class="dedup">重复已扣除:<b>−${ov} 场、−${fmt(ovp)} 页</b>(日程表和数据库都有的场次只算一次)</p>
   <div class="bar sortbar" style="margin-top:14px"><span class="hint">排序:</span><button class="sortb ${planSort==='p'?'on':''}" data-s="p">按页数</button><button class="sortb ${planSort==='n'?'on':''}" data-s="n">按场次</button></div>
