@@ -391,6 +391,15 @@ body.mview .hintCard{display:block}
 .pl-gtr em{float:right;font-style:normal;color:#e9e3d3;font-size:13px}
 .pl-ttr td{text-align:center;color:#ffc000;font-size:12px;border-top:1px dashed rgba(255,192,0,.5);background:rgba(255,192,0,.05)}
 .pl-tbl td.sm{min-width:200px;max-width:300px}
+
+.schf{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.schf .srow{flex:1 1 280px}.schf .srow>label:first-child{flex:1;min-width:0}.schf input#sQ{width:100%;box-sizing:border-box}
+body.mview .schf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+body.mview .schf label select{padding:7px 6px;font-size:14px}
+body.mview .schf .srow{grid-column:1/-1}
+@media(max-width:700px){.schf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.schf label select{padding:7px 6px;font-size:14px}.schf .srow{grid-column:1/-1}}
+.pl-tbl th.sortable{cursor:pointer;user-select:none}.pl-tbl th.sorted{color:var(--accent)}.pl-tbl th i{font-style:normal;font-size:10px;margin-left:3px}
+.pl-tbl tfoot th{position:static;color:var(--accent);font-size:13px;border-top:1px solid #3a3a43;border-bottom:0}
 </style>
 </head>
 <body>
@@ -2104,60 +2113,58 @@ function renderPlan(){
 }
 
 
-/* ---- 大计划日程:把 PDF 拍摄日程做成手机好读的列表 ---- */
-let SCHQ='',SCHMODE='day',SCHKEY='date',SCHREV=false;
+/* ---- 大计划日程:把 PDF 拍摄日程做成跟「场次表」一样的版面(电脑版表格 / 手机版卡片) ---- */
+let SCHF={ep:'',day:'',role:'',q:''},SCHSORT={key:'ep',dir:1};
+const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场',''],['light','气氛',''],['io','内外',''],['season','季节',''],['summary','内容概要',''],['cast','角色','nos'],['pages','页数','num'],['loc','实拍景地',''],['region','地区',''],['main','主场景',''],['sub','次场景',''],['hint','现场提示','']];
 function renderSched(box){
-  const btn=(cls,attr,val,cur,txt)=>`<button class="sortb ${cur?'on':''}" ${attr}="${val}">${txt}</button>`;
-  const arrow=k=>SCHKEY===k?(SCHREV?' ↓':' ↑'):'';
+  const P=PLAN,eps=[...new Set(P.scenes.map(s=>+s.ep))].sort((a,b)=>a-b);
   box.innerHTML=`<button class="coback" type="button">← 返回大计划统计</button>
-  <h3 style="margin:14px 0 6px;font-size:16px">大计划日程<small style="margin-left:8px;color:var(--mute);font-weight:400">拍摄日程表(PDF)</small></h3>
-  <div class="bar sortbar schbar"><span class="hint">显示:</span>${btn('', 'data-m','day',SCHMODE==='day','按天数')}${btn('','data-m','ep',SCHMODE==='ep','按集数')}${btn('','data-m','role',SCHMODE==='role','按角色名')}</div>
-  <div class="bar sortbar schbar"><span class="hint">排序:</span>${btn('','data-k','date',SCHKEY==='date','按日期'+arrow('date'))}${btn('','data-k','ep',SCHKEY==='ep','按集数'+arrow('ep'))}<span class="hint" style="margin-left:4px">再点反向</span></div>
-  <input id="schQ" class="schq" placeholder="搜寻:集数、场号、场景、内容、角色、日期…" value="${esc(SCHQ)}">
-  <div id="schList"></div>`;
-  box.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{SCHMODE=b.dataset.m;renderSched(box)});
-  box.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(SCHKEY===k)SCHREV=!SCHREV;else{SCHKEY=k;SCHREV=false}renderSched(box)});
-  $('#schQ').oninput=e=>{SCHQ=e.target.value;schList()};
+  <h3 style="margin:14px 0 10px;font-size:16px">大计划日程<small style="margin-left:8px;color:var(--mute);font-weight:400">拍摄日程表(PDF)</small></h3>
+  <div class="bar schf">
+    <label>集数<select id="sEp"><option value="">全部</option>${eps.map(e=>`<option value="${e}" ${SCHF.ep==e?'selected':''}>第${e}集</option>`).join('')}</select></label>
+    <label>拍摄日期<select id="sDay"><option value="">全部</option>${P.days.map((d,i)=>`<option value="${i}" ${SCHF.day===String(i)?'selected':''}>${d.m}/${d.d} DAY${d.n}</option>`).join('')}</select></label>
+    <label>角色<select id="sRole"><option value="">全部</option>${P.roles.map(r=>`<option ${SCHF.role===r?'selected':''}>${esc(r)}</option>`).join('')}</select></label>
+    <div class="full srow"><label>搜寻<input id="sQ" placeholder="场景、内容…" value="${esc(SCHF.q)}"></label></div>
+  </div>
+  <div id="schList" style="margin-top:12px"></div>`;
+  $('#sEp').onchange=e=>{SCHF.ep=e.target.value;schList()};
+  $('#sDay').onchange=e=>{SCHF.day=e.target.value;schList()};
+  $('#sRole').onchange=e=>{SCHF.role=e.target.value;schList()};
+  $('#sQ').oninput=e=>{SCHF.q=e.target.value;schList()};
   schList();
 }
 function schList(){
-  const P=PLAN,days=P.days,roles=P.roles;
+  const P=PLAN,days=P.days;
   const shot=new Set(S.scenes.map(s=>String(s.ep)+'|'+String(s.sc)));
-  const q=toSimp(SCHQ.trim()).split(/\s+/).filter(Boolean);
-  const hay=(s,i)=>{const d=days[s.day];return toSimp([s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,shot.has(s.ep+'|'+s.sc)?'已拍':''].join(' '))};
-  let rows=P.scenes.map((s,i)=>({s,i})).filter(x=>{if(!q.length)return true;const h=hay(x.s,x.i);return q.every(t=>h.includes(t))});
+  const q=toSimp(SCHF.q.trim()).split(/\s+/).filter(Boolean);
+  const hay=s=>{const d=days[s.day];return toSimp([s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,shot.has(s.ep+'|'+s.sc)?'已拍':''].join(' '))};
+  let rows=P.scenes.map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t))));
   const scNo=v=>{const m=String(v).match(/\d+/);return m?+m[0]:0};
-  const cmp=SCHKEY==='ep'?(a,b)=>(+a.s.ep-+b.s.ep)||(scNo(a.s.sc)-scNo(b.s.sc))||(a.i-b.i):(a,b)=>a.i-b.i;
-  rows.sort(cmp);if(SCHREV)rows.reverse();
-  const tot=r=>({n:r.length,p:r.reduce((a,x)=>a+(x.s.pages||0),0)});
-  const t=tot(rows);
+  const k=SCHSORT.key,dir=SCHSORT.dir;
+  const val=x=>k==='date'?x.i:k==='ep'?+x.s.ep:k==='pages'?(x.s.pages==null?null:x.s.pages):k==='hint'?[x.s.hint,x.s.act].filter(Boolean).join(' '):(x.s[k]||'');
+  rows.sort((a,b)=>{const va=val(a),vb=val(b);let c;
+    if(va===null||vb===null){if(va===vb)c=0;else return va===null?1:-1}
+    else c=typeof va==='number'?va-vb:String(va).localeCompare(String(vb),'zh',{numeric:true});
+    c=c*dir;
+    return c||((+a.s.ep-+b.s.ep)||(scNo(a.s.sc)-scNo(b.s.sc))||(a.i-b.i))});
+  const tp=rows.reduce((a,x)=>a+(x.s.pages||0),0);
+  const chips=s=>s.cast.map(r=>`<span class="chip rc ${r===PINK?'pink':''}">${esc(r)}${(s.unsure||[]).includes(r)?'？':''}</span>`).join('');
   const card=x=>{const s=x.s,d=days[s.day],isShot=shot.has(s.ep+'|'+s.sc);
     const meta=[s.loc,s.region,s.main,s.sub].filter(Boolean).map(esc).join(' · ');
     const tag=(c,tx)=>tx?`<span class="pl-tag ${c}">${esc(tx)}</span>`:'';
     const night=/夜/.test(s.light||'');
-    return`${(SCHMODE==='day'&&SCHKEY==='date'&&!SCHREV&&s.tb)?'<div class="pl-tr">↪ 转场</div>':''}<div class="pl-card ${isShot?'shot':''}"><div class="h"><b>第${esc(s.ep)}集</b><span>${esc(s.sc)}场</span>${isShot?'<i class="pl-shot">已拍</i>':''}<em>${s.pages!=null?fmt(s.pages)+'<small>页</small>':esc(s.pnote||'')}</em></div>
-    <div class="tags">${tag('dt',d.m+'/'+d.d+' DAY'+d.n)}${tag(night?'nt':'dy',s.light)}${tag('',s.io)}${tag('',s.season)}</div>
+    return`<div class="pl-card ${isShot?'shot':''}"><div class="h"><b>${d.m}/${d.d}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span>${isShot?'<i class="pl-shot">已拍</i>':''}<em>${s.pages!=null?fmt(s.pages)+'<small>页</small>':esc(s.pnote||'')}</em></div>
+    <div class="tags">${tag('dt','DAY'+d.n+' '+d.wk)}${tag(night?'nt':'dy',s.light)}${tag('',s.io)}${tag('',s.season)}</div>
     ${meta?`<div class="m">${meta}</div>`:''}${(s.hint||s.act)?`<div class="hn">⚠ ${esc([s.hint,s.act].filter(Boolean).join(' · '))}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}
-    ${s.cast.length?`<div class="c">${s.cast.map(r=>`<span class="chip rc ${r===PINK?'pink':''}">${esc(r)}${(s.unsure||[]).includes(r)?'？':''}</span>`).join('')}</div>`:''}</div>`};
-  let groups=[];
-  if(SCHMODE==='day'){const mp=new Map();rows.forEach(x=>{if(!mp.has(x.s.day))mp.set(x.s.day,[]);mp.get(x.s.day).push(x)});
-    groups=[...mp].map(([k,r])=>{const d=days[k];const extra=/^\d*场?[\d.]*页?$/.test(d.note||'')?'':d.note;return{ord:k,title:`DAY${d.n} · ${d.m}月${d.d}日 ${d.wk}`,sub:[d.wx,d.grp].filter(Boolean).join(' · '),note:extra,rows:r}})}
-  else if(SCHMODE==='ep'){const mp=new Map();rows.forEach(x=>{const k=+x.s.ep;if(!mp.has(k))mp.set(k,[]);mp.get(k).push(x)});
-    groups=[...mp].map(([k,r])=>({ord:k,title:`第${k}集`,sub:'',rows:r}))}
-  else{roles.forEach((rn,ri)=>{const r=rows.filter(x=>x.s.cast.includes(rn));if(r.length)groups.push({ord:ri,title:rn,pink:rn===PINK,sub:'',rows:r})});
-    const none=rows.filter(x=>!x.s.cast.length);if(none.length)groups.push({ord:99,title:'没有标角色',sub:'',rows:none})}
-  groups.sort((a,b)=>a.ord-b.ord);if(SCHREV)groups.reverse();
-  const NC=14,showTr=SCHMODE==='day'&&SCHKEY==='date'&&!SCHREV;
+    ${s.cast.length?`<div class="c">${chips(s)}</div>`:''}</div>`};
   const trow=x=>{const s=x.s,d=days[s.day],isShot=shot.has(s.ep+'|'+s.sc),night=/夜/.test(s.light||'');
-    return`${(showTr&&s.tb)?`<tr class="pl-ttr"><td colspan="${NC}">↪ 转场</td></tr>`:''}<tr class="${isShot?'shotrow':''}"><td class="c1">${d.m}/${d.d}<br><small>DAY${d.n}</small></td><td class="c2">${esc(s.ep)}</td><td>${esc(s.sc)}${isShot?'<i class="pl-shot">已拍</i>':''}</td><td class="${night?'ntc':''}">${esc(s.light||'')}</td><td>${esc(s.io||'')}</td><td>${esc(s.season||'')}</td><td class="wrap sm">${esc(cut(s.summary||''))}</td><td class="wrap">${s.cast.map(r=>`<span class="chip rc ${r===PINK?'pink':''}">${esc(r)}${(s.unsure||[]).includes(r)?'？':''}</span>`).join('')}</td><td class="num">${s.pages!=null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${esc(s.loc||'')}</td><td>${esc(s.region||'')}</td><td class="wrap">${esc(s.main||'')}</td><td class="wrap">${esc(s.sub||'')}</td><td class="wrap hn">${esc([s.hint,s.act].filter(Boolean).join(' · '))}</td></tr>`};
-  const head=g=>{const gt=tot(g.rows);return`<div class="pl-gh ${g.pink?'pink':''}"><b>${esc(g.title)}</b>${g.sub?`<span>${esc(g.sub)}</span>`:''}<em>${gt.n} 场 · ${fmt(gt.p)} 页</em></div>${g.note?`<div class="pl-note">📝 ${esc(g.note)}</div>`:''}`};
-  const html=`<div class="pl-cards">`+groups.map(g=>head(g)+`<div class="pl-list">${g.rows.map(card).join('')}</div>`).join('')+`</div>`
-   +`<div class="scroll mtable pl-tblwrap"><table class="pl-tbl"><thead><tr><th class="c1">日期</th><th class="c2">集</th><th>场</th><th>气氛</th><th>内外</th><th>季节</th><th>内容概要</th><th>角色</th><th class="num">页数</th><th>实拍景地</th><th>地区</th><th>主场景</th><th>次场景</th><th>现场提示</th></tr></thead><tbody>`
-   +groups.map(g=>{const gt=tot(g.rows);return`<tr class="pl-gtr${g.pink?' pink':''}"><td colspan="${NC}"><b>${esc(g.title)}</b>${g.sub?` <span>${esc(g.sub)}</span>`:''}${g.note?` <span class="gn">📝 ${esc(g.note)}</span>`:''}<em>${gt.n} 场 · ${fmt(gt.p)} 页</em></td></tr>`+g.rows.map(trow).join('')}).join('')
-   +`</tbody></table></div>`;
-  $('#schList').innerHTML=`<div class="tot" style="color:var(--accent);font-size:13px;padding:8px 2px 0">${q.length?'搜寻结果:':'共'} ${t.n} 场 · ${fmt(t.p)} 页${SCHMODE==='role'?'(一场有多位角色会在每位角色下各出现一次,这里的页数是各角色合计)':''}</div>`+(html||'<div class="empty">没有符合的场次</div>');
+    return`<tr class="${isShot?'shotrow':''}"><td class="c1">${d.m}/${d.d}<br><small>DAY${d.n}</small></td><td class="c2">${esc(s.ep)}</td><td>${esc(s.sc)}${isShot?'<i class="pl-shot">已拍</i>':''}</td><td class="${night?'ntc':''}">${esc(s.light||'')}</td><td>${esc(s.io||'')}</td><td>${esc(s.season||'')}</td><td class="wrap sm">${esc(cut(s.summary||''))}</td><td class="wrap">${chips(s)}</td><td class="num">${s.pages!=null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${esc(s.loc||'')}</td><td>${esc(s.region||'')}</td><td class="wrap">${esc(s.main||'')}</td><td class="wrap">${esc(s.sub||'')}</td><td class="wrap hn">${esc([s.hint,s.act].filter(Boolean).join(' · '))}</td></tr>`};
+  const head=SCOLS.map(([key,lab,cls])=>key==='cast'?`<th>${lab}</th>`:`<th class="sortable${cls?' '+cls:''}${k===key?' sorted':''}" data-sk="${key}" title="点一下排序,再点一下反向">${lab}<i>${k===key?(dir>0?'▲':'▼'):''}</i></th>`).join('');
+  $('#schList').innerHTML=rows.length?`<div class="pl-cards"><div class="pl-list">${rows.map(card).join('')}</div><div class="tot" style="color:var(--accent);font-size:13px;padding:10px 4px">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div>
+  <div class="scroll mtable pl-tblwrap"><table class="pl-tbl"><thead><tr>${head}</tr></thead><tbody>${rows.map(trow).join('')}</tbody><tfoot><tr><th colspan="9" style="text-align:left">合计 ${rows.length} 场</th><th colspan="5" class="num" style="text-align:left">${fmt(tp)} 页</th></tr></tfoot></table></div>
+  <p class="hint">点表头可以排序,再点一次反向。</p>`:'<div class="empty">没有符合的场次</div>';
+  document.querySelectorAll('#schList th.sortable').forEach(th=>th.onclick=()=>{const kk=th.dataset.sk;SCHSORT=SCHSORT.key===kk?{key:kk,dir:-SCHSORT.dir}:{key:kk,dir:1};schList()});
 }
-
 /* ---- scene dialog ---- */
 function openScene(id){
   if(!ADMIN)return;
