@@ -2561,7 +2561,9 @@ try{ADMIN=sessionStorage.getItem('xifen-admin')==='1'}catch(_){}
 load();
 
 if('serviceWorker' in navigator&&location.protocol!=='file:'){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadCtl&&!reloaded){reloaded=true;location.reload()}}); // 网站有新版本:自动重新载入一次,不用手动关掉再开
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{}));
 }
 </script>
 </body>
