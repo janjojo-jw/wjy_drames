@@ -1,6 +1,6 @@
 // 网络优先:有网时永远取最新的页面与 data.json,断网时才用缓存,
 // 这样更新网站内容后,手机上的 app 下次打开就会看到新数据。
-const CACHE = 'wjy-drames-v7';
+const CACHE = 'wjy-drames-v8';
 const CORE = [
   './',
   'index.html',
@@ -30,7 +30,7 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   e.respondWith(
-    fetch(req)
+    fetch(req,{cache:'no-cache'}) // 绕过浏览器自己的缓存(GitHub Pages 默认缓存约 10 分钟),每次都向服务器确认最新版
       .then(res => {
         if (res.ok) {
           const copy = res.clone();
