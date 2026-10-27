@@ -2150,7 +2150,7 @@ function renderPlan(){
 let SCHF={ep:'',day:'',role:'',q:'',diff:false},SCHSORT={key:'date',dir:1,auto:true};
 const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场',''],['light','气氛',''],['io','内外',''],['season','季节',''],['summary','内容概要',''],['cast','角色','nos'],['pages','页数','num'],['loc','实拍景地',''],['region','地区',''],['main','主场景',''],['sub','次场景',''],['hint','现场提示','']];
 function renderSched(box){
-  const P=PLAN,eps=[...new Set(P.scenes.map(s=>+s.ep))].sort((a,b)=>a-b);
+  const P=PLAN,eps=[...new Set([...P.scenes,...planAdded()].map(s=>+s.ep))].sort((a,b)=>a-b);
   box.innerHTML=`<button class="coback" type="button">← 返回大计划统计</button>
   <h3 style="margin:14px 0 10px;font-size:16px">大计划日程<small style="margin-left:8px;color:var(--mute);font-weight:400">拍摄日程表(PDF)</small></h3>
   <div class="bar schf">
@@ -2167,8 +2167,17 @@ function renderSched(box){
   $('#sDiff').onchange=e=>{SCHF.diff=e.target.checked;schList()};
   schList();
 }
+function planAdded(){ // 加戏:场次表(已拍)里有、拍摄日程表里找不到对应场的场次
+  const nb=x=>{const q=/^(\d+)[A-Z]?$/.exec(String(x));return q?q[1]:null},dbk=new Set(S.scenes.map(d=>String(d.ep)+'|'+String(d.sc)));
+  const pk=new Set(PLAN.scenes.map(p=>p.ep+'|'+p.sc));
+  const d0=PLAN.days[0],inPlan=d=>{const t=[...String(d.date||'').matchAll(/(\d+)\D+(\d+)/g)];return t.some(q=>+q[1]*100+ +q[2]>=d0.m*100+d0.d)}; // 日程表之前(10/24 以前)拍的不算加戏
+  return S.scenes.filter(d=>{if(!inPlan(d))return false;const k=String(d.ep)+'|'+String(d.sc);if(pk.has(k))return false;const n=nb(d.sc);
+    return !(n!==null&&PLAN.scenes.some(p=>!dbk.has(p.ep+'|'+p.sc)&&String(p.ep)===String(d.ep)&&nb(p.sc)===n))})
+   .map(d=>({ep:d.ep,sc:d.sc,pages:num(d.pages),pnote:d.pnote||'',cast:S.roles.filter(r=>d.cast[r]===1),loc:d.place||'',region:'',main:d.main||'',sub:d.sub||'',light:d.light||'',io:'',season:'',summary:d.summary||'',add:true,day:null,dbdate:String(d.date||'')}))
+   .sort((a,b)=>(+a.ep-+b.ep)||(parseInt(String(a.sc))||0)-(parseInt(String(b.sc))||0)||String(a.sc).localeCompare(String(b.sc)));
+}
 function schList(){
-  const P=PLAN,days=P.days;
+  const P=PLAN,days=P.days,ADD=planAdded();
   const shot=new Set(S.scenes.map(s=>String(s.ep)+'|'+String(s.sc)));
   { // 拍摄时场号拆分/改字母(15集4场→4A/4B、8集21A→21B):日程表对应的那一场也标已拍
     const nb=x=>{const q=/^(\d+)[A-Z]?$/.exec(String(x));return q?q[1]:null},dbk=new Set(shot);
@@ -2191,11 +2200,11 @@ function schList(){
     if(extra.length)out.push('实拍多了:'+extra.join('、'));
     return out;
   };
-  const dfl=ps=>{const o=shot.has(ps.ep+'|'+ps.sc)?diffOf(ps):null;return o&&o.length?o:null};
+  const dfl=ps=>{if(ps.add)return['新加场次'];const o=shot.has(ps.ep+'|'+ps.sc)?diffOf(ps):null;return o&&o.length?o:null};
   const dfHTML=ps=>{const o=dfl(ps);return o?`<div class="pl-diff">${o.map(esc).join('<br>')}</div>`:''};
   const q=toSimp(SCHF.q.trim()).split(/\s+/).filter(Boolean);
-  const hay=s=>{const d=days[s.day];return toSimp([s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,shot.has(s.ep+'|'+s.sc)?'已拍':''].join(' '))};
-  let rows=P.scenes.map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t)))&&(!SCHF.diff||dfl(x.s)));
+  const hay=s=>{const d=s.add?{n:'',m:'',d:'',wk:'',wx:'',grp:''}:days[s.day];return toSimp([s.add?'新加场次 加戏 '+s.dbdate:'',s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,(s.add||shot.has(s.ep+'|'+s.sc))?'已拍':''].join(' '))};
+  let rows=[...P.scenes,...(SCHF.day===''?ADD:[])].map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t)))&&(!SCHF.diff||dfl(x.s)));
   const scNo=v=>{const m=String(v).match(/\d+/);return m?+m[0]:0};
   const eff=(SCHF.ep&&(SCHSORT.auto||VIEW==='card'))?{key:'sc',dir:1}:SCHSORT; // 选了某一集:预设按场号递增,才看得出剧情发展顺序
   const k=eff.key,dir=eff.dir;
@@ -2205,18 +2214,20 @@ function schList(){
     else c=typeof va==='number'?va-vb:String(va).localeCompare(String(vb),'zh',{numeric:true});
     c=c*dir;
     return c||((+a.s.ep-+b.s.ep)||(scNo(a.s.sc)-scNo(b.s.sc))||(a.i-b.i))});
+  rows=[...rows.filter(x=>!x.s.add),...rows.filter(x=>x.s.add)]; // 加戏的场次排在最后(选了某一集就是那一集的最后面)
   const tp=rows.reduce((a,x)=>a+(x.s.pages||0),0);
   const chips=s=>s.cast.map(r=>`<span class="chip rc ${r===PINK?'pink':''}">${esc(r)}${(s.unsure||[]).includes(r)?'？':''}</span>`).join('');
-  const card=x=>{const s=x.s,d=days[s.day],isShot=shot.has(s.ep+'|'+s.sc);
+  const dm=s=>{const q=/^(\d+)\D+(\d+)/.exec(s.dbdate||'');return q?q[1]+'/'+q[2]:(s.dbdate||'')};
+  const card=x=>{const s=x.s,d=s.add?{m:'',d:'',n:'',wk:''}:days[s.day],isShot=s.add||shot.has(s.ep+'|'+s.sc);
     const meta=[s.loc,s.region,s.main,s.sub].filter(Boolean).map(esc).join(' · ');
     const tag=(c,tx)=>tx?`<span class="pl-tag ${c}">${esc(tx)}</span>`:'';
     const night=/夜/.test(s.light||'');
-    return`<div class="pl-card ${isShot?'shot':''}"><div class="h"><b>${d.m}/${d.d}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span>${isShot?'<i class="pl-shot">已拍</i>':''}<em>${s.pages!=null?fmt(s.pages)+'<small>页</small>':esc(s.pnote||'')}</em></div>
-    ${dfHTML(s)}<div class="tags">${tag('dt','DAY'+d.n+' '+d.wk)}${tag(night?'nt':'dy',s.light)}${tag('',s.io)}${tag('',s.season)}</div>
+    return`<div class="pl-card ${isShot?'shot':''}"><div class="h"><b>${s.add?esc(dm(s)):d.m+'/'+d.d}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span>${isShot?'<i class="pl-shot">已拍</i>':''}<em>${s.pages!=null?fmt(s.pages)+'<small>页</small>':esc(s.pnote||'')}</em></div>
+    ${dfHTML(s)}<div class="tags">${s.add?'':tag('dt','DAY'+d.n+' '+d.wk)}${tag(night?'nt':'dy',s.light)}${tag('',s.io)}${tag('',s.season)}</div>
     ${meta?`<div class="m">${meta}</div>`:''}${(s.hint||s.act)?`<div class="hn">⚠ ${esc([s.hint,s.act].filter(Boolean).join(' · '))}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}
     ${s.cast.length?`<div class="c">${chips(s)}</div>`:''}</div>`};
-  const trow=x=>{const s=x.s,d=days[s.day],isShot=shot.has(s.ep+'|'+s.sc),night=/夜/.test(s.light||'');
-    return`<tr class="${isShot?'shotrow':''}${dfl(s)?' hasdiff':''}"><td class="c1">${d.m}/${d.d}<br><small>DAY${d.n}</small></td><td class="c2">${esc(s.ep)}</td><td>${esc(s.sc)}${isShot?'<i class="pl-shot">已拍</i>':''}${dfHTML(s)}</td><td class="${night?'ntc':''}">${esc(s.light||'')}</td><td>${esc(s.io||'')}</td><td>${esc(s.season||'')}</td><td class="wrap sm">${esc(cut(s.summary||''))}</td><td class="wrap">${chips(s)}</td><td class="num">${s.pages!=null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${esc(s.loc||'')}</td><td>${esc(s.region||'')}</td><td class="wrap">${esc(s.main||'')}</td><td class="wrap">${esc(s.sub||'')}</td><td class="wrap hn">${esc([s.hint,s.act].filter(Boolean).join(' · '))}</td></tr>`};
+  const trow=x=>{const s=x.s,d=s.add?{m:'',d:'',n:'',wk:''}:days[s.day],isShot=s.add||shot.has(s.ep+'|'+s.sc),night=/夜/.test(s.light||'');
+    return`<tr class="${isShot?'shotrow':''}${dfl(s)?' hasdiff':''}"><td class="c1">${s.add?esc(dm(s))+'<br><small>加戏</small>':d.m+'/'+d.d+'<br><small>DAY'+d.n+'</small>'}</td><td class="c2">${esc(s.ep)}</td><td>${esc(s.sc)}${isShot?'<i class="pl-shot">已拍</i>':''}${dfHTML(s)}</td><td class="${night?'ntc':''}">${esc(s.light||'')}</td><td>${esc(s.io||'')}</td><td>${esc(s.season||'')}</td><td class="wrap sm">${esc(cut(s.summary||''))}</td><td class="wrap">${chips(s)}</td><td class="num">${s.pages!=null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${esc(s.loc||'')}</td><td>${esc(s.region||'')}</td><td class="wrap">${esc(s.main||'')}</td><td class="wrap">${esc(s.sub||'')}</td><td class="wrap hn">${esc([s.hint,s.act].filter(Boolean).join(' · '))}</td></tr>`};
   const head=SCOLS.map(([key,lab,cls])=>key==='cast'?`<th>${lab}</th>`:`<th class="sortable${cls?' '+cls:''}${k===key?' sorted':''}" data-sk="${key}" title="点一下排序,再点一下反向">${lab}<i>${k===key?(dir>0?'▲':'▼'):''}</i></th>`).join('');
   $('#schList').innerHTML=rows.length?`<div class="pl-cards"><div class="pl-list">${rows.map(card).join('')}</div><div class="tot" style="color:var(--accent);font-size:13px;padding:10px 4px">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div>
   <div class="scroll mtable pl-tblwrap"><table class="pl-tbl"><thead><tr>${head}</tr></thead><tbody>${rows.map(trow).join('')}</tbody><tfoot><tr><th colspan="9" style="text-align:left">合计 ${rows.length} 场</th><th colspan="5" class="num" style="text-align:left">${fmt(tp)} 页</th></tr></tfoot></table></div>
