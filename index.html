@@ -2119,7 +2119,7 @@ function renderPlan(){
   // 拍摄时场号拆分/改字母(如 日程 15集4场 → 场次表 4A、4B;8集21A → 21B):以场次表为准,扣除日程表对应的那一场
   const dbk=new Set(S.scenes.map(s=>String(s.ep)+'|'+String(s.sc))),nb=x=>{const q=/^(\d+)[A-Z]?$/.exec(String(x));return q?q[1]:null};
   const gone=new Set();
-  S.scenes.forEach(s=>{const n=nb(s.sc);if(n===null)return;PLAN.scenes.forEach(ps=>{const pk=ps.ep+'|'+ps.sc;if(!dbk.has(pk)&&!gone.has(pk)&&String(ps.ep)===String(s.ep)&&nb(ps.sc)===n){gone.add(pk);ov++;ovp+=num(ps.pages)||0;m.delete(pk)}})});
+  S.scenes.forEach(s=>{const n=nb(s.sc);if(n===null)return;PLAN.scenes.forEach(ps=>{const pk=ps.ep+'|'+ps.sc;if(!dbk.has(pk)&&!gone.has(pk)&&String(ps.ep)===String(s.ep)&&(/^\d+$/.test(String(ps.sc))?nb(ps.sc):null)===n){gone.add(pk);ov++;ovp+=num(ps.pages)||0;m.delete(pk)}})});
   S.scenes.forEach(s=>{const k=String(s.ep)+'|'+String(s.sc);const o=m.get(k),cs=new Set(S.roles.filter(r=>s.cast[r]===1));if(o){ov++;ovp+=o.p||0}m.set(k,{p:num(s.pages)!==null?num(s.pages):(o?o.p:null),cast:cs,src:'db'})}); // 同一集同一场两边都有时只算一次:页数和角色都以数据库(每天的场次表)为准
   const all=[...m.values()],nsc=all.length,total=all.reduce((a,x)=>a+(x.p||0),0);
   const roles=[...S.roles];PLAN.scenes.forEach(s=>s.cast.forEach(r=>{if(!roles.includes(r))roles.push(r)}));
@@ -2171,8 +2171,8 @@ function planAdded(){ // 加戏:场次表(已拍)里有、拍摄日程表里找�
   const nb=x=>{const q=/^(\d+)[A-Z]?$/.exec(String(x));return q?q[1]:null},dbk=new Set(S.scenes.map(d=>String(d.ep)+'|'+String(d.sc)));
   const pk=new Set(PLAN.scenes.map(p=>p.ep+'|'+p.sc));
   const d0=PLAN.days[0],inPlan=d=>{const t=[...String(d.date||'').matchAll(/(\d+)\D+(\d+)/g)];return t.some(q=>+q[1]*100+ +q[2]>=d0.m*100+d0.d)}; // 日程表之前(10/24 以前)拍的不算加戏
-  return S.scenes.filter(d=>{if(!inPlan(d))return false;const k=String(d.ep)+'|'+String(d.sc);if(pk.has(k))return false;const n=nb(d.sc);
-    return !(n!==null&&PLAN.scenes.some(p=>!dbk.has(p.ep+'|'+p.sc)&&String(p.ep)===String(d.ep)&&nb(p.sc)===n))})
+  return S.scenes.filter(d=>{if(!inPlan(d)&&!PLAN.scenes.some(p=>String(p.ep)===String(d.ep)&&nb(p.sc)!==null&&nb(p.sc)===nb(d.sc)))return false;const k=String(d.ep)+'|'+String(d.sc);if(pk.has(k))return false;const n=nb(d.sc);
+    return !(n!==null&&PLAN.scenes.some(p=>!dbk.has(p.ep+'|'+p.sc)&&String(p.ep)===String(d.ep)&&(/^\d+$/.test(String(p.sc))?nb(p.sc):null)===n))})
    .map(d=>({ep:d.ep,sc:d.sc,pages:num(d.pages),pnote:d.pnote||'',cast:S.roles.filter(r=>d.cast[r]===1),loc:d.place||'',region:'',main:d.main||'',sub:d.sub||'',light:d.light||'',io:'',season:'',summary:d.summary||'',add:true,day:null,dbdate:String(d.date||'')}))
    .sort((a,b)=>(+a.ep-+b.ep)||(parseInt(String(a.sc))||0)-(parseInt(String(b.sc))||0)||String(a.sc).localeCompare(String(b.sc)));
 }
@@ -2181,13 +2181,13 @@ function schList(){
   const shot=new Set(S.scenes.map(s=>String(s.ep)+'|'+String(s.sc)));
   { // 拍摄时场号拆分/改字母(15集4场→4A/4B、8集21A→21B):日程表对应的那一场也标已拍
     const nb=x=>{const q=/^(\d+)[A-Z]?$/.exec(String(x));return q?q[1]:null},dbk=new Set(shot);
-    S.scenes.forEach(d=>{const n=nb(d.sc);if(n===null)return;P.scenes.forEach(ps=>{const pk=ps.ep+'|'+ps.sc;if(!dbk.has(pk)&&String(ps.ep)===String(d.ep)&&nb(ps.sc)===n)shot.add(pk)})});
+    S.scenes.forEach(d=>{const n=nb(d.sc);if(n===null)return;P.scenes.forEach(ps=>{const pk=ps.ep+'|'+ps.sc;if(!dbk.has(pk)&&String(ps.ep)===String(d.ep)&&(/^\d+$/.test(String(ps.sc))?nb(ps.sc):null)===n)shot.add(pk)})});
   }
   // 已拍与日程表的差异:页数、场号(拆分/改字母)、日程表有记录的几位主要角色
   const diffOf=ps=>{
     const pk=ps.ep+'|'+ps.sc,nb=x=>{const q=/^(\d+)[A-Z]?$/.exec(String(x));return q?q[1]:null};
     let ms=S.scenes.filter(d=>String(d.ep)+'|'+String(d.sc)===pk),split=false;
-    if(!ms.length){const n=nb(ps.sc);if(n===null)return null;ms=S.scenes.filter(d=>String(d.ep)===String(ps.ep)&&nb(d.sc)===n);split=true}
+    if(!ms.length){const n=/^\d+$/.test(String(ps.sc))?nb(ps.sc):null;if(n===null)return null;ms=S.scenes.filter(d=>String(d.ep)===String(ps.ep)&&nb(d.sc)===n);split=true}
     if(!ms.length)return null;
     const out=[];
     if(split)out.push('场号变了:实拍为 '+ms.map(d=>d.sc+'场').join('、'));
