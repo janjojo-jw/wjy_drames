@@ -2167,7 +2167,7 @@ function schList(){
   const hay=s=>{const d=days[s.day];return toSimp([s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,shot.has(s.ep+'|'+s.sc)?'已拍':''].join(' '))};
   let rows=P.scenes.map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t))));
   const scNo=v=>{const m=String(v).match(/\d+/);return m?+m[0]:0};
-  const eff=(SCHSORT.auto&&SCHF.ep)?{key:'sc',dir:1}:SCHSORT; // 选了某一集:预设按场号递增,才看得出剧情发展顺序
+  const eff=(SCHF.ep&&(SCHSORT.auto||VIEW==='card'))?{key:'sc',dir:1}:SCHSORT; // 选了某一集:预设按场号递增,才看得出剧情发展顺序
   const k=eff.key,dir=eff.dir;
   const val=x=>k==='date'?x.i:k==='ep'?+x.s.ep:k==='pages'?(x.s.pages==null?null:x.s.pages):k==='hint'?[x.s.hint,x.s.act].filter(Boolean).join(' '):(x.s[k]||'');
   rows.sort((a,b)=>{const va=val(a),vb=val(b);let c;
