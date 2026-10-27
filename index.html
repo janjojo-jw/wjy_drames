@@ -2193,6 +2193,13 @@ function schList(){
     if(split)out.push('场号变了:实拍为 '+ms.map(d=>d.sc+'场').join('、'));
     const dp=ms.map(d=>num(d.pages));
     if(dp.every(v=>v!==null)&&ps.pages!=null){const t=Math.round(dp.reduce((a,v)=>a+v,0)*100)/100;if(Math.abs(t-ps.pages)>0.001)out.push('页数:日程 '+fmt(ps.pages)+' → 实拍 '+fmt(t)+(ms.length>1?'('+dp.map(fmt).join('+')+')':''))}
+    // 内容概要、主场景跟日程表对不上:有可能是拍摄时换了内容,或是加戏
+    const nz=t=>toSimp(String(t||'').replace(/【[^】]*】?/g,'').replace(/[\s\p{P}\p{S}]/gu,'')),bg=t=>{const g=new Set();for(let i=0;i<t.length-1;i++)g.add(t.slice(i,i+2));return g};
+    const sim=(a,b)=>{a=nz(a);b=nz(b);if(!a||!b)return 1;if(a.includes(b)||b.includes(a))return 1;const A=bg(a),B=bg(b);if(!A.size||!B.size)return 1;let c=0;A.forEach(x=>{if(B.has(x))c++});return 2*c/(A.size+B.size)};
+    const best=Math.max(...ms.map(d=>sim(d.summary,ps.summary)));
+    if(best<0.5)out.push('内容概要不同,可能是加戏:日程「'+ps.summary+'」/ 实拍「'+ms.map(d=>d.summary||'').join(' + ')+'」');
+    const pm=nz(ps.main),mm=ms.map(d=>nz(d.main)).filter(Boolean);
+    if(pm&&mm.length&&!mm.some(x=>x.includes(pm)||pm.includes(x)))out.push('场景不同,可能是加戏:日程「'+ps.main+'」/ 实拍「'+ms.map(d=>d.main).filter(Boolean).join('、')+'」');
     const dc=new Set();ms.forEach(d=>S.roles.forEach(r=>{if(d.cast[r]===1)dc.add(r)}));
     const tracked=P.roles;
     const miss=tracked.filter(r=>ps.cast.includes(r)&&!dc.has(r)),extra=tracked.filter(r=>dc.has(r)&&!ps.cast.includes(r));
