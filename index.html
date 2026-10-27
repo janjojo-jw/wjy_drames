@@ -408,10 +408,12 @@ body.mview .schf .srow{grid-column:1/-1}
 .plbar td:nth-child(2) b{display:inline-block;text-align:center}
 .plbar th:nth-child(2),.plbar td:nth-child(2){left:44px;min-width:92px;width:92px;white-space:normal;box-shadow:6px 0 8px -6px rgba(0,0,0,.7);border-right:1px solid #3a3a43}
 
-.datebtn{display:block;width:100%;box-sizing:border-box;text-align:left;border:1px solid var(--line);background:#101014;color:var(--ink);padding:7px 10px;border-radius:6px;font-size:14px;cursor:pointer;position:relative}
+label .datebtn{margin-top:4px}
+.datebtn{display:block;width:100%;box-sizing:border-box;text-align:left;border:1px solid var(--line);background:#101014;color:var(--ink);padding:7px 10px;border-radius:6px;font-size:15px;line-height:21px;cursor:pointer;position:relative}
 .datebtn:after{content:"";position:absolute;right:11px;top:50%;width:6px;height:6px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:translateY(-70%) rotate(45deg)}
 .datebtn.set{border-color:var(--accent);color:#fbefc6}
-body.mview .datebtn,.bar .datebtn{font-size:14px}
+body.mview .card>.bar .datebtn{font-size:14px;line-height:19px;padding:7px 6px}
+@media(max-width:700px){.card>.bar .datebtn{font-size:14px;line-height:19px;padding:7px 6px}}
 #calDlg{width:min(340px,92vw);padding:16px}
 .calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .calh b{font-size:16px;color:#f3ecd9}.calh button{width:38px;height:34px;font-size:20px;border-radius:8px}
@@ -1888,7 +1890,9 @@ const T2S=(()=>{const t="喪為舉樂書亂產傷蘭內擊匱單賣廳縣場奪�
 const toSimp=x=>String(x||'').replace(/[\u3400-\u9fff]/g,c=>T2S[c]||c).toLowerCase();
 function filtered(){
   const ep=$('#fEp').value,dt=$('#fDate').value,ro=$('#fRole').value,q=toSimp($('#fQ').value.trim()),ph=$('#fPhoto').checked;
-  return sorted().filter(s=>(!ph||s.photo)&&(!ep||String(s.ep)===ep)&&(!dt||dateHas(s.date,dt))&&(!ro||s.cast[ro])&&
+  const base=sorted();
+  if(ep&&VIEW==='card'){const k=s=>parseInt(s.sc)||0;base.sort((a,b)=>k(a)-k(b)||String(a.sc).localeCompare(String(b.sc),'zh',{numeric:true}))} // 手机版选了某一集:一律按场号递增,看得出剧情顺序
+  return base.filter(s=>(!ph||s.photo)&&(!ep||String(s.ep)===ep)&&(!dt||dateHas(s.date,dt))&&(!ro||s.cast[ro])&&
     (!q||toSimp([s.main,s.sub,s.summary,s.place,s.sc].join(' ')).includes(q)));
 }
 /* 排序:点表头的字;同一列点第一次=递增,再点=递减。默认按集数递增,每次打开都从这里开始 */
