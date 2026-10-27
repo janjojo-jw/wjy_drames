@@ -364,7 +364,7 @@ body.mview .hintCard{display:block}
 .pl-card .h b{color:var(--accent);font-size:16px}.pl-card .h span{font-size:14px}
 .pl-card .h em{margin-left:auto;font-style:normal;font:600 18px/1 "Songti SC","Noto Serif CJK SC",serif;color:#f3ecd9}
 .pl-card .h small{font:400 11px sans-serif;color:var(--mute);margin-left:2px}
-.diffck{display:flex!important;flex-direction:row!important;align-items:center;gap:6px;white-space:nowrap;flex:none;margin-top:4px;padding:0 4px;color:var(--text,inherit);font-size:13px}.diffck input{width:auto!important;height:auto!important;margin:0}
+.ckgrp{display:flex;flex-direction:column;gap:2px;flex:none}.diffck b{font-weight:600;color:var(--accent,#e8c47a);margin-left:4px;font-size:12px}.diffck{display:flex!important;flex-direction:row!important;align-items:center;gap:6px;white-space:nowrap;flex:none;margin-top:4px;padding:0 4px;color:var(--text,inherit);font-size:13px}.diffck input{width:auto!important;height:auto!important;margin:0}
 .pl-tbl .pl-diff{min-width:150px;margin-top:5px}.pl-diff{margin-top:6px;padding:5px 8px;border-radius:6px;background:rgba(248,113,113,.15);color:#fca5a5;font-size:12px;line-height:1.5;font-weight:600;white-space:normal}
 .pl-shot{font-style:normal;font-size:11px;padding:0 6px;border-radius:4px;background:rgba(80,190,160,.18);border:1px solid rgba(80,190,160,.5);color:#b0ead8}
 .pl-card .tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
@@ -2147,7 +2147,7 @@ function renderPlan(){
 
 
 /* ---- 大计划日程:把 PDF 拍摄日程做成跟「场次表」一样的版面(电脑版表格 / 手机版卡片) ---- */
-let SCHF={ep:'',day:'',role:'',q:'',diff:false},SCHSORT={key:'date',dir:1,auto:true};
+let SCHF={ep:'',day:'',role:'',q:'',diff:false,un:false},SCHSORT={key:'date',dir:1,auto:true};
 const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场',''],['light','气氛',''],['io','内外',''],['season','季节',''],['summary','内容概要',''],['cast','角色','nos'],['pages','页数','num'],['loc','实拍景地',''],['region','地区',''],['main','主场景',''],['sub','次场景',''],['hint','现场提示','']];
 function renderSched(box){
   const P=PLAN,eps=[...new Set([...P.scenes,...planAdded()].map(s=>+s.ep))].sort((a,b)=>a-b);
@@ -2157,14 +2157,15 @@ function renderSched(box){
     <label>集数<select id="sEp"><option value="">全部</option>${eps.map(e=>`<option value="${e}" ${SCHF.ep==e?'selected':''}>第${e}集</option>`).join('')}</select></label>
     <label>拍摄日期<select id="sDay"><option value="">全部</option>${P.days.map((d,i)=>`<option value="${i}" ${SCHF.day===String(i)?'selected':''}>${d.m}/${d.d} DAY${d.n}</option>`).join('')}</select></label>
     <label>角色<select id="sRole"><option value="">全部</option>${P.roles.map(r=>`<option ${SCHF.role===r?'selected':''}>${esc(r)}</option>`).join('')}</select></label>
-    <div class="full srow"><label>搜寻<input id="sQ" placeholder="场景、内容…" value="${esc(SCHF.q)}"></label><label class="diffck"><input type="checkbox" id="sDiff" ${SCHF.diff?'checked':''}><span>只看已拍有差异</span></label></div>
+    <div class="full srow"><label>搜寻<input id="sQ" placeholder="场景、内容…" value="${esc(SCHF.q)}"></label><div class="ckgrp"><label class="diffck"><input type="checkbox" id="sDiff" ${SCHF.diff?'checked':''}><span>只看已拍有差异</span></label><label class="diffck"><input type="checkbox" id="sUn" ${SCHF.un?'checked':''}><span>未拍摄场次<b id="unCnt"></b></span></label></div></div>
   </div>
   <div id="schList" style="margin-top:12px"></div>`;
   $('#sEp').onchange=e=>{SCHF.ep=e.target.value;schList()};
   $('#sDay').onchange=e=>{SCHF.day=e.target.value;schList()};
   $('#sRole').onchange=e=>{SCHF.role=e.target.value;schList()};
   $('#sQ').oninput=e=>{SCHF.q=e.target.value;schList()};
-  $('#sDiff').onchange=e=>{SCHF.diff=e.target.checked;schList()};
+  $('#sDiff').onchange=e=>{SCHF.diff=e.target.checked;if(SCHF.diff){SCHF.un=false;$('#sUn').checked=false}schList()};
+  $('#sUn').onchange=e=>{SCHF.un=e.target.checked;if(SCHF.un){SCHF.diff=false;$('#sDiff').checked=false}schList()};
   schList();
 }
 // 同一场的判断:集数和场号一致就是同一场(不管内容概要、主场景有没有改);日程表是纯数字场号、场次表拆成 4A、4B,也是同一场(拆开拍)对不对得上
@@ -2214,7 +2215,7 @@ function schList(){
   const dfHTML=ps=>{const o=dfl(ps);return o?`<div class="pl-diff">${o.map(esc).join('<br>')}</div>`:''};
   const q=toSimp(SCHF.q.trim()).split(/\s+/).filter(Boolean);
   const hay=s=>{const d=s.add?{n:'',m:'',d:'',wk:'',wx:'',grp:''}:days[s.day];return toSimp([s.add?'新加场次 加戏 '+s.dbdate:'',s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,(s.add||shot.has(s.ep+'|'+s.sc))?'已拍':''].join(' '))};
-  let rows=[...P.scenes,...(SCHF.day===''?ADD:[])].map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t)))&&(!SCHF.diff||dfl(x.s)));
+  let rows=[...P.scenes,...(SCHF.day===''?ADD:[])].map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t)))&&(!SCHF.diff||dfl(x.s))&&(!SCHF.un||(!x.s.add&&!shot.has(x.s.ep+'|'+x.s.sc))));
   const scNo=v=>{const m=String(v).match(/\d+/);return m?+m[0]:0};
   const eff=(SCHF.ep&&(SCHSORT.auto||VIEW==='card'))?{key:'sc',dir:1}:SCHSORT; // 选了某一集:预设按场号递增,才看得出剧情发展顺序
   const k=eff.key,dir=eff.dir;
@@ -2226,6 +2227,7 @@ function schList(){
     return c||((+a.s.ep-+b.s.ep)||(scNo(a.s.sc)-scNo(b.s.sc))||(a.i-b.i))});
   rows=[...rows.filter(x=>!x.s.add),...rows.filter(x=>x.s.add)]; // 加戏的场次排在最后(选了某一集就是那一集的最后面)
   const tp=rows.reduce((a,x)=>a+(x.s.pages||0),0);
+  { const us=P.scenes.filter(p=>!shot.has(p.ep+'|'+p.sc)),up=us.reduce((a,p)=>a+(p.pages||0),0),el=$('#unCnt');if(el)el.textContent=`(全部 ${us.length} 场 · ${fmt(Math.round(up*100)/100)} 页)`}
   const chips=s=>s.cast.map(r=>`<span class="chip rc ${r===PINK?'pink':''}">${esc(r)}${(s.unsure||[]).includes(r)?'？':''}</span>`).join('');
   const dm=s=>{const q=/^(\d+)\D+(\d+)/.exec(s.dbdate||'');return q?q[1]+'/'+q[2]:(s.dbdate||'')};
   const card=x=>{const s=x.s,d=s.add?{m:'',d:'',n:'',wk:''}:days[s.day],isShot=s.add||shot.has(s.ep+'|'+s.sc);
