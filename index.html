@@ -2152,7 +2152,7 @@ const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场',''],['light','
 function renderSched(box){
   const P=PLAN,eps=[...new Set([...P.scenes,...planAdded()].map(s=>+s.ep))].sort((a,b)=>a-b);
   box.innerHTML=`<button class="coback" type="button">← 返回大计划统计</button>
-  <h3 style="margin:14px 0 10px;font-size:16px">大计划日程<small style="margin-left:8px;color:var(--mute);font-weight:400">拍摄日程表(PDF)</small></h3>
+  <h3 style="margin:14px 0 10px;font-size:16px">大计划日程<small style="margin-left:8px;color:var(--mute);font-weight:400">拍摄日程表(PDF)<span style="margin-left:8px;white-space:nowrap">${P.days[0].m}/${P.days[0].d} – ${P.days[P.days.length-1].m}/${P.days[P.days.length-1].d}</span></small></h3>
   <div class="bar schf">
     <label>集数<select id="sEp"><option value="">全部</option>${eps.map(e=>`<option value="${e}" ${SCHF.ep==e?'selected':''}>第${e}集</option>`).join('')}</select></label>
     <label>拍摄日期<select id="sDay"><option value="">全部</option>${P.days.map((d,i)=>`<option value="${i}" ${SCHF.day===String(i)?'selected':''}>${d.m}/${d.d} DAY${d.n}</option>`).join('')}</select></label>
