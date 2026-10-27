@@ -405,7 +405,8 @@ body.mview .schf .srow{grid-column:1/-1}
 .plbar th:nth-child(-n+2),.plbar td:nth-child(-n+2){position:sticky;background:#17171c;z-index:2}
 .plbar th:nth-child(-n+2){background:#1b1b21;z-index:3}
 .plbar th:nth-child(1),.plbar td:nth-child(1){left:0;min-width:44px;width:44px}
-.plbar th:nth-child(2),.plbar td:nth-child(2){left:44px;min-width:110px;box-shadow:6px 0 8px -6px rgba(0,0,0,.7);border-right:1px solid #3a3a43}
+.plbar td:nth-child(2) b{display:inline-block;text-align:center}
+.plbar th:nth-child(2),.plbar td:nth-child(2){left:44px;min-width:92px;width:92px;white-space:normal;box-shadow:6px 0 8px -6px rgba(0,0,0,.7);border-right:1px solid #3a3a43}
 </style>
 </head>
 <body>
@@ -2110,7 +2111,7 @@ function renderPlan(){
   <div class="mcards" style="margin-top:10px">`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b>${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
   `</div><div class="scroll mtable plbar" style="margin-top:10px"><table><thead><tr><th>#</th><th>角色</th><th class="num">场次</th><th class="num">场次占比</th><th style="width:22%"></th><th class="num">页数</th><th class="num">页数占比</th><th style="width:22%"></th></tr></thead><tbody>`+
-  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+`</tbody></table></div>`;
+  list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${x.r.split('/').map(p=>`<span style="white-space:nowrap">${esc(p)}</span>`).join('/<wbr>')}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+`</tbody></table></div>`;
   $('#plCo').onclick=()=>{COV=true;render()};$('#plSch').onclick=()=>{SCH=true;render()};
   if(!roles.includes(planLead))planLead=PINK;
   if(COV){box.innerHTML='<button class="coback" type="button">← 返回大计划统计</button>'+coHTML(all,roles,planLead,'planLead');$('#planLead').onchange=e=>{planLead=e.target.value;render()}}
