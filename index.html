@@ -2076,8 +2076,8 @@ function coHTML(all,roles,lead,selId){
 }
 function renderCoStats(rows){
   const all=rows.map(s=>({p:num(s.pages),cast:new Set(S.roles.filter(r=>s.cast[r]===1))}));
-  if(!S.roles.includes(CLEAD))CLEAD=PINK;
-  $('#vStats').innerHTML='<button class="coback" type="button">← 返回长条图</button>'+coHTML(all,S.roles,CLEAD,'coLead');
+  if(!S.roles.includes(CLEAD)&&CLEAD!=='夏玉尔')CLEAD=PINK;
+  $('#vStats').innerHTML='<button class="coback" type="button">← 返回长条图</button>'+coHTML(all,S.roles.includes('夏玉尔')?S.roles:[...S.roles,'夏玉尔'],CLEAD,'coLead');
   $('#coLead').onchange=e=>{CLEAD=e.target.value;render()};
 }
 function renderPlan(){
