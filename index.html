@@ -2070,7 +2070,7 @@ function coHTML(all,roles,lead,selId){
   const solo=mine.filter(x=>x.cast.size===1),sn=solo.length,sp=solo.reduce((a,x)=>a+(x.p||0),0);
   const row=(label,n,p)=>{const ps=mn?n/mn*100:0,pp=mp?p/mp*100:0;return`<div class="st-card"><div class="h"><b>${esc(label)}</b></div><div class="r"><span>场次</span><strong>${n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`};
   return `<h3 style="margin:14px 0 6px;font-size:16px">对戏占比<small style="margin-left:8px;color:var(--mute);font-weight:400">谁跟谁一起出场</small></h3>
-  <div class="note" style="margin:0 0 10px"><p class="coq"><select id="${selId}" class="rolesel">${roles.map(r=>`<option ${r===lead?'selected':''}>${esc(r)}</option>`).join('')}</select><span>的戏,有多少和别的角色同场。</span></p>
+  <div class="note" style="margin:0 0 10px"><p class="coq"><select id="${selId}" class="rolesel">${(()=>{const top=['祝阮/阮卿卿','陆封','夏玉尔','芈大丽','沈心阳'].filter(r=>roles.includes(r));return[...top,...roles.filter(r=>!top.includes(r))]})().map(r=>`<option ${r===lead?'selected':''}>${esc(r)}</option>`).join('')}</select><span>的戏,有多少和别的角色同场。</span></p>
   <p>该角色共有 <span class="hl">${mn}</span> 场、<span class="hl">${fmt(mp)}</span> 页。占比 = 和某角色同场的场次(页数)÷ 她自己的总场次(页数)。一场里有好几个人时,每个人各算一次,所以占比加起来会超过 100%。</p></div>
   <div class="mcards copage">${row('只有 TA 一人(没有其他角色)',sn,sp)}${co.map(x=>row('和 '+x.r+' 同场',x.n,x.p)).join('')}</div>`;
 }
