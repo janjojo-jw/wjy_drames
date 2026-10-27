@@ -2157,7 +2157,7 @@ function renderSched(box){
     <label>集数<select id="sEp"><option value="">全部</option>${eps.map(e=>`<option value="${e}" ${SCHF.ep==e?'selected':''}>第${e}集</option>`).join('')}</select></label>
     <label>拍摄日期<select id="sDay"><option value="">全部</option>${P.days.map((d,i)=>`<option value="${i}" ${SCHF.day===String(i)?'selected':''}>${d.m}/${d.d} DAY${d.n}</option>`).join('')}</select></label>
     <label>角色<select id="sRole"><option value="">全部</option>${P.roles.map(r=>`<option ${SCHF.role===r?'selected':''}>${esc(r)}</option>`).join('')}</select></label>
-    <div class="full srow"><label>搜寻<input id="sQ" placeholder="场景、内容…" value="${esc(SCHF.q)}"></label><div class="ckgrp"><label class="diffck"><input type="checkbox" id="sDiff" ${SCHF.diff?'checked':''}><span>只看已拍有差异</span></label><label class="diffck"><input type="checkbox" id="sUn" ${SCHF.un?'checked':''}><span>未拍摄场次<b id="unCnt"></b></span></label></div></div>
+    <div class="full srow"><label>搜寻<input id="sQ" placeholder="场景、内容…" value="${esc(SCHF.q)}"></label><div class="ckgrp"><label class="diffck"><input type="checkbox" id="sDiff" ${SCHF.diff?'checked':''}><span>只看已拍有差异</span></label><label class="diffck"><input type="checkbox" id="sUn" ${SCHF.un?'checked':''}><span>未拍摄场次</span></label></div></div>
   </div>
   <div id="schList" style="margin-top:12px"></div>`;
   $('#sEp').onchange=e=>{SCHF.ep=e.target.value;schList()};
@@ -2227,7 +2227,6 @@ function schList(){
     return c||((+a.s.ep-+b.s.ep)||(scNo(a.s.sc)-scNo(b.s.sc))||(a.i-b.i))});
   rows=[...rows.filter(x=>!x.s.add),...rows.filter(x=>x.s.add)]; // 加戏的场次排在最后(选了某一集就是那一集的最后面)
   const tp=rows.reduce((a,x)=>a+(x.s.pages||0),0);
-  { const us=P.scenes.filter(p=>!shot.has(p.ep+'|'+p.sc)),up=us.reduce((a,p)=>a+(p.pages||0),0),el=$('#unCnt');if(el)el.textContent=`(全部 ${us.length} 场 · ${fmt(Math.round(up*100)/100)} 页)`}
   const chips=s=>s.cast.map(r=>`<span class="chip rc ${r===PINK?'pink':''}">${esc(r)}${(s.unsure||[]).includes(r)?'？':''}</span>`).join('');
   const dm=s=>{const q=/^(\d+)\D+(\d+)/.exec(s.dbdate||'');return q?q[1]+'/'+q[2]:(s.dbdate||'')};
   const card=x=>{const s=x.s,d=s.add?{m:'',d:'',n:'',wk:''}:days[s.day],isShot=s.add||shot.has(s.ep+'|'+s.sc);
