@@ -349,6 +349,29 @@ body.mview .hintCard{display:block}
 .coq{flex-wrap:nowrap!important;gap:6px!important;white-space:nowrap}
 .coq .rolesel{font-size:16px;padding:6px 30px 6px 11px}
 @media(max-width:430px){.coq{font-size:12px}.coq .rolesel{font-size:15px;padding:6px 28px 6px 11px}}
+
+.schbar{margin-top:8px}.schbar .hint{white-space:nowrap;display:inline!important}
+.schq{width:100%;box-sizing:border-box;margin:10px 0 2px;padding:10px 12px;font-size:15px;border-radius:8px;border:1px solid var(--line);background:#121217;color:var(--ink)}
+.pl-gh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:18px 0 8px;padding:0 2px 6px;border-bottom:1px solid #3a3a43}
+.pl-gh b{font-size:16px;color:var(--accent)}.pl-gh.pink b{color:var(--pink)}
+.pl-gh span{font-size:12.5px;color:var(--mute)}.pl-gh em{margin-left:auto;font-style:normal;font-size:13px;color:#e9e3d3;white-space:nowrap}
+.pl-note{margin:0 0 8px;padding:6px 10px;border-radius:6px;background:rgba(255,160,40,.12);border:1px solid rgba(255,160,40,.35);font-size:13px;color:#ffd9a0}
+.pl-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.pl-tr{grid-column:1/-1;text-align:center;font-size:12px;color:#ffc000;border-top:1px dashed rgba(255,192,0,.5);padding-top:4px;margin-top:-2px}
+.pl-card{background:#121217;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.pl-card.shot{border-color:rgba(80,190,160,.45)}
+.pl-card .h{display:flex;align-items:baseline;gap:8px}
+.pl-card .h b{color:var(--accent);font-size:16px}.pl-card .h span{font-size:14px}
+.pl-card .h em{margin-left:auto;font-style:normal;font:600 18px/1 "Songti SC","Noto Serif CJK SC",serif;color:#f3ecd9}
+.pl-card .h small{font:400 11px sans-serif;color:var(--mute);margin-left:2px}
+.pl-shot{font-style:normal;font-size:11px;padding:0 6px;border-radius:4px;background:rgba(80,190,160,.18);border:1px solid rgba(80,190,160,.5);color:#b0ead8}
+.pl-card .tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
+.pl-tag{font-size:12px;padding:0 7px;border-radius:4px;border:1px solid #3a3a43;color:#cfcac0}
+.pl-tag.dt{color:var(--mute)}.pl-tag.nt{background:#1b2b52;border-color:#4a6bb8;color:#cfe0ff}.pl-tag.dy{background:rgba(217,181,108,.14);border-color:rgba(217,181,108,.45);color:#f0d9a0}
+.pl-card .m{margin-top:6px;font-size:12.5px;color:var(--mute)}
+.pl-card .hn{margin-top:4px;font-size:12.5px;color:#ffc27a}
+.pl-card .t{margin-top:6px;font-size:15px;line-height:1.5}
+.pl-card .c{margin-top:8px}
 </style>
 </head>
 <body>
@@ -370,10 +393,9 @@ body.mview .hintCard{display:block}
 </div>
 <main>
   <div class="tabrow">
-    <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比结算</button><button data-t="plan">大计划</button></div>
+    <div class="tabs"><button data-t="scenes" class="on">场次表</button><button data-t="stats">戏份占比结算</button><button data-t="plan">大计划戏份占比</button></div>
     <div class="vsw" role="group" aria-label="排版"><span class="hint">排版</span><button data-v="table" class="on">电脑版</button><button data-v="card">手机版</button></div>
     <button type="button" class="piebtn" id="pieBtn" hidden>圆饼图</button>
-    <button type="button" class="piebtn" id="coBtn" hidden>对戏占比</button>
   </div>
 
   <div class="card" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
@@ -1872,7 +1894,7 @@ function render(){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   if(tab==='scenes')renderScenes(rows);else if(tab==='plan')renderPlan();else if(CV)renderCoStats(rows);else if(PIE)renderPie(rows);else if(EPV)$('#vStats').innerHTML=epChart(rows);else renderStats(rows);
   document.querySelectorAll('.vsw button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
-  $('#coBtn').hidden=tab!=='plan';$('#coBtn').classList.toggle('on',COV);$('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「戏份占比结算」页出现
+  $('#pieBtn').hidden=tab!=='stats';$('#pieBtn').classList.toggle('on',PIE); // 圆饼图按钮只在「戏份占比结算」页出现
 }
 
 function renderScenes(rows){
@@ -1977,8 +1999,7 @@ function epChart(rows){
   return`<div class="epc"><button class="pieback" type="button">← 返回长条图</button><h3>每集戏份分布(按页数)</h3><div class="note"><b>这张图怎么看</b><p>每一条是一集;条里各色块是各角色在这一集的页数占比(该角色页数 ÷ 这一集所有角色页数加总),颜色和圆饼图相同。</p><p>色块越宽,代表那个角色在这一集的戏越重;鼠标移上去(手机长按)可以看到页数。左边的页数和场次数是这一集的实际总量。</p></div>
     <div class="epleg">${leg}</div>${segs}</div>`;
 }
-$('#coBtn').onclick=()=>{COV=!COV;render()}; // 对戏占比自成一页
-document.addEventListener('click',e=>{if(e.target.closest('.coback')){COV=false;CV=false;render()}});
+document.addEventListener('click',e=>{if(e.target.closest('.coback')){COV=false;CV=false;SCH=false;render()}});
 $('#pieBtn').onclick=()=>{PIE=!PIE;EPV=false;render()}; // 圆饼图自成一页,跟排版无关
 document.addEventListener('click',e=>{if(e.target.closest('.pieback')){PIE=false;EPV=false;tab='stats';render()}});
 function renderStats(rows){
@@ -2011,7 +2032,7 @@ function renderStats(rows){
 
 
 /* ---- 大计划:拍摄日程表(PDF) + 数据库场次 合并统计(独立页面,不影响其他统计) ---- */
-let PLAN=null,PLANERR=false,planSort='p',planLead='祝阮/阮卿卿',COV=false;
+let PLAN=null,PLANERR=false,planSort='p',planLead='祝阮/阮卿卿',COV=false,SCH=false;
 fetch('plan.json',{cache:'no-cache'}).then(r=>r.json()).then(j=>{PLAN=j;if(tab==='plan')render()}).catch(()=>{PLANERR=true;if(tab==='plan')render()});
 function coHTML(all,roles,lead,selId){
   const bar=pc=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
@@ -2034,6 +2055,7 @@ function renderCoStats(rows){
 function renderPlan(){
   const box=$('#vStats');
   if(!PLAN){box.innerHTML=`<div class="empty">${PLANERR?'大计划资料读取失败,请重新整理页面':'读取大计划资料中…'}</div>`;return}
+  if(SCH){renderSched(box);return}
   const m=new Map();
   PLAN.scenes.forEach(s=>m.set(s.ep+'|'+s.sc,{p:num(s.pages),cast:new Set(s.cast),src:'plan'}));
   let ov=0,ovp=0;
@@ -2042,7 +2064,8 @@ function renderPlan(){
   const roles=[...S.roles];PLAN.scenes.forEach(s=>s.cast.forEach(r=>{if(!roles.includes(r))roles.push(r)}));
   const list=roles.map(r=>{let p=0,n=0;all.forEach(x=>{if(x.cast.has(r)){n++;p+=x.p||0}});return{r,p,n}}).sort((a,b)=>planSort==='n'?(b.n-a.n||b.p-a.p):(b.p-a.p||b.n-a.n));
   const bar=pc=>`<div class="meter"><i style="width:${Math.min(100,pc)}%"></i></div>`;
-  box.innerHTML=`<div class="note"><b>大计划统计的算法</b>
+  box.innerHTML=`<div class="bar sortbar topbtns"><button class="epbtn" id="plCo" type="button">🤝 对戏占比</button><button class="epbtn" id="plSch" type="button">📅 大计划日程</button></div>
+  <div class="note"><b>大计划统计的算法</b>
     <p>把「拍摄日程表」(PDF,${PLAN.scenes.length} 场)和网站数据库里的场次(${S.scenes.length} 场)合在一起统计,同一集同一场两边都有时只算一次(已拍过的重复场次共 ${ov} 场、${fmt(ovp)} 页,已从日程表里扣除;页数以数据库为准,角色标记取两边的联集),合计 <span class="hl">${nsc}</span> 场、<span class="hl">${fmt(total)}</span> 页。</p>
     <p>场次占比 = 该角色有戏的场次数 ÷ 总场次数;页数占比 = 该角色所在场次的页数 ÷ 总页数。一场戏有多位角色时每人各算一次,所以占比加起来会超过 100%。</p>
     <p>⚠ 拍摄日程表只标出 5 位主要角色(祝阮/阮卿卿、陆封、夏玉尔、沈心阳、芈大丽),其他角色的数字只来自数据库,会偏低。</p>
@@ -2054,10 +2077,59 @@ function renderPlan(){
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<div class="st-card ${x.r===PINK?'pinkrow':''}"><div class="h"><span class="no">${i+1}</span><b>${esc(x.r)}</b></div><div class="r"><span>场次</span><strong>${x.n}</strong><em>${ps.toFixed(1)}%</em></div>${bar(ps)}<div class="r"><span>页数</span><strong>${fmt(x.p)}</strong><em>${pp.toFixed(1)}%</em></div>${bar(pp)}</div>`}).join('')+
   `</div><div class="scroll mtable" style="margin-top:10px"><table><thead><tr><th>#</th><th>角色</th><th class="num">场次</th><th class="num">场次占比</th><th style="width:22%"></th><th class="num">页数</th><th class="num">页数占比</th><th style="width:22%"></th></tr></thead><tbody>`+
   list.map((x,i)=>{const ps=nsc?x.n/nsc*100:0,pp=total?x.p/total*100:0;return`<tr class="${x.r===PINK?'pinkrow':''}"><td>${i+1}</td><td><b>${esc(x.r)}</b></td><td class="num">${x.n}</td><td class="num">${ps.toFixed(1)}%</td><td>${bar(ps)}</td><td class="num">${fmt(x.p)}</td><td class="num">${pp.toFixed(1)}%</td><td>${bar(pp)}</td></tr>`}).join('')+`</tbody></table></div>`;
+  $('#plCo').onclick=()=>{COV=true;render()};$('#plSch').onclick=()=>{SCH=true;render()};
   if(!roles.includes(planLead))planLead=PINK;
   if(COV){box.innerHTML='<button class="coback" type="button">← 返回大计划统计</button>'+coHTML(all,roles,planLead,'planLead');$('#planLead').onchange=e=>{planLead=e.target.value;render()}}
   else{document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{planSort=b.dataset.s;render()});return}
   document.querySelectorAll('.sortb').forEach(b=>b.onclick=()=>{planSort=b.dataset.s;render()});
+}
+
+
+/* ---- 大计划日程:把 PDF 拍摄日程做成手机好读的列表 ---- */
+let SCHQ='',SCHMODE='day',SCHKEY='date',SCHREV=false;
+function renderSched(box){
+  const btn=(cls,attr,val,cur,txt)=>`<button class="sortb ${cur?'on':''}" ${attr}="${val}">${txt}</button>`;
+  const arrow=k=>SCHKEY===k?(SCHREV?' ↓':' ↑'):'';
+  box.innerHTML=`<button class="coback" type="button">← 返回大计划统计</button>
+  <h3 style="margin:14px 0 6px;font-size:16px">大计划日程<small style="margin-left:8px;color:var(--mute);font-weight:400">拍摄日程表(PDF)</small></h3>
+  <div class="bar sortbar schbar"><span class="hint">显示:</span>${btn('', 'data-m','day',SCHMODE==='day','按天数')}${btn('','data-m','ep',SCHMODE==='ep','按集数')}${btn('','data-m','role',SCHMODE==='role','按角色名')}</div>
+  <div class="bar sortbar schbar"><span class="hint">排序:</span>${btn('','data-k','date',SCHKEY==='date','按日期'+arrow('date'))}${btn('','data-k','ep',SCHKEY==='ep','按集数'+arrow('ep'))}<span class="hint" style="margin-left:4px">再点反向</span></div>
+  <input id="schQ" class="schq" placeholder="搜寻:集数、场号、场景、内容、角色、日期…" value="${esc(SCHQ)}">
+  <div id="schList"></div>`;
+  box.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{SCHMODE=b.dataset.m;renderSched(box)});
+  box.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(SCHKEY===k)SCHREV=!SCHREV;else{SCHKEY=k;SCHREV=false}renderSched(box)});
+  $('#schQ').oninput=e=>{SCHQ=e.target.value;schList()};
+  schList();
+}
+function schList(){
+  const P=PLAN,days=P.days,roles=P.roles;
+  const shot=new Set(S.scenes.map(s=>String(s.ep)+'|'+String(s.sc)));
+  const q=toSimp(SCHQ.trim()).split(/\s+/).filter(Boolean);
+  const hay=(s,i)=>{const d=days[s.day];return toSimp([s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,shot.has(s.ep+'|'+s.sc)?'已拍':''].join(' '))};
+  let rows=P.scenes.map((s,i)=>({s,i})).filter(x=>{if(!q.length)return true;const h=hay(x.s,x.i);return q.every(t=>h.includes(t))});
+  const scNo=v=>{const m=String(v).match(/\d+/);return m?+m[0]:0};
+  const cmp=SCHKEY==='ep'?(a,b)=>(+a.s.ep-+b.s.ep)||(scNo(a.s.sc)-scNo(b.s.sc))||(a.i-b.i):(a,b)=>a.i-b.i;
+  rows.sort(cmp);if(SCHREV)rows.reverse();
+  const tot=r=>({n:r.length,p:r.reduce((a,x)=>a+(x.s.pages||0),0)});
+  const t=tot(rows);
+  const card=x=>{const s=x.s,d=days[s.day],isShot=shot.has(s.ep+'|'+s.sc);
+    const meta=[s.loc,s.region,s.main,s.sub].filter(Boolean).map(esc).join(' · ');
+    const tag=(c,tx)=>tx?`<span class="pl-tag ${c}">${esc(tx)}</span>`:'';
+    const night=/夜/.test(s.light||'');
+    return`${(SCHMODE==='day'&&SCHKEY==='date'&&!SCHREV&&s.tb)?'<div class="pl-tr">↪ 转场</div>':''}<div class="pl-card ${isShot?'shot':''}"><div class="h"><b>第${esc(s.ep)}集</b><span>${esc(s.sc)}场</span>${isShot?'<i class="pl-shot">已拍</i>':''}<em>${s.pages!=null?fmt(s.pages)+'<small>页</small>':esc(s.pnote||'')}</em></div>
+    <div class="tags">${tag('dt',d.m+'/'+d.d+' DAY'+d.n)}${tag(night?'nt':'dy',s.light)}${tag('',s.io)}${tag('',s.season)}</div>
+    ${meta?`<div class="m">${meta}</div>`:''}${(s.hint||s.act)?`<div class="hn">⚠ ${esc([s.hint,s.act].filter(Boolean).join(' · '))}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}
+    ${s.cast.length?`<div class="c">${s.cast.map(r=>`<span class="chip rc ${r===PINK?'pink':''}">${esc(r)}${(s.unsure||[]).includes(r)?'？':''}</span>`).join('')}</div>`:''}</div>`};
+  let groups=[];
+  if(SCHMODE==='day'){const mp=new Map();rows.forEach(x=>{if(!mp.has(x.s.day))mp.set(x.s.day,[]);mp.get(x.s.day).push(x)});
+    groups=[...mp].map(([k,r])=>{const d=days[k];const extra=/^\d*场?[\d.]*页?$/.test(d.note||'')?'':d.note;return{ord:k,title:`DAY${d.n} · ${d.m}月${d.d}日 ${d.wk}`,sub:[d.wx,d.grp].filter(Boolean).join(' · '),note:extra,rows:r}})}
+  else if(SCHMODE==='ep'){const mp=new Map();rows.forEach(x=>{const k=+x.s.ep;if(!mp.has(k))mp.set(k,[]);mp.get(k).push(x)});
+    groups=[...mp].map(([k,r])=>({ord:k,title:`第${k}集`,sub:'',rows:r}))}
+  else{roles.forEach((rn,ri)=>{const r=rows.filter(x=>x.s.cast.includes(rn));if(r.length)groups.push({ord:ri,title:rn,pink:rn===PINK,sub:'',rows:r})});
+    const none=rows.filter(x=>!x.s.cast.length);if(none.length)groups.push({ord:99,title:'没有标角色',sub:'',rows:none})}
+  groups.sort((a,b)=>a.ord-b.ord);if(SCHREV)groups.reverse();
+  const html=groups.map(g=>{const gt=tot(g.rows);return`<div class="pl-gh ${g.pink?'pink':''}"><b>${esc(g.title)}</b>${g.sub?`<span>${esc(g.sub)}</span>`:''}<em>${gt.n} 场 · ${fmt(gt.p)} 页</em></div>${g.note?`<div class="pl-note">📝 ${esc(g.note)}</div>`:''}<div class="pl-list">${g.rows.map(card).join('')}</div>`}).join('');
+  $('#schList').innerHTML=`<div class="tot" style="color:var(--accent);font-size:13px;padding:8px 2px 0">${q.length?'搜寻结果:':'共'} ${t.n} 场 · ${fmt(t.p)} 页${SCHMODE==='role'?'(一场有多位角色会在每位角色下各出现一次,这里的页数是各角色合计)':''}</div>`+(html||'<div class="empty">没有符合的场次</div>');
 }
 
 /* ---- scene dialog ---- */
@@ -2245,7 +2317,7 @@ $('#mCancel').onclick=()=>{
 };
 
 /* ---- tabs / filters ---- */
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;PIE=false;EPV=false;COV=false;CV=false;render()});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;PIE=false;EPV=false;COV=false;CV=false;SCH=false;render()});
 
 /* ---- 排版切换:电脑版(表格)/ 手机版(卡片),默认电脑版,记住选择 ---- */
 let VIEW='table';
