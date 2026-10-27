@@ -2114,7 +2114,7 @@ function renderPlan(){
 
 
 /* ---- 大计划日程:把 PDF 拍摄日程做成跟「场次表」一样的版面(电脑版表格 / 手机版卡片) ---- */
-let SCHF={ep:'',day:'',role:'',q:''},SCHSORT={key:'ep',dir:1};
+let SCHF={ep:'',day:'',role:'',q:''},SCHSORT={key:'date',dir:1};
 const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场',''],['light','气氛',''],['io','内外',''],['season','季节',''],['summary','内容概要',''],['cast','角色','nos'],['pages','页数','num'],['loc','实拍景地',''],['region','地区',''],['main','主场景',''],['sub','次场景',''],['hint','现场提示','']];
 function renderSched(box){
   const P=PLAN,eps=[...new Set(P.scenes.map(s=>+s.ep))].sort((a,b)=>a-b);
