@@ -364,6 +364,7 @@ body.mview .hintCard{display:block}
 .pl-card .h b{color:var(--accent);font-size:16px}.pl-card .h span{font-size:14px}
 .pl-card .h em{margin-left:auto;font-style:normal;font:600 18px/1 "Songti SC","Noto Serif CJK SC",serif;color:#f3ecd9}
 .pl-card .h small{font:400 11px sans-serif;color:var(--mute);margin-left:2px}
+.pl-diff{margin-top:6px;padding:5px 8px;border-radius:6px;background:rgba(248,113,113,.15);color:#fca5a5;font-size:12px;line-height:1.5;font-weight:600;white-space:normal}
 .pl-shot{font-style:normal;font-size:11px;padding:0 6px;border-radius:4px;background:rgba(80,190,160,.18);border:1px solid rgba(80,190,160,.5);color:#b0ead8}
 .pl-card .tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
 .pl-tag{font-size:12px;padding:0 7px;border-radius:4px;border:1px solid #3a3a43;color:#cfcac0}
@@ -2171,6 +2172,25 @@ function schList(){
     const nb=x=>{const q=/^(\d+)[A-Z]?$/.exec(String(x));return q?q[1]:null},dbk=new Set(shot);
     S.scenes.forEach(d=>{const n=nb(d.sc);if(n===null)return;P.scenes.forEach(ps=>{const pk=ps.ep+'|'+ps.sc;if(!dbk.has(pk)&&String(ps.ep)===String(d.ep)&&nb(ps.sc)===n)shot.add(pk)})});
   }
+  // 已拍与日程表的差异:页数、场号(拆分/改字母)、日程表有记录的几位主要角色
+  const diffOf=ps=>{
+    const pk=ps.ep+'|'+ps.sc,nb=x=>{const q=/^(\d+)[A-Z]?$/.exec(String(x));return q?q[1]:null};
+    let ms=S.scenes.filter(d=>String(d.ep)+'|'+String(d.sc)===pk),split=false;
+    if(!ms.length){const n=nb(ps.sc);if(n===null)return null;ms=S.scenes.filter(d=>String(d.ep)===String(ps.ep)&&nb(d.sc)===n);split=true}
+    if(!ms.length)return null;
+    const out=[];
+    if(split)out.push('场号变了:实拍为 '+ms.map(d=>d.sc+'场').join('、'));
+    const dp=ms.map(d=>num(d.pages));
+    if(dp.every(v=>v!==null)&&ps.pages!=null){const t=Math.round(dp.reduce((a,v)=>a+v,0)*100)/100;if(Math.abs(t-ps.pages)>0.001)out.push('页数:日程 '+fmt(ps.pages)+' → 实拍 '+fmt(t)+(ms.length>1?'('+dp.map(fmt).join('+')+')':''))}
+    const dc=new Set();ms.forEach(d=>S.roles.forEach(r=>{if(d.cast[r]===1)dc.add(r)}));
+    const tracked=P.roles;
+    const miss=tracked.filter(r=>ps.cast.includes(r)&&!dc.has(r)),extra=tracked.filter(r=>dc.has(r)&&!ps.cast.includes(r));
+    if(miss.length)out.push('日程有、实拍没有:'+miss.join('、'));
+    if(extra.length)out.push('实拍多了:'+extra.join('、'));
+    return out;
+  };
+  const dfl=ps=>{const o=shot.has(ps.ep+'|'+ps.sc)?diffOf(ps):null;return o&&o.length?o:null};
+  const dfHTML=ps=>{const o=dfl(ps);return o?`<div class="pl-diff">≠ 与实拍不同:${o.map(esc).join(';')}</div>`:''};
   const q=toSimp(SCHF.q.trim()).split(/\s+/).filter(Boolean);
   const hay=s=>{const d=days[s.day];return toSimp([s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,shot.has(s.ep+'|'+s.sc)?'已拍':''].join(' '))};
   let rows=P.scenes.map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t))));
@@ -2192,9 +2212,9 @@ function schList(){
     return`<div class="pl-card ${isShot?'shot':''}"><div class="h"><b>${d.m}/${d.d}</b><span>第${esc(s.ep)}集 · ${esc(s.sc)}场</span>${isShot?'<i class="pl-shot">已拍</i>':''}<em>${s.pages!=null?fmt(s.pages)+'<small>页</small>':esc(s.pnote||'')}</em></div>
     <div class="tags">${tag('dt','DAY'+d.n+' '+d.wk)}${tag(night?'nt':'dy',s.light)}${tag('',s.io)}${tag('',s.season)}</div>
     ${meta?`<div class="m">${meta}</div>`:''}${(s.hint||s.act)?`<div class="hn">⚠ ${esc([s.hint,s.act].filter(Boolean).join(' · '))}</div>`:''}${s.summary?`<div class="t">${esc(cut(s.summary))}</div>`:''}
-    ${s.cast.length?`<div class="c">${chips(s)}</div>`:''}</div>`};
+    ${s.cast.length?`<div class="c">${chips(s)}</div>`:''}${dfHTML(s)}</div>`};
   const trow=x=>{const s=x.s,d=days[s.day],isShot=shot.has(s.ep+'|'+s.sc),night=/夜/.test(s.light||'');
-    return`<tr class="${isShot?'shotrow':''}"><td class="c1">${d.m}/${d.d}<br><small>DAY${d.n}</small></td><td class="c2">${esc(s.ep)}</td><td>${esc(s.sc)}${isShot?'<i class="pl-shot">已拍</i>':''}</td><td class="${night?'ntc':''}">${esc(s.light||'')}</td><td>${esc(s.io||'')}</td><td>${esc(s.season||'')}</td><td class="wrap sm">${esc(cut(s.summary||''))}</td><td class="wrap">${chips(s)}</td><td class="num">${s.pages!=null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${esc(s.loc||'')}</td><td>${esc(s.region||'')}</td><td class="wrap">${esc(s.main||'')}</td><td class="wrap">${esc(s.sub||'')}</td><td class="wrap hn">${esc([s.hint,s.act].filter(Boolean).join(' · '))}</td></tr>`};
+    return`<tr class="${isShot?'shotrow':''}${dfl(s)?' hasdiff':''}"><td class="c1">${d.m}/${d.d}<br><small>DAY${d.n}</small></td><td class="c2">${esc(s.ep)}</td><td>${esc(s.sc)}${isShot?'<i class="pl-shot">已拍</i>':''}</td><td class="${night?'ntc':''}">${esc(s.light||'')}</td><td>${esc(s.io||'')}</td><td>${esc(s.season||'')}</td><td class="wrap sm">${esc(cut(s.summary||''))}</td><td class="wrap">${chips(s)}${dfHTML(s)}</td><td class="num">${s.pages!=null?fmt(s.pages):esc(s.pnote||'')}</td><td class="wrap">${esc(s.loc||'')}</td><td>${esc(s.region||'')}</td><td class="wrap">${esc(s.main||'')}</td><td class="wrap">${esc(s.sub||'')}</td><td class="wrap hn">${esc([s.hint,s.act].filter(Boolean).join(' · '))}</td></tr>`};
   const head=SCOLS.map(([key,lab,cls])=>key==='cast'?`<th>${lab}</th>`:`<th class="sortable${cls?' '+cls:''}${k===key?' sorted':''}" data-sk="${key}" title="点一下排序,再点一下反向">${lab}<i>${k===key?(dir>0?'▲':'▼'):''}</i></th>`).join('');
   $('#schList').innerHTML=rows.length?`<div class="pl-cards"><div class="pl-list">${rows.map(card).join('')}</div><div class="tot" style="color:var(--accent);font-size:13px;padding:10px 4px">合计 ${rows.length} 场 · ${fmt(tp)} 页</div></div>
   <div class="scroll mtable pl-tblwrap"><table class="pl-tbl"><thead><tr>${head}</tr></thead><tbody>${rows.map(trow).join('')}</tbody><tfoot><tr><th colspan="9" style="text-align:left">合计 ${rows.length} 场</th><th colspan="5" class="num" style="text-align:left">${fmt(tp)} 页</th></tr></tfoot></table></div>
