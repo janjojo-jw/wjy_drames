@@ -120,9 +120,9 @@ main{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env
 .banner h1 small:empty{display:none}
 .banner .bar button:not(.primary){background:rgba(14,14,17,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 @media(max-width:600px){
- .banner{min-height:185px;background-size:cover;background-position:50% 20%}
- .banner::before{background:linear-gradient(180deg,rgba(14,14,17,.05) 0,rgba(14,14,17,0) 35%,rgba(14,14,17,.65) 75%,var(--bg) 100%)}
- .banner header{flex-direction:column;align-items:flex-start;gap:10px;padding:calc(env(safe-area-inset-top) + 20px) 14px 12px}
+ .banner{min-height:0;background-size:100% auto;background-position:50% 0}
+ .banner::before{background:linear-gradient(180deg,rgba(14,14,17,0) 0,rgba(14,14,17,0) calc(24.9vw - 22px),var(--bg) calc(24.9vw + 1px))}
+ .banner header{flex-direction:column;align-items:flex-start;gap:10px;padding:calc(24.9vw + 6px) 14px 12px}
  .banner h1{font-size:23px;letter-spacing:.12em}
  .banner .bar{gap:5px}
  .banner .bar button{padding:4px 9px;font-size:13px}
