@@ -1522,6 +1522,105 @@
     "黄灯/小黄灯": 1,
     "上官芳/黄盼儿": 1
    }
+  },
+  {
+   "id": 84,
+   "date": "10.30",
+   "ep": 1,
+   "sc": "21",
+   "light": "秋",
+   "place": "太平县",
+   "main": "王家【丧】",
+   "sub": "大门口",
+   "summary": "许婆婆寻孙女被踹倒",
+   "pages": 0.8,
+   "pnote": "",
+   "cast": {
+    "许婆婆": 1
+   }
+  },
+  {
+   "id": 85,
+   "date": "10.30",
+   "ep": 2,
+   "sc": "18",
+   "light": "秋",
+   "place": "太平县",
+   "main": "王家【丧】",
+   "sub": "祠堂",
+   "summary": "王夫人逼妮子殉节",
+   "pages": 1.1,
+   "pnote": "",
+   "cast": {
+    "王夫人": 1,
+    "许妮子": 1
+   }
+  },
+  {
+   "id": 86,
+   "date": "10.30",
+   "ep": 2,
+   "sc": "19",
+   "light": "秋",
+   "place": "太平县",
+   "main": "王家【丧】",
+   "sub": "内宅偏厅",
+   "summary": "王夫人教导珍珠女德",
+   "pages": 0.9,
+   "pnote": "",
+   "cast": {
+    "王夫人": 1,
+    "王珍珠": 1
+   }
+  },
+  {
+   "id": 87,
+   "date": "10.30",
+   "ep": 2,
+   "sc": "20",
+   "light": "秋",
+   "place": "太平县",
+   "main": "王家【丧】",
+   "sub": "祠堂",
+   "summary": "妮子见林茑灵位",
+   "pages": 0.35,
+   "pnote": "",
+   "cast": {
+    "许妮子": 1
+   }
+  },
+  {
+   "id": 88,
+   "date": "10.30",
+   "ep": 2,
+   "sc": "22",
+   "light": "秋",
+   "place": "太平县",
+   "main": "王家【丧】",
+   "sub": "祠堂",
+   "summary": "【接2-20】妮子抱灵位不再害怕",
+   "pages": 0.35,
+   "pnote": "",
+   "cast": {
+    "林鸢": 1,
+    "许妮子": 1
+   }
+  },
+  {
+   "id": 89,
+   "date": "10.30",
+   "ep": 2,
+   "sc": "26",
+   "light": "秋",
+   "place": "太平县",
+   "main": "王家【丧】",
+   "sub": "祠堂",
+   "summary": "珍珠得知王夫人状告卿",
+   "pages": 0.45,
+   "pnote": "",
+   "cast": {
+    "王珍珠": 1
+   }
   }
  ],
  "sec": "i130XMVZ2kv6lkw4Zr6h6/r4RtrbFW35dNeWopf4VgqPW5BqivrRON5XK9ZBCOqpDOOA7BTaYUlHfksEAQBpr5nR/1ffU1LdpDKB+6ulBmOoLdUTmzPzeKqSVwT1PtsprqFyi/BOExkyqvfvvN2c4Mb04dCAY0WjFGJMOcK3cUUh++H9W05gv+Q="
