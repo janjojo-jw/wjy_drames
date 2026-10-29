@@ -416,7 +416,8 @@ label .datebtn{margin-top:4px}
 .datebtn.set{border-color:var(--accent);color:#fbefc6}
 body.mview .card>.bar .datebtn{font-size:14px;line-height:19px;padding:7px 6px}
 @media(max-width:700px){.card>.bar .datebtn{font-size:14px;line-height:19px;padding:7px 6px}}
-#calDlg,#epDlg{width:min(340px,92vw);padding:16px}
+#calDlg,#epDlg,#roDlg{width:min(340px,92vw);padding:16px}
+.rog{display:flex;flex-wrap:wrap;gap:6px;max-height:50vh;overflow:auto}.rog button{border:1px solid #34343c;background:#1b1b21;color:#f3ecd9;border-radius:8px;padding:7px 10px;font-size:14px;cursor:pointer;white-space:nowrap}.rog button i{font-style:normal;font-size:11px;color:var(--accent);margin-left:5px}.rog button.on{background:linear-gradient(180deg,#fbefc6,#e5bf6c);color:#2a210a;border-color:#fbefc6;font-weight:700}.rog button.on i{color:#2a210a}
 .calg.epg{grid-template-columns:repeat(5,1fr)}
 .calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .calh b{font-size:16px;color:#f3ecd9}.calh button{width:38px;height:34px;font-size:20px;border-radius:8px}
@@ -458,7 +459,7 @@ body.mview .card>.bar .datebtn{font-size:14px;line-height:19px;padding:7px 6px}
     <div class="bar" id="filterBar" style="margin-bottom:12px">
       <label>集数<button type="button" id="fEpBtn" class="datebtn">全部</button><input type="hidden" id="fEp" value=""></label>
       <label>拍摄日期<button type="button" id="fDateBtn" class="datebtn">全部</button><input type="hidden" id="fDate" value=""></label>
-      <label>角色<select id="fRole"></select></label>
+      <label>角色<button type="button" id="fRoBtn" class="datebtn">全部</button><input type="hidden" id="fRole" value=""></label>
       <div class="full srow"><label>搜寻<input id="fQ" placeholder="场景、内容…"></label><label class="pchk"><input type="checkbox" id="fPhoto">📷 只看有照片</label></div>
     </div>
     <div id="vScenes" class="scroll"></div>
@@ -505,6 +506,7 @@ body.mview .card>.bar .datebtn{font-size:14px;line-height:19px;padding:7px 6px}
   </form>
 </dialog>
 
+<dialog id="roDlg"><div class="cal"><div class="calh" style="justify-content:center"><b>选择角色</b></div><div class="rog" id="roGrid"></div><p class="hint" id="roSel" style="margin:8px 0;color:var(--accent,#e8c47a)"></p><div class="calf"><button type="button" id="roClear">清除(显示全部)</button><button type="button" id="roClose">完成</button></div><p class="hint" style="margin:8px 0 0">可以选好几位:选多位时,只显示这几位<b>同时出现</b>的场次。数字是该角色的场数。</p></div></dialog>
 <dialog id="epDlg"><div class="cal"><div class="calh" style="justify-content:center"><b>选择集数</b></div><div class="calg epg" id="epGrid"></div><p class="hint" id="epSel" style="margin:8px 0;color:var(--accent,#e8c47a)"></p><div class="calf"><button type="button" id="epClear">清除(显示全部)</button><button type="button" id="epClose">完成</button></div><p class="hint" style="margin:8px 0 0">可以选好几集:点一下选取,再点一下取消。数字下面的金色小数字是那一集的场数。</p></div></dialog>
 <dialog id="calDlg"><div class="cal"><div class="calh"><button type="button" id="calPrev">‹</button><b id="calTitle"></b><button type="button" id="calNext">›</button></div><div class="calw"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div class="calg" id="calGrid"></div><p class="hint" id="calSel" style="margin:0 0 8px;color:var(--accent,#e8c47a)"></p><div class="calf"><button type="button" id="calClear">清除(显示全部)</button><button type="button" id="calClose">完成</button></div><p class="hint" style="margin:8px 0 0">可以选好几天:点一下选取,再点一下取消。亮色的日子有场次,日期下面的金色数字是当天场数。</p></div></dialog>
 <dialog id="pdlg"><img id="pBig" alt="现场照片"></dialog>
@@ -1893,10 +1895,10 @@ function pageOf(sc,r){return sc.cast[r]===1?(num(sc.pages)||0):0}
 const T2S=(()=>{const t="喪為舉樂書亂產傷蘭內擊匱單賣廳縣場奪婦孫宮對崗師帶庫開棄張搶攔掙換摑擲攤殺樹殯滿爛爺牘狀狹瘋箋簽絕脅節羋蔦萊鶯虜觀計認訊許訟證誕趙鋪閃聞隊陸陳難驛魘鮮鳶鳴愛罷備筆邊賓補參蠶倉側測層長廠車稱寵處傳創從擔膽黨導燈鄧敵遞點電釣調東動鬥獨讀賭斷發髮範飛費紛風豐負復該蓋幹趕個鞏貢溝構購顧關廣歸規貴國過漢號閡賀後護華劃懷壞歡環還黃會燬獲禍機積極幾擠記際繼價堅間艱檢減薦劍見將獎講醬階結盡進驚靜鏡舊據劇捲決覺剋課誇塊寬虧擴來賴藍覽淚離裡禮歷麗連聯練糧涼兩遼臨靈劉龍樓盧錄論羅媽馬買麥貓夢麼門們彌麵廟滅憫謀腦鬧寧擬釀鳥聶農濃歐盤龐噴闢憑評頻颯氣遷錢強橋親輕傾請慶窮區權勸確讓熱榮絨紹設攝審聲勝時識實適勢飾試壽獸樞輸屬數帥雙誰說絲歲損臺壇歎湯體條鐵聽統頭圖塗團廢萬網衛偉緯問臥無務霧習係戲細現線鄉響項嚮懸學尋壓鴨亞嚴顏驗陽楊養樣搖藥葉頁業儀藝議憶陰蔭銀飲隱應嬰營優郵猶遊憂與語獄預園員緣遠願約閱雲運醞雜災載贊髒責則擇賊贈閘齋債氈戰漲帳這陣鎮爭徵鄭織職執紙誌質鍾種眾週豬諸築著莊裝壯準濁資總縱組寢輩氫纏鋒塵諾齒暫憲牽標飄撲蘋罰頓遲靂廚獻棲鐘懲顯賢險綫鄰殘慘蒼滄艙蟲誠盜燭畫話滬謊懼鑒驕嬌膠腳較饑嘆顆啟鬱癥漿縫墳綱鋼烏鑰鬆悶謎濕釋蘇獅穩襲韓毀捨陝疊鐮壘煉綠滾濱罵憐蕭鑼鴻償薩鵝儘彎貝筍蛻遺賤緊謹類戀攏緩綻閒譽艷逕窩鴛鴦囑穫縮訪詞詩訴診詐詢詭詳誤誘諒諷謠謝譜譯譴贏贖趨躍軌軍軒軟輛輪輯轉轟辦辭迴選遙醫釘針鈴鈔鉤鉅銅銘銷錯錶鍵鎖鎭鏈鑄閉闖隨隻雖雞頂順須頑頒領頗題額飯飼餅餘館驅骯鬍魚魯鳳鴿鵑鷹鹽齊齡龜嬸姪嫵嫻媯孃寶專屆屍嶺嶽巖幣幫幟廂廈彈彙徑徹悅惡惱慾憊懇懶戶搾摯撈撥擁擾攜斂斃斕曆曉暉朧枴柵棗棧楓槍樁橫檔檯櫃櫻欄欽殲毆漁滲漸澀濟濤濫瀏瀝灣燙燦爐爍爲牆牠犧猙玆瑪瑣璽甌畢畝疇痙癡碩碼磚礎禦禪秈稈稅稜穎窪窺竄競篤簡籃籌籤粵糞糾紀級紡紮紳終紼絆絞絡給經綁綜維綴綵綸綽緋緒緘緝編緻縈縊縐縛繞繡繩繪繭繳辮續纜羈羨義翹聖聰肅脈脣腎腫腸膚膩臉臟興艦茲莖葷蓮蔔蔣蕩薑薔藉蘊蘆蘿虛蝦蝸螢蟻衝裏製複襯觸訂託訝訣訥詆詔詛詫詮詰誅誼諂談諍諜諧諫諮諱諳諺謂謄謗謙謨譁譏變讚豈貞財販貪貧貨貫貯貳貶貸貼貿賁賂賃賄賅賈賑賜賞賠賦賬賺賽贅贓跡踐踴蹟蹤軀軋輔",s="丧为举乐书乱产伤兰内击匮单卖厅县场夺妇孙宫对岗师带库开弃张抢拦挣换掴掷摊杀树殡满烂爷牍状狭疯笺签绝胁节芈茑莱莺虏观计认讯许讼证诞赵铺闪闻队陆陈难驿魇鲜鸢鸣爱罢备笔边宾补参蚕仓侧测层长厂车称宠处传创从担胆党导灯邓敌递点电钓调东动斗独读赌断发发范飞费纷风丰负复该盖干赶个巩贡沟构购顾关广归规贵国过汉号阂贺后护华划怀坏欢环还黄会毁获祸机积极几挤记际继价坚间艰检减荐剑见将奖讲酱阶结尽进惊静镜旧据剧卷决觉克课夸块宽亏扩来赖蓝览泪离里礼历丽连联练粮凉两辽临灵刘龙楼卢录论罗妈马买麦猫梦么门们弥面庙灭悯谋脑闹宁拟酿鸟聂农浓欧盘庞喷辟凭评频飒气迁钱强桥亲轻倾请庆穷区权劝确让热荣绒绍设摄审声胜时识实适势饰试寿兽枢输属数帅双谁说丝岁损台坛叹汤体条铁听统头图涂团废万网卫伟纬问卧无务雾习系戏细现线乡响项向悬学寻压鸭亚严颜验阳杨养样摇药叶页业仪艺议忆阴荫银饮隐应婴营优邮犹游忧与语狱预园员缘远愿约阅云运酝杂灾载赞脏责则择贼赠闸斋债毡战涨帐这阵镇争征郑织职执纸志质钟种众周猪诸筑着庄装壮准浊资总纵组寝辈氢缠锋尘诺齿暂宪牵标飘扑苹罚顿迟雳厨献栖钟惩显贤险线邻残惨苍沧舱虫诚盗烛画话沪谎惧鉴骄娇胶脚较饥叹颗启郁症浆缝坟纲钢乌钥松闷谜湿释苏狮稳袭韩毁舍陕叠镰垒炼绿滚滨骂怜萧锣鸿偿萨鹅尽弯贝笋蜕遗贱紧谨类恋拢缓绽闲誉艳径窝鸳鸯嘱获缩访词诗诉诊诈询诡详误诱谅讽谣谢谱译谴赢赎趋跃轨军轩软辆轮辑转轰办辞回选遥医钉针铃钞钩钜铜铭销错表键锁镇链铸闭闯随只虽鸡顶顺须顽颁领颇题额饭饲饼余馆驱肮胡鱼鲁凤鸽鹃鹰盐齐龄龟婶侄妩娴妫娘宝专届尸岭岳岩币帮帜厢厦弹汇径彻悦恶恼欲惫恳懒户榨挚捞拨拥扰携敛毙斓历晓晖胧拐栅枣栈枫枪桩横档台柜樱栏钦歼殴渔渗渐涩济涛滥浏沥湾烫灿炉烁为墙它牺狰兹玛琐玺瓯毕亩畴痉痴硕码砖础御禅籼秆税棱颖洼窥窜竞笃简篮筹签粤粪纠纪级纺扎绅终绋绊绞络给经绑综维缀彩纶绰绯绪缄缉编致萦缢绉缚绕绣绳绘茧缴辫续缆羁羡义翘圣聪肃脉唇肾肿肠肤腻脸脏兴舰兹茎荤莲卜蒋荡姜蔷借蕴芦萝虚虾蜗萤蚁冲里制复衬触订托讶诀讷诋诏诅诧诠诘诛谊谄谈诤谍谐谏咨讳谙谚谓誊谤谦谟哗讥变赞岂贞财贩贪贫货贯贮贰贬贷贴贸贲赂赁贿赅贾赈赐赏赔赋账赚赛赘赃迹践踊迹踪躯轧辅",m={};for(let i=0;i<t.length;i++)m[t[i]]=s[i];return m})();
 const toSimp=x=>String(x||'').replace(/[\u3400-\u9fff]/g,c=>T2S[c]||c).toLowerCase();
 function filtered(){
-  const ep=$('#fEp').value?$('#fEp').value.split(','):[],dt=$('#fDate').value,ro=$('#fRole').value,q=toSimp($('#fQ').value.trim()),ph=$('#fPhoto').checked;
+  const ep=$('#fEp').value?$('#fEp').value.split(','):[],dt=$('#fDate').value,ro=$('#fRole').value?$('#fRole').value.split('|'):[],q=toSimp($('#fQ').value.trim()),ph=$('#fPhoto').checked;
   const base=sorted();
   if(ep.length&&VIEW==='card'){const k=s=>parseInt(s.sc)||0;base.sort((a,b)=>(+a.ep-+b.ep)||k(a)-k(b)||String(a.sc).localeCompare(String(b.sc),'zh',{numeric:true}))} // 手机版选了某一集:一律按场号递增,看得出剧情顺序
-  return base.filter(s=>(!ph||s.photo)&&(!ep.length||ep.includes(String(s.ep)))&&(!dt||dt.split(',').some(x=>dateHas(s.date,x)))&&(!ro||s.cast[ro])&&
+  return base.filter(s=>(!ph||s.photo)&&(!ep.length||ep.includes(String(s.ep)))&&(!dt||dt.split(',').some(x=>dateHas(s.date,x)))&&(!ro.length||ro.every(r=>s.cast[r]))&&
     (!q||toSimp([s.main,s.sub,s.summary,s.place,s.sc].join(' ')).includes(q)));
 }
 /* 排序:点表头的字;同一列点第一次=递增,再点=递减。默认按集数递增,每次打开都从这里开始 */
@@ -1929,8 +1931,7 @@ function fillFilters(){
   const keep={ep:$('#fEp').value,dt:$('#fDate').value,ro:$('#fRole').value};
   const eps=uniq(S.scenes.map(s=>s.ep)).sort((a,b)=>a-b);
   const dates=uniq(S.scenes.map(s=>s.date)).sort((a,b)=>String(a).localeCompare(String(b),'zh',{numeric:true}));
-  $('#fRole').innerHTML='<option value="">全部</option>'+S.roles.map(e=>`<option>${esc(e)}</option>`).join('');
-  $('#fEp').value=keep.ep;epLabel();$('#fDate').value=keep.dt;$('#fRole').value=keep.ro;
+  $('#fEp').value=keep.ep;epLabel();$('#fDate').value=keep.dt;$('#fRole').value=keep.ro;roLabel();
   for(const f of ['date','light','place','main','sub'])
     $('#l-'+f).innerHTML=(f==='date'?dates:options(f)).map(o=>`<option value="${esc(o)}">`).join('');
 }
@@ -2148,7 +2149,7 @@ function renderPlan(){
 
 
 /* ---- 大计划日程:把 PDF 拍摄日程做成跟「场次表」一样的版面(电脑版表格 / 手机版卡片) ---- */
-let SCHF={eps:[],dates:[],role:'',q:'',diff:false,un:false},SCHSORT={key:'date',dir:1,auto:true};
+let SCHF={eps:[],dates:[],roles:[],q:'',diff:false,un:false},SCHSORT={key:'date',dir:1,auto:true};
 const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场',''],['light','气氛',''],['io','内外',''],['season','季节',''],['summary','内容概要',''],['cast','角色','nos'],['pages','页数','num'],['loc','实拍景地',''],['region','地区',''],['main','主场景',''],['sub','次场景',''],['hint','现场提示','']];
 function renderSched(box){
   const P=PLAN,eps=[...new Set([...P.scenes,...planAdded()].map(s=>+s.ep))].sort((a,b)=>a-b);
@@ -2157,13 +2158,13 @@ function renderSched(box){
   <div class="bar schf">
     <label>集数<button type="button" id="sEpBtn" class="datebtn">全部</button></label>
     <label>拍摄日期<button type="button" id="sDayBtn" class="datebtn">全部</button></label>
-    <label>角色<select id="sRole"><option value="">全部</option>${P.roles.map(r=>`<option ${SCHF.role===r?'selected':''}>${esc(r)}</option>`).join('')}</select></label>
+    <label>角色<button type="button" id="sRoBtn" class="datebtn">全部</button></label>
     <div class="full srow"><label>搜寻<input id="sQ" placeholder="场景、内容…" value="${esc(SCHF.q)}"></label><div class="ckgrp"><label class="diffck"><input type="checkbox" id="sDiff" ${SCHF.diff?'checked':''}><span>只看已拍有差异</span></label><label class="diffck"><input type="checkbox" id="sUn" ${SCHF.un?'checked':''}><span>未拍摄场次</span></label></div></div>
   </div>
   <div id="schList" style="margin-top:12px"></div>`;
   $('#sEpBtn').onclick=()=>openEp('plan');EPM='plan';epLabel();
   $('#sDayBtn').onclick=()=>openCal('plan');CALM='plan';calLabel();
-  $('#sRole').onchange=e=>{SCHF.role=e.target.value;schList()};
+  $('#sRoBtn').onclick=()=>openRo('plan');ROM='plan';roLabel();
   $('#sQ').oninput=e=>{SCHF.q=e.target.value;schList()};
   $('#sDiff').onchange=e=>{SCHF.diff=e.target.checked;if(SCHF.diff){SCHF.un=false;$('#sUn').checked=false}schList()};
   $('#sUn').onchange=e=>{SCHF.un=e.target.checked;if(SCHF.un){SCHF.diff=false;$('#sDiff').checked=false}schList()};
@@ -2216,7 +2217,7 @@ function schList(){
   const dfHTML=ps=>{const o=dfl(ps);return o?`<div class="pl-diff">${o.map(esc).join('<br>')}</div>`:''};
   const q=toSimp(SCHF.q.trim()).split(/\s+/).filter(Boolean);
   const hay=s=>{const d=s.add?{n:'',m:'',d:'',wk:'',wx:'',grp:''}:days[s.day];return toSimp([s.add?'新加场次 加戏 '+s.dbdate:'',s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,(s.add||shot.has(s.ep+'|'+s.sc))?'已拍':''].join(' '))};
-  let rows=[...P.scenes,...(SCHF.dates.length?[]:ADD)].map((s,i)=>({s,i})).filter(x=>(!SCHF.eps.length||SCHF.eps.includes(+x.s.ep))&&(!SCHF.dates.length||(!x.s.add&&SCHF.dates.includes(`${YEAR}-${pad(days[x.s.day].m)}-${pad(days[x.s.day].d)}`)))&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t)))&&(!SCHF.diff||dfl(x.s))&&(!SCHF.un||(!x.s.add&&!shot.has(x.s.ep+'|'+x.s.sc))));
+  let rows=[...P.scenes,...(SCHF.dates.length?[]:ADD)].map((s,i)=>({s,i})).filter(x=>(!SCHF.eps.length||SCHF.eps.includes(+x.s.ep))&&(!SCHF.dates.length||(!x.s.add&&SCHF.dates.includes(`${YEAR}-${pad(days[x.s.day].m)}-${pad(days[x.s.day].d)}`)))&&(!SCHF.roles.length||SCHF.roles.every(r=>x.s.cast.includes(r)))&&(!q.length||q.every(t=>hay(x.s).includes(t)))&&(!SCHF.diff||dfl(x.s))&&(!SCHF.un||(!x.s.add&&!shot.has(x.s.ep+'|'+x.s.sc))));
   const scNo=v=>{const m=String(v).match(/\d+/);return m?+m[0]:0};
   const eff=(SCHF.eps.length&&(SCHSORT.auto||VIEW==='card'))?{key:SCHF.eps.length>1?'ep':'sc',dir:1}:SCHSORT; // 选了某一集:预设按场号递增,才看得出剧情发展顺序
   const k=eff.key,dir=eff.dir;
@@ -2489,8 +2490,22 @@ function drawEp(){const cur=epSel();
   $('#epSel').textContent=cur.length?`已选 ${cur.length} 集:${cur.slice(0,10).join('、')}${cur.length>10?'…':''}`:'还没有选集数(显示全部)'}
 function openEp(mode){EPM=mode;drawEp();$('#epDlg').showModal()}
 $('#fEpBtn').onclick=()=>openEp('scenes');
+/* ---- 角色:小视窗复选,选多位=只看这几位同时出场的场次 ---- */
+var ROM='scenes';
+function roSel(){return ROM==='plan'?[...SCHF.roles]:($('#fRole').value?$('#fRole').value.split('|'):[])}
+function roAll(){return ROM==='plan'?PLAN.roles:S.roles}
+function roCnt(r){return ROM==='plan'?PLAN.scenes.filter(s=>s.cast.includes(r)).length:S.scenes.filter(s=>s.cast[r]===1).length}
+function roLabel(){const set=(b,a)=>{if(b){b.textContent=!a.length?'全部':a.length<=2?a.join('+'):`已选 ${a.length} 位`;b.classList.toggle('set',!!a.length)}};set($('#fRoBtn'),$('#fRole').value?$('#fRole').value.split('|'):[]);set($('#sRoBtn'),SCHF.roles)}
+function roApply(a){if(ROM==='plan'){SCHF.roles=a;schList()}else{$('#fRole').value=a.join('|');render()}roLabel()}
+function drawRo(){const cur=roSel();
+  $('#roGrid').innerHTML=roAll().map(r=>`<button type="button" class="${cur.includes(r)?'on':''}" data-r="${esc(r)}">${esc(r)}<i>${roCnt(r)}</i></button>`).join('');
+  $('#roGrid').querySelectorAll('button').forEach(b=>b.onclick=()=>{const a=roSel(),k=b.dataset.r;roApply(a.includes(k)?a.filter(x=>x!==k):[...a,k]);drawRo()});
+  $('#roSel').textContent=cur.length?`已选 ${cur.length} 位:${cur.join('、')}${cur.length>1?'(同时出现)':''}`:'还没有选角色(显示全部)'}
+function openRo(mode){ROM=mode;drawRo();$('#roDlg').showModal()}
+$('#fRoBtn').onclick=()=>openRo('scenes');
+$('#roClear').onclick=()=>{roApply([]);drawRo()};$('#roClose').onclick=()=>$('#roDlg').close();
 $('#epClear').onclick=()=>{epApply([]);drawEp()};$('#epClose').onclick=()=>$('#epDlg').close();
-['fDate','fRole'].forEach(i=>$('#'+i).onchange=render);$('#fQ').oninput=render;$('#fPhoto').onchange=render;
+['fDate'].forEach(i=>$('#'+i).onchange=render);$('#fQ').oninput=render;$('#fPhoto').onchange=render;
 /* ---- import / export ---- */
 function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $('#exp').onclick=()=>dl('data.json',JSON.stringify(S,null,1),'application/json');
