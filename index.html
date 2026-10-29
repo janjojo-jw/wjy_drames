@@ -504,7 +504,7 @@ body.mview .card>.bar .datebtn{font-size:14px;line-height:19px;padding:7px 6px}
   </form>
 </dialog>
 
-<dialog id="calDlg"><div class="cal"><div class="calh"><button type="button" id="calPrev">‹</button><b id="calTitle"></b><button type="button" id="calNext">›</button></div><div class="calw"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div class="calg" id="calGrid"></div><div class="calf"><button type="button" id="calClear">显示全部日期</button><button type="button" id="calClose">关闭</button></div><p class="hint" style="margin:8px 0 0">亮色的日子有场次,日期下面的金色数字是当天场数。</p></div></dialog>
+<dialog id="calDlg"><div class="cal"><div class="calh"><button type="button" id="calPrev">‹</button><b id="calTitle"></b><button type="button" id="calNext">›</button></div><div class="calw"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div class="calg" id="calGrid"></div><p class="hint" id="calSel" style="margin:0 0 8px;color:var(--accent,#e8c47a)"></p><div class="calf"><button type="button" id="calClear">清除(显示全部)</button><button type="button" id="calClose">完成</button></div><p class="hint" style="margin:8px 0 0">可以选好几天:点一下选取,再点一下取消。亮色的日子有场次,日期下面的金色数字是当天场数。</p></div></dialog>
 <dialog id="pdlg"><img id="pBig" alt="现场照片"></dialog>
 
 <dialog id="ddlg">
@@ -1894,7 +1894,7 @@ function filtered(){
   const ep=$('#fEp').value,dt=$('#fDate').value,ro=$('#fRole').value,q=toSimp($('#fQ').value.trim()),ph=$('#fPhoto').checked;
   const base=sorted();
   if(ep&&VIEW==='card'){const k=s=>parseInt(s.sc)||0;base.sort((a,b)=>k(a)-k(b)||String(a.sc).localeCompare(String(b.sc),'zh',{numeric:true}))} // 手机版选了某一集:一律按场号递增,看得出剧情顺序
-  return base.filter(s=>(!ph||s.photo)&&(!ep||String(s.ep)===ep)&&(!dt||dateHas(s.date,dt))&&(!ro||s.cast[ro])&&
+  return base.filter(s=>(!ph||s.photo)&&(!ep||String(s.ep)===ep)&&(!dt||dt.split(',').some(x=>dateHas(s.date,x)))&&(!ro||s.cast[ro])&&
     (!q||toSimp([s.main,s.sub,s.summary,s.place,s.sc].join(' ')).includes(q)));
 }
 /* 排序:点表头的字;同一列点第一次=递增,再点=递减。默认按集数递增,每次打开都从这里开始 */
@@ -2147,7 +2147,7 @@ function renderPlan(){
 
 
 /* ---- 大计划日程:把 PDF 拍摄日程做成跟「场次表」一样的版面(电脑版表格 / 手机版卡片) ---- */
-let SCHF={ep:'',day:'',role:'',q:'',diff:false,un:false},SCHSORT={key:'date',dir:1,auto:true};
+let SCHF={ep:'',dates:[],role:'',q:'',diff:false,un:false},SCHSORT={key:'date',dir:1,auto:true};
 const SCOLS=[['date','日期','c1'],['ep','集','c2'],['sc','场',''],['light','气氛',''],['io','内外',''],['season','季节',''],['summary','内容概要',''],['cast','角色','nos'],['pages','页数','num'],['loc','实拍景地',''],['region','地区',''],['main','主场景',''],['sub','次场景',''],['hint','现场提示','']];
 function renderSched(box){
   const P=PLAN,eps=[...new Set([...P.scenes,...planAdded()].map(s=>+s.ep))].sort((a,b)=>a-b);
@@ -2155,13 +2155,13 @@ function renderSched(box){
   <h3 style="margin:14px 0 10px;font-size:16px">大计划日程<small style="margin-left:8px;color:var(--mute);font-weight:400">拍摄日程表(PDF)<span style="margin-left:8px;white-space:nowrap;font-weight:700;color:#4ade80">${P.days[0].m}/${P.days[0].d} – ${P.days[P.days.length-1].m}/${P.days[P.days.length-1].d}</span></small></h3>
   <div class="bar schf">
     <label>集数<select id="sEp"><option value="">全部</option>${eps.map(e=>`<option value="${e}" ${SCHF.ep==e?'selected':''}>第${e}集</option>`).join('')}</select></label>
-    <label>拍摄日期<select id="sDay"><option value="">全部</option>${P.days.map((d,i)=>`<option value="${i}" ${SCHF.day===String(i)?'selected':''}>${d.m}/${d.d} DAY${d.n}</option>`).join('')}</select></label>
+    <label>拍摄日期<button type="button" id="sDayBtn" class="datebtn">全部</button></label>
     <label>角色<select id="sRole"><option value="">全部</option>${P.roles.map(r=>`<option ${SCHF.role===r?'selected':''}>${esc(r)}</option>`).join('')}</select></label>
     <div class="full srow"><label>搜寻<input id="sQ" placeholder="场景、内容…" value="${esc(SCHF.q)}"></label><div class="ckgrp"><label class="diffck"><input type="checkbox" id="sDiff" ${SCHF.diff?'checked':''}><span>只看已拍有差异</span></label><label class="diffck"><input type="checkbox" id="sUn" ${SCHF.un?'checked':''}><span>未拍摄场次</span></label></div></div>
   </div>
   <div id="schList" style="margin-top:12px"></div>`;
   $('#sEp').onchange=e=>{SCHF.ep=e.target.value;schList()};
-  $('#sDay').onchange=e=>{SCHF.day=e.target.value;schList()};
+  $('#sDayBtn').onclick=()=>openCal('plan');CALM='plan';calLabel();
   $('#sRole').onchange=e=>{SCHF.role=e.target.value;schList()};
   $('#sQ').oninput=e=>{SCHF.q=e.target.value;schList()};
   $('#sDiff').onchange=e=>{SCHF.diff=e.target.checked;if(SCHF.diff){SCHF.un=false;$('#sUn').checked=false}schList()};
@@ -2215,7 +2215,7 @@ function schList(){
   const dfHTML=ps=>{const o=dfl(ps);return o?`<div class="pl-diff">${o.map(esc).join('<br>')}</div>`:''};
   const q=toSimp(SCHF.q.trim()).split(/\s+/).filter(Boolean);
   const hay=s=>{const d=s.add?{n:'',m:'',d:'',wk:'',wx:'',grp:''}:days[s.day];return toSimp([s.add?'新加场次 加戏 '+s.dbdate:'',s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,(s.add||shot.has(s.ep+'|'+s.sc))?'已拍':''].join(' '))};
-  let rows=[...P.scenes,...(SCHF.day===''?ADD:[])].map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(SCHF.day===''||x.s.day===+SCHF.day)&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t)))&&(!SCHF.diff||dfl(x.s))&&(!SCHF.un||(!x.s.add&&!shot.has(x.s.ep+'|'+x.s.sc))));
+  let rows=[...P.scenes,...(SCHF.dates.length?[]:ADD)].map((s,i)=>({s,i})).filter(x=>(!SCHF.ep||+x.s.ep===+SCHF.ep)&&(!SCHF.dates.length||(!x.s.add&&SCHF.dates.includes(`${YEAR}-${pad(days[x.s.day].m)}-${pad(days[x.s.day].d)}`)))&&(!SCHF.role||x.s.cast.includes(SCHF.role))&&(!q.length||q.every(t=>hay(x.s).includes(t)))&&(!SCHF.diff||dfl(x.s))&&(!SCHF.un||(!x.s.add&&!shot.has(x.s.ep+'|'+x.s.sc))));
   const scNo=v=>{const m=String(v).match(/\d+/);return m?+m[0]:0};
   const eff=(SCHF.ep&&(SCHSORT.auto||VIEW==='card'))?{key:'sc',dir:1}:SCHSORT; // 选了某一集:预设按场号递增,才看得出剧情发展顺序
   const k=eff.key,dir=eff.dir;
@@ -2449,25 +2449,31 @@ applyView();
 /* ---- 拍摄日期:日历选择(取代很长的下拉选单) ---- */
 const dTok=str=>(String(str||'').match(/\d{1,2}\.\d{1,2}/g)||[]).map(t=>{const[a,b]=t.split('.');return+a*100+ +b});
 function dateHas(str,iso){const t=dTok(str);if(!t.length)return false;const[,m,d]=iso.split('-');const v=+m*100+ +d;return t.length===1?t[0]===v:(v>=Math.min(...t)&&v<=Math.max(...t))}
-let CAL={y:YEAR,m:10};
-function calBounds(){const all=S.scenes.flatMap(s=>dTok(s.date));if(!all.length){const n=new Date();return[(n.getMonth()+1),(n.getMonth()+1)]}return[Math.floor(Math.min(...all)/100),Math.floor(Math.max(...all)/100)]}
+let CAL={y:YEAR,m:10},CALM='scenes'; // CALM:日历用在哪一页('scenes' 场次表 / 'plan' 大计划日程);拍摄日期可以复选
+const calSel=()=>CALM==='plan'?[...SCHF.dates]:($('#fDate').value?$('#fDate').value.split(','):[]);
+function calCnt(iso){if(CALM==='plan'){const[,m,d]=iso.split('-');return PLAN.scenes.filter(s=>PLAN.days[s.day].m===+m&&PLAN.days[s.day].d===+d).length}return S.scenes.filter(s=>dateHas(s.date,iso)).length}
+function calBounds(){if(CALM==='plan'){const ms=PLAN.days.map(d=>d.m);return[Math.min(...ms),Math.max(...ms)]}const all=S.scenes.flatMap(s=>dTok(s.date));if(!all.length){const n=new Date();return[(n.getMonth()+1),(n.getMonth()+1)]}return[Math.floor(Math.min(...all)/100),Math.floor(Math.max(...all)/100)]}
+const calText=a=>!a.length?'全部':a.length<=2?a.map(v=>`${+v.slice(5,7)}/${+v.slice(8)}`).join('、'):`已选 ${a.length} 天`;
+function calLabel(){const a=calSel(),b=CALM==='plan'?$('#sDayBtn'):$('#fDateBtn');if(b){b.textContent=calText(a);b.classList.toggle('set',!!a.length)}}
+function calApply(a){a.sort();if(CALM==='plan'){SCHF.dates=a;schList()}else{$('#fDate').value=a.join(',');render()}calLabel()}
 function drawCal(){
   const[mn,mx]=calBounds();if(CAL.m<mn)CAL.m=mn;if(CAL.m>mx)CAL.m=mx;
-  const first=new Date(YEAR,CAL.m-1,1).getDay(),n=new Date(YEAR,CAL.m,0).getDate(),cur=$('#fDate').value;
+  const first=new Date(YEAR,CAL.m-1,1).getDay(),n=new Date(YEAR,CAL.m,0).getDate(),cur=calSel();
   $('#calTitle').textContent=`${YEAR}年 ${CAL.m}月`;
   $('#calPrev').disabled=CAL.m<=mn;$('#calNext').disabled=CAL.m>=mx;
   let h='';for(let i=0;i<first;i++)h+='<span></span>';
   for(let d=1;d<=n;d++){
-    const iso=`${YEAR}-${pad(CAL.m)}-${pad(d)}`,c=S.scenes.filter(s=>dateHas(s.date,iso)).length;
-    h+=`<button type="button" class="cd ${c?'has':''} ${cur===iso?'on':''}" data-d="${iso}" ${c?'':'disabled'}>${d}${c?`<i>${c}</i>`:''}</button>`;
+    const iso=`${YEAR}-${pad(CAL.m)}-${pad(d)}`,c=calCnt(iso);
+    h+=`<button type="button" class="cd ${c?'has':''} ${cur.includes(iso)?'on':''}" data-d="${iso}" ${c?'':'disabled'}>${d}${c?`<i>${c}</i>`:''}</button>`;
   }
   $('#calGrid').innerHTML=h;
-  $('#calGrid').querySelectorAll('.cd.has').forEach(b=>b.onclick=()=>{$('#fDate').value=b.dataset.d;calLabel();$('#calDlg').close();render()});
+  $('#calGrid').querySelectorAll('.cd.has').forEach(b=>b.onclick=()=>{const a=calSel(),k=b.dataset.d;calApply(a.includes(k)?a.filter(x=>x!==k):[...a,k]);drawCal()}); // 点一下选取,再点一下取消,可以选很多天
+  $('#calSel').textContent=cur.length?`已选 ${cur.length} 天:${cur.slice(0,6).map(v=>`${+v.slice(5,7)}/${+v.slice(8)}`).join('、')}${cur.length>6?'…':''}`:'还没有选日期(显示全部)';
 }
-function calLabel(){const v=$('#fDate').value;$('#fDateBtn').textContent=v?`${+v.slice(5,7)}/${+v.slice(8)}`:'全部';$('#fDateBtn').classList.toggle('set',!!v)}
-$('#fDateBtn').onclick=()=>{const v=$('#fDate').value;if(v)CAL.m=+v.slice(5,7);else{const[,mx]=calBounds();CAL.m=mx}drawCal();$('#calDlg').showModal()};
+function openCal(mode){CALM=mode;const a=calSel();if(a.length)CAL.m=+a[0].slice(5,7);else{const[mn,mx]=calBounds();CAL.m=mode==='plan'?Math.min(mx,Math.max(mn,new Date().getMonth()+1)):mx}drawCal();$('#calDlg').showModal()}
+$('#fDateBtn').onclick=()=>openCal('scenes');
 $('#calPrev').onclick=()=>{CAL.m--;drawCal()};$('#calNext').onclick=()=>{CAL.m++;drawCal()};
-$('#calClear').onclick=()=>{$('#fDate').value='';calLabel();$('#calDlg').close();render()};
+$('#calClear').onclick=()=>{calApply([]);drawCal()};
 $('#calClose').onclick=()=>$('#calDlg').close();
 ['fEp','fDate','fRole'].forEach(i=>$('#'+i).onchange=render);$('#fQ').oninput=render;$('#fPhoto').onchange=render;
 /* ---- import / export ---- */
