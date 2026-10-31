@@ -2204,6 +2204,9 @@ function schList(){
     if(!ms.length)return null;
     const out=[];
     if(split)out.push('拆成 '+ms.length+' 场戏:'+ms.map(d=>d.sc+'场'+(num(d.pages)!==null?' '+fmt(num(d.pages))+'页':'')+(d.summary?'「'+cut(d.summary.replace(/【[^】]*】/g,''))+'」':'')).join('、'));
+    const dd=days[ps.day],dts=[];
+    ms.forEach(d=>{const q=/(\d+)\D+(\d+)/.exec(String(d.date||''));if(q&&dd&&(+q[1]!==dd.m||+q[2]!==dd.d)){const t=+q[1]+'/'+ +q[2];if(!dts.includes(t))dts.push(t)}});
+    if(dts.length)out.push('拍摄日期:日程 '+dd.m+'/'+dd.d+' → 实拍 '+dts.join('、'));
     const dp=ms.map(d=>num(d.pages));
     if(dp.every(v=>v!==null)&&ps.pages!=null){const t=Math.round(dp.reduce((a,v)=>a+v,0)*100)/100;if(Math.abs(t-ps.pages)>0.001)out.push('页数:日程 '+fmt(ps.pages)+' → 实拍 '+fmt(t)+(ms.length>1?'('+dp.map(fmt).join('+')+')':''))}
     const dc=new Set();ms.forEach(d=>S.roles.forEach(r=>{if(d.cast[r]===1)dc.add(r)}));
