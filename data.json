@@ -1621,6 +1621,58 @@
    "cast": {
     "王珍珠": 1
    }
+  },
+  {
+   "id": 90,
+   "date": "10.31",
+   "ep": 4,
+   "sc": "6",
+   "light": "秋",
+   "place": "太平县",
+   "main": "林茑家",
+   "sub": "屋内",
+   "summary": "【闪新】林小郎僵死床上",
+   "pages": 0.05,
+   "pnote": "",
+   "cast": {
+    "陆二": 1
+   }
+  },
+  {
+   "id": 91,
+   "date": "10.31",
+   "ep": 4,
+   "sc": "8",
+   "light": "冬雪",
+   "place": "太平县",
+   "main": "林茑家",
+   "sub": "门口/院子",
+   "summary": "【闪新6年前】王家管家上门抓人",
+   "pages": 0.75,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "林鸢": 1,
+    "林母": 1
+   }
+  },
+  {
+   "id": 92,
+   "date": "10.31",
+   "ep": 14,
+   "sc": "23",
+   "light": "秋",
+   "place": "太平县",
+   "main": "蓬莱山祝阮之慕",
+   "sub": "墓地打开",
+   "summary": "墓前摊牌卿卿盖棺被埋",
+   "pages": 0.95,
+   "pnote": "",
+   "cast": {
+    "祝阮/阮卿卿": 1,
+    "赵丽华": 1,
+    "赵嬷嬷": 1
+   }
   }
  ],
  "sec": "i130XMVZ2kv6lkw4Zr6h6/r4RtrbFW35dNeWopf4VgqPW5BqivrRON5XK9ZBCOqpDOOA7BTaYUlHfksEAQBpr5nR/1ffU1LdpDKB+6ulBmOoLdUTmzPzeKqSVwT1PtsprqFyi/BOExkyqvfvvN2c4Mb04dCAY0WjFGJMOcK3cUUh++H9W05gv+Q="
