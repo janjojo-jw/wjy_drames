@@ -1,6 +1,6 @@
 // 网络优先:有网时永远取最新的页面与 data.json,断网时才用缓存,
 // 这样更新网站内容后,手机上的 app 下次打开就会看到新数据。
-const CACHE = 'wjy-drames-v15';
+const CACHE = 'wjy-drames-v16';
 const CORE = [
   './',
   'index.html',

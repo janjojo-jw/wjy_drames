@@ -2208,12 +2208,21 @@ function schList(){
     if(dp.every(v=>v!==null)&&ps.pages!=null){const t=Math.round(dp.reduce((a,v)=>a+v,0)*100)/100;if(Math.abs(t-ps.pages)>0.001)out.push('页数:日程 '+fmt(ps.pages)+' → 实拍 '+fmt(t)+(ms.length>1?'('+dp.map(fmt).join('+')+')':''))}
     const dc=new Set();ms.forEach(d=>S.roles.forEach(r=>{if(d.cast[r]===1)dc.add(r)}));
     const tracked=P.roles;
-    const miss=tracked.filter(r=>ps.cast.includes(r)&&!dc.has(r)),extra=tracked.filter(r=>dc.has(r)&&!ps.cast.includes(r));
+    const uq=(ps.unsure||[]).filter(r=>ps.cast.includes(r)); // 日程表上标「？」的角色:到时候有拍或没拍都要注记
+    const miss=tracked.filter(r=>ps.cast.includes(r)&&!dc.has(r)&&!uq.includes(r)),extra=tracked.filter(r=>dc.has(r)&&!ps.cast.includes(r));
+    const uyes=uq.filter(r=>dc.has(r)),uno=uq.filter(r=>!dc.has(r));
+    if(uyes.length)out.push('日程标「？」的 '+uyes.join('、')+':实拍有拍到');
+    if(uno.length)out.push('日程标「？」的 '+uno.join('、')+':实拍没有');
     if(miss.length)out.push('日程有、实拍没有:'+miss.join('、'));
     if(extra.length)out.push('实拍多了:'+extra.join('、'));
     return out;
   };
-  const dfl=ps=>{if(ps.add)return['新加场次'];const o=shot.has(ps.ep+'|'+ps.sc)?diffOf(ps):null;return o&&o.length?o:null};
+  const today=(()=>{const n=new Date();return n.getMonth()*100+n.getDate()})();
+  const dfl=ps=>{if(ps.add)return['新加场次'];
+    if(!shot.has(ps.ep+'|'+ps.sc)){ // 还没拍:日程标「？」的角色,日程日期已经过了场次表还没有这场,也注记
+      const u=(ps.unsure||[]).filter(r=>ps.cast.includes(r)),d=days[ps.day];
+      return u.length&&d&&(d.m-1)*100+d.d<today?['日程标「？」的 '+u.join('、')+':日程日期('+d.m+'/'+d.d+')已过,场次表还没有这场']:null}
+    const o=diffOf(ps);return o&&o.length?o:null};
   const dfHTML=ps=>{const o=dfl(ps);return o?`<div class="pl-diff">${o.map(esc).join('<br>')}</div>`:''};
   const q=toSimp(SCHF.q.trim()).split(/\s+/).filter(Boolean);
   const hay=s=>{const d=s.add?{n:'',m:'',d:'',wk:'',wx:'',grp:''}:days[s.day];return toSimp([s.add?'新加场次 加戏 '+s.dbdate:'',s.ep,s.sc,s.loc,s.region,s.main,s.sub,s.hint,s.act,s.light,s.io,s.season,s.summary,s.cast.join(' '),'DAY'+d.n,d.m+'月'+d.d+'日',d.m+'.'+d.d,d.m+'/'+d.d,d.wk,d.wx,d.grp,(s.add||shot.has(s.ep+'|'+s.sc))?'已拍':''].join(' '))};
